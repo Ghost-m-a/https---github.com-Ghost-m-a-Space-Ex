@@ -1,0 +1,361 @@
+.overlay {
+   position: fixed;
+   inset: 0;
+   background-color: rgba(0, 0, 0, 0.7);
+   backdrop-filter: blur(4px);
+   -webkit-backdrop-filter: blur(4px);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   z-index: 9999;
+   padding: 24px;
+   animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+   from {
+      opacity: 0;
+   }
+   to {
+      opacity: 1;
+   }
+}
+
+.modal {
+   background-color: var(--bg-primary);
+   border-radius: 16px;
+   width: 100%;
+   max-width: 720px;
+   padding: 48px 40px;
+   position: relative;
+   border: 1px solid var(--border-color);
+   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+   animation: slideUp 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+   min-height: 400px;
+}
+
+@keyframes slideUp {
+   from {
+      opacity: 0;
+      transform: translateY(20px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+.closeBtn {
+   position: absolute;
+   top: 16px;
+   right: 16px;
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   cursor: pointer;
+   padding: 8px;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: all 0.2s ease;
+}
+
+.closeBtn:hover {
+   background-color: var(--bg-tertiary);
+   color: var(--text-primary);
+}
+
+.title {
+   text-align: center;
+   font-size: 28px;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin-bottom: 32px;
+}
+
+/* =========================================
+   STEP 1: CHOICE CARDS
+   ========================================= */
+.choices {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 20px;
+   margin-top: 24px;
+}
+
+.choiceCard {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 20px;
+   padding: 48px 24px;
+   background-color: transparent;
+   border: 1px solid var(--border-subtle);
+   border-radius: 12px;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   color: var(--text-primary);
+}
+
+.choiceCard:hover {
+   border-color: var(--text-secondary);
+   background-color: var(--bg-tertiary);
+}
+
+.choiceIcon {
+   color: var(--text-primary);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.choiceLabel {
+   font-size: 15px;
+   font-weight: 500;
+   color: var(--text-primary);
+}
+
+/* =========================================
+   STEP 2 & 3: FORM
+   ========================================= */
+.formContainer {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+   max-width: 480px;
+   margin: 0 auto;
+   width: 100%;
+}
+
+.field {
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+}
+
+.label {
+   font-size: 13px;
+   font-weight: 500;
+   color: var(--text-secondary);
+}
+
+.inputWrapper {
+   position: relative;
+   display: flex;
+   align-items: center;
+}
+
+.textInput {
+   width: 100%;
+   background-color: transparent;
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   padding: 12px 44px 12px 16px;
+   color: var(--text-primary);
+   font-size: 14px;
+   outline: none;
+   transition: border-color 0.2s ease;
+}
+
+.textInput::placeholder {
+   color: var(--text-muted);
+}
+
+.textInput:focus {
+   border-color: var(--accent-blue);
+}
+
+/* Standalone text input without icon */
+.field .textInput {
+   padding-right: 16px;
+}
+
+.iconBtn {
+   position: absolute;
+   right: 8px;
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   cursor: pointer;
+   padding: 6px;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   transition: all 0.2s ease;
+}
+
+.iconBtn:hover {
+   background-color: var(--bg-tertiary);
+   color: var(--text-primary);
+}
+
+/* =========================================
+   SELECT DROPDOWN
+   ========================================= */
+.selectWrapper {
+   position: relative;
+   width: 100%;
+}
+
+.selectBtn {
+   width: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   gap: 12px;
+   background-color: transparent;
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   padding: 12px 16px;
+   color: var(--text-primary);
+   font-size: 14px;
+   cursor: pointer;
+   transition: border-color 0.2s ease;
+   text-align: left;
+}
+
+.selectBtn:hover {
+   border-color: var(--text-secondary);
+}
+
+.selectBtn:focus {
+   border-color: var(--accent-blue);
+   outline: none;
+}
+
+.placeholder {
+   color: var(--text-muted);
+}
+
+.dropdown {
+   position: absolute;
+   top: calc(100% + 4px);
+   left: 0;
+   right: 0;
+   background-color: var(--bg-elevated);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   box-shadow: var(--shadow-lg);
+   z-index: 100;
+   max-height: 260px;
+   overflow-y: auto;
+   padding: 4px;
+   animation: dropdownIn 0.15s ease;
+}
+
+.dropdownTall {
+   max-height: 340px;
+}
+
+@keyframes dropdownIn {
+   from {
+      opacity: 0;
+      transform: translateY(-4px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+.dropdownItem {
+   width: 100%;
+   padding: 10px 12px;
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   font-size: 14px;
+   text-align: left;
+   cursor: pointer;
+   border-radius: 6px;
+   transition: all 0.15s ease;
+}
+
+.dropdownItem:hover {
+   background-color: var(--bg-hover);
+   color: var(--text-primary);
+}
+
+/* =========================================
+   CONTINUE BUTTON
+   ========================================= */
+.continueBtn {
+   width: 100%;
+   padding: 12px;
+   background-color: var(--accent-blue);
+   color: #ffffff;
+   border: none;
+   border-radius: 8px;
+   font-size: 14px;
+   font-weight: 500;
+   cursor: pointer;
+   transition: all 0.2s ease;
+   margin-top: 8px;
+}
+
+.continueBtn:hover:not(:disabled) {
+   background-color: #2563eb;
+}
+
+.continueBtn:disabled {
+   background-color: var(--bg-tertiary);
+   color: var(--text-muted);
+   cursor: not-allowed;
+}
+
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 640px) {
+   .modal {
+      padding: 32px 20px;
+   }
+   .choices {
+      grid-template-columns: 1fr;
+   }
+   .title {
+      font-size: 22px;
+   }
+}
+
+/* =========================================
+   SUGGESTION HINT (only shown for "I want a business")
+   ========================================= */
+.suggestionHint {
+   text-align: center;
+   font-size: 13px;
+   color: var(--text-secondary);
+   margin-bottom: 20px;
+   margin-top: -20px;
+   line-height: 1.5;
+}
+
+/* =========================================
+   INPUT SHUFFLE ANIMATION
+   ========================================= */
+.inputShuffle {
+   animation: shuffleFlash 0.3s ease;
+}
+
+@keyframes shuffleFlash {
+   0% {
+      border-color: var(--accent-blue);
+      background-color: rgba(59, 130, 246, 0.08);
+   }
+   100% {
+      border-color: var(--border-subtle);
+      background-color: transparent;
+   }
+}
+
+/* Make the shuffle button pop on hover */
+.iconBtn:hover svg {
+   transition: transform 0.3s ease;
+}
+
+.iconBtn:hover {
+   color: var(--accent-blue);
+}

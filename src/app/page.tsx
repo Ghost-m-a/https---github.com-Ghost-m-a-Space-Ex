@@ -1,69 +1,123 @@
-import Image from "next/image";
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { Zap, ChevronRight, Home as HomeIcon } from "lucide-react";
+import { HomeStats } from "./lib/types";
 import styles from "./page.module.css";
 
-export default function Home() {
-  return (
-    <div className={styles.page}>
-      <main className={styles.main}>
-        <Image
-          className={styles.logo}
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className={styles.intro}>
-          <h1>
-            To get started, edit the{" "}
-            <code className={styles.code}>page.tsx</code> file.
-          </h1>
-          <p>
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
+export default function HomePage() {
+   const [stats, setStats] = useState<HomeStats | null>(null);
+   const [econIntel, setEconIntel] = useState(false);
+   const [loading, setLoading] = useState(true);
+
+   useEffect(() => {
+      fetch("/api/home")
+         .then((r) => r.json())
+         .then(setStats)
+         .finally(() => setLoading(false));
+   }, []);
+
+   if (loading || !stats) {
+      return <div className={styles.loading}>Loading...</div>;
+   }
+
+   // Build SVG path for the chart
+   const width = 900;
+   const height = 200;
+   const points = stats.chartData.map((d, i) => {
+      const x = (i / (stats.chartData.length - 1)) * width;
+      const y = height - (d.value / 100) * height;
+      return `${x},${y}`;
+   });
+   const pathD = `M ${points.join(" L ")}`;
+
+   return (
+      <div className={styles.homePage}>
+         {/* Balance Header */}
+         <div className={styles.balanceHeader}>
+            <div className={styles.balanceLabel}>
+               Total balance · All balances
+            </div>
+            <div className={styles.balanceValue}>
+               ${stats.totalBalance.toFixed(2)}
+            </div>
+         </div>
+
+         {/* Chart */}
+         <div className={styles.chartWrapper}>
+            <div className={styles.chartTooltip}>
+               Your balance will appear here.
+            </div>
+            <svg
+               viewBox={`0 0 ${width} ${height}`}
+               className={styles.chart}
+               preserveAspectRatio="none"
             >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className={styles.ctas}>
-          <a
-            className={styles.primary}
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className={styles.logo}
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className={styles.secondary}
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+               <defs>
+                  <linearGradient
+                     id="chartGradient"
+                     x1="0"
+                     y1="0"
+                     x2="0"
+                     y2="1"
+                  >
+                     <stop offset="0%" stopColor="rgba(255,255,255,0.08)" />
+                     <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+                  </linearGradient>
+               </defs>
+               <path
+                  d={`${pathD} L ${width},${height} L 0,${height} Z`}
+                  fill="url(#chartGradient)"
+               />
+               <path d={pathD} fill="none" stroke="#ffffff" strokeWidth="2" />
+            </svg>
+         </div>
+
+         {/* Economic Intelligence */}
+         <div className={styles.card}>
+            <div className={styles.econTitle}>
+               Businesses grow <span className={styles.blue}>3x faster</span>{" "}
+               with Economic Intelligence.
+            </div>
+            <div className={styles.econToggle}>
+               <div className={styles.econToggleLeft}>
+                  <Zap size={16} className={styles.zapIcon} />
+                  <span>Turn on</span>
+               </div>
+               <button
+                  className={`${styles.switch} ${econIntel ? styles.switchOn : ""}`}
+                  onClick={() => setEconIntel(!econIntel)}
+                  aria-label="Toggle Economic Intelligence"
+               >
+                  <span className={styles.switchThumb} />
+               </button>
+            </div>
+         </div>
+
+         {/* Balances */}
+         <div className={styles.card}>
+            <div className={styles.cardTitle}>Balances</div>
+            <button className={styles.balanceRow}>
+               <div className={styles.balanceRowLeft}>
+                  <div className={styles.avatarCircle}>DZ</div>
+                  <span>Personal</span>
+               </div>
+               <div className={styles.balanceRowRight}>
+                  <span>$0.00</span>
+                  <ChevronRight size={18} />
+               </div>
+            </button>
+         </div>
+
+         {/* Pulse */}
+         <div className={styles.card}>
+            <div className={styles.cardTitle}>
+               Pulse <span className={styles.pulseDot} />
+            </div>
+            <div className={styles.pulseEmpty}>
+               Live activity across Whop will appear here.
+            </div>
+         </div>
+      </div>
+   );
 }
