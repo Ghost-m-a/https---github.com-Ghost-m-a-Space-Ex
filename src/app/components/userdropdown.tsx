@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
    Info,
    FileText,
@@ -18,7 +19,16 @@ import {
 } from "lucide-react";
 import styles from "../styles/navbar.module.css";
 
+// =========================================
+// TYPES
+// =========================================
 type ThemeType = "system" | "light" | "dark";
+
+interface AuthUser {
+   id: string;
+   name: string;
+   email: string;
+}
 
 interface MenuItemProps {
    icon: React.ReactNode;
@@ -27,6 +37,9 @@ interface MenuItemProps {
    hasSubmenu?: boolean;
 }
 
+// =========================================
+// REUSABLE MENU ITEM
+// =========================================
 const MenuItem: React.FC<MenuItemProps> = ({
    icon,
    label,
@@ -35,26 +48,40 @@ const MenuItem: React.FC<MenuItemProps> = ({
 }) => (
    <Link href={href} className={styles.menuItem}>
       <div className={styles.menuItemContent}>
-         <span className={styles.icon}>{icon}</span>
-         <span className={styles.label}>{label}</span>
+         <span className={styles.menuItemIcon}>{icon}</span>
+         <span className={styles.menuItemLabel}>{label}</span>
       </div>
       {hasSubmenu && <ChevronRight size={16} className={styles.submenuIcon} />}
    </Link>
 );
 
+// =========================================
+// USER DROPDOWN COMPONENT
+// =========================================
 export const UserDropdown: React.FC = () => {
+   const router = useRouter();
    const [isOpen, setIsOpen] = useState(false);
    const [theme, setTheme] = useState<ThemeType>("dark");
    const [mounted, setMounted] = useState(false);
+   const [user, setUser] = useState<AuthUser | null>(null);
+   const [isLoggingOut, setIsLoggingOut] = useState(false);
    const dropdownRef = useRef<HTMLDivElement>(null);
 
    // -----------------------------------------
-   // 1. Load saved theme on mount
+   // 1. Load saved theme + user on mount
    // -----------------------------------------
    useEffect(() => {
       setMounted(true);
+
+      // Load theme
       const savedTheme = (localStorage.getItem("theme") as ThemeType) || "dark";
       setTheme(savedTheme);
+
+      // Load current user
+      fetch("/api/auth/me")
+         .then((r) => r.json())
+         .then((d) => setUser(d.user))
+         .catch(() => setUser(null));
    }, []);
 
    // -----------------------------------------
@@ -63,7 +90,6 @@ export const UserDropdown: React.FC = () => {
    useEffect(() => {
       if (!mounted) return;
 
-      // Save preference
       localStorage.setItem("theme", theme);
 
       const root = document.documentElement;
@@ -128,7 +154,31 @@ export const UserDropdown: React.FC = () => {
       return () => document.removeEventListener("keydown", handleEscape);
    }, []);
 
-   const mainMenu = [
+   // -----------------------------------------
+   // 6. Logout handler
+   // -----------------------------------------
+   const handleLogout = async (e: React.MouseEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isLoggingOut) return;
+      setIsLoggingOut(true);
+
+      try {
+         await fetch("/api/auth/logout", { method: "POST" });
+         setIsOpen(false);
+         router.push("/login");
+         router.refresh();
+      } catch (err) {
+         console.error("Logout failed:", err);
+         setIsLoggingOut(false);
+      }
+   };
+
+   // -----------------------------------------
+   // MENU DATA
+   // -----------------------------------------
+   const mainMenu: MenuItemProps[] = [
       {
          icon: <Info size={18} />,
          label: "Resolution center",
@@ -138,7 +188,7 @@ export const UserDropdown: React.FC = () => {
       { icon: <Settings size={18} />, label: "Settings", href: "/settings" },
    ];
 
-   const secondaryMenu = [
+   const secondaryMenu: MenuItemProps[] = [
       {
          icon: <HelpCircle size={18} />,
          label: "Help and support",
@@ -156,7 +206,6 @@ export const UserDropdown: React.FC = () => {
          href: "/legal",
          hasSubmenu: true,
       },
-      { icon: <LogOut size={18} />, label: "Sign out", href: "/logout" },
    ];
 
    const themes: { key: ThemeType; icon: React.ReactNode; label: string }[] = [
@@ -165,9 +214,27 @@ export const UserDropdown: React.FC = () => {
       { key: "dark", icon: <Moon size={18} />, label: "Dark theme" },
    ];
 
+   // -----------------------------------------
+   // DERIVED USER DISPLAY DATA
+   // -----------------------------------------
+   const initials = user
+      ? user.name
+           .trim()
+           .split(/\s+/)
+           .map((n) => n[0])
+           .join("")
+           .slice(0, 2)
+           .toUpperCase()
+      : "?";
+
+   const displayName = user?.name || "Guest";
+   const displayEmail = user?.email || "Sign in to your account";
+
    return (
       <div className={styles.dropdownContainer} ref={dropdownRef}>
-         {/* Trigger Button */}
+         {/* =========================================
+          TRIGGER BUTTON
+          ========================================= */}
          <button
             type="button"
             onClick={(e) => {
@@ -176,9 +243,10 @@ export const UserDropdown: React.FC = () => {
             }}
             className={styles.triggerButton}
             aria-label="User menu"
+            aria-haspopup="menu"
             aria-expanded={isOpen}
          >
-            <div className={styles.avatarSmall}>DZ</div>
+            <div className={styles.avatarSmall}>{initials}</div>
             <ChevronDown
                size={16}
                className={styles.chevronDown}
@@ -189,23 +257,25 @@ export const UserDropdown: React.FC = () => {
             />
          </button>
 
-         {/* Dropdown Menu */}
+         {/* =========================================
+          DROPDOWN MENU
+          ========================================= */}
          {isOpen && (
             <div className={styles.menuDropdown} role="menu">
-               {/* Header */}
+               {/* ---------- HEADER ---------- */}
                <div className={styles.menuHeader}>
-                  <div className={styles.avatarLarge}>DZ</div>
+                  <div className={styles.avatarLarge}>{initials}</div>
                   <div className={styles.headerInfo}>
-                     <span className={styles.userName}>Dr. Zakarinović</span>
+                     <span className={styles.userName}>{displayName}</span>
                      <Link href="/profile" className={styles.viewProfile}>
-                        View profile
+                        {displayEmail}
                      </Link>
                   </div>
                </div>
 
                <div className={styles.divider} />
 
-               {/* Main Menu */}
+               {/* ---------- MAIN MENU ---------- */}
                <div className={styles.menuGroup}>
                   {mainMenu.map((item) => (
                      <MenuItem key={item.label} {...item} />
@@ -214,16 +284,41 @@ export const UserDropdown: React.FC = () => {
 
                <div className={styles.divider} />
 
-               {/* Secondary Menu */}
+               {/* ---------- SECONDARY MENU ---------- */}
                <div className={styles.menuGroup}>
                   {secondaryMenu.map((item) => (
                      <MenuItem key={item.label} {...item} />
                   ))}
+
+                  {/* Sign out (uses button for onClick handler) */}
+                  <button
+                     type="button"
+                     className={styles.menuItem}
+                     onClick={handleLogout}
+                     disabled={isLoggingOut}
+                     style={{
+                        width: "100%",
+                        textAlign: "left",
+                        background: "transparent",
+                        border: "none",
+                        cursor: isLoggingOut ? "not-allowed" : "pointer",
+                        opacity: isLoggingOut ? 0.6 : 1,
+                     }}
+                  >
+                     <div className={styles.menuItemContent}>
+                        <span className={styles.menuItemIcon}>
+                           <LogOut size={18} />
+                        </span>
+                        <span className={styles.menuItemLabel}>
+                           {isLoggingOut ? "Signing out..." : "Sign out"}
+                        </span>
+                     </div>
+                  </button>
                </div>
 
                <div className={styles.divider} />
 
-               {/* Theme Switcher */}
+               {/* ---------- THEME SWITCHER ---------- */}
                <div className={styles.themeSwitcherContainer}>
                   <div className={styles.themeSwitcherTrack}>
                      {themes.map((t) => (

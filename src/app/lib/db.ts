@@ -19,10 +19,27 @@ import {
    DiscoveredBusiness,
    HomeStats,
 } from "./types";
+import { hashPassword } from "./auth";
 
 // =========================================
 // IN-MEMORY DATABASE
 // =========================================
+
+// =========================================
+// USERS
+// =========================================
+export interface User {
+   id: string;
+   name: string;
+   email: string;
+   passwordHash: string;
+   createdAt: number;
+}
+
+const users: User[] = [];
+
+// Extend the db object (add these to the existing db object)
+// Find `export const db = {` and add these methods:
 
 const conversations: Conversation[] = [
    {
@@ -317,6 +334,22 @@ export const db = {
       conv.lastMessage = text;
       conv.timestamp = "just now";
       return newMessage;
+   }, // Users
+   findUserByEmail: (email: string) =>
+      users.find((u) => u.email.toLowerCase() === email.toLowerCase()),
+   findUserById: (id: string) => users.find((u) => u.id === id),
+   createUser: (name: string, email: string, password: string): User | null => {
+      if (users.find((u) => u.email.toLowerCase() === email.toLowerCase()))
+         return null;
+      const user: User = {
+         id: `user-${Date.now()}`,
+         name,
+         email,
+         passwordHash: hashPassword(password),
+         createdAt: Date.now(),
+      };
+      users.push(user);
+      return user;
    },
 
    // Townhall

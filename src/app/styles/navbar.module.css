@@ -392,3 +392,14 @@
       display: none;
    }
 }
+
+.searchKbd {
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-subtle);
+   color: var(--text-muted);
+   font-size: 11px;
+   padding: 3px 8px;
+   border-radius: 5px;
+   font-family: inherit;
+   white-space: nowrap;
+}

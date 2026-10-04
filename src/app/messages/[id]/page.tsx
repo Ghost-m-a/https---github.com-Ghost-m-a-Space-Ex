@@ -2,85 +2,146 @@
 
 import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
-import { Send, CheckCircle2 } from "lucide-react";
-import { Conversation } from "../../lib/types";
+import { Send, CheckCircle2, ChevronLeft } from "lucide-react";
+import Link from "next/link";
 import styles from "../messages.module.css";
+
+// =========================================
+// TYPES
+// =========================================
+interface ConversationMeta {
+   id: string;
+   name: string;
+   email: string;
+   avatar: string;
+}
+
+interface MessageItem {
+   id: string;
+   sender: "me" | "them";
+   text: string;
+   timestamp: string;
+}
 
 export default function ConversationPage() {
    const params = useParams();
    const id = params.id as string;
-   const [conversation, setConversation] = useState<Conversation | null>(null);
+
+   const [conversation, setConversation] = useState<ConversationMeta | null>(
+      null,
+   );
+   const [messages, setMessages] = useState<MessageItem[]>([]);
    const [input, setInput] = useState("");
+   const [loading, setLoading] = useState(true);
    const [sending, setSending] = useState(false);
    const messagesEndRef = useRef<HTMLDivElement>(null);
 
+   // Load conversation
    useEffect(() => {
-      if (id) loadConversation();
+      if (!id) return;
+      setLoading(true);
+      fetch(`/api/messages/${id}`)
+         .then((r) => r.json())
+         .then((data) => {
+            // ✅ FIX: API returns { conversation, messages }
+            setConversation(data.conversation || null);
+            setMessages(Array.isArray(data.messages) ? data.messages : []);
+         })
+         .catch(() => {
+            setConversation(null);
+            setMessages([]);
+         })
+         .finally(() => setLoading(false));
    }, [id]);
 
+   // Auto-scroll to bottom
    useEffect(() => {
       messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-   }, [conversation?.messages]);
-
-   const loadConversation = async () => {
-      const res = await fetch(`/api/messages/${id}`);
-      if (res.ok) setConversation(await res.json());
-   };
+   }, [messages]);
 
    const handleSend = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!input.trim() || sending) return;
       setSending(true);
-      const res = await fetch("/api/messages", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ conversationId: id, text: input }),
-      });
-      if (res.ok) {
-         setInput("");
-         await loadConversation();
+
+      try {
+         const res = await fetch("/api/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ conversationId: id, text: input }),
+         });
+
+         if (res.ok) {
+            const data = await res.json();
+            setMessages((prev) => [
+               ...prev,
+               {
+                  id: data.message.id,
+                  sender: "me",
+                  text: data.message.text,
+                  timestamp: data.message.createdAt,
+               },
+            ]);
+            setInput("");
+         }
+      } finally {
+         setSending(false);
       }
-      setSending(false);
    };
 
-   if (!conversation) return <div className={styles.loading}>Loading...</div>;
+   if (loading) {
+      return <div className={styles.loading}>Loading conversation...</div>;
+   }
+
+   if (!conversation) {
+      return (
+         <div className={styles.loading}>
+            Conversation not found.{" "}
+            <Link href="/messages" style={{ color: "var(--accent-blue)" }}>
+               Go back
+            </Link>
+         </div>
+      );
+   }
 
    return (
       <div className={styles.chatView}>
          {/* Header */}
          <div className={styles.chatHeader}>
+            <Link href="/messages" className={styles.backBtn}>
+               <ChevronLeft size={18} />
+            </Link>
             <div className={styles.convAvatar}>{conversation.avatar}</div>
             <div>
                <div className={styles.chatName}>
-                  {conversation.name}{" "}
-                  {conversation.verified && (
-                     <span className={styles.verified}>✓</span>
-                  )}
+                  {conversation.name} <span className={styles.verified}>✓</span>
                </div>
             </div>
          </div>
 
          {/* Messages */}
          <div className={styles.chatMessages}>
-            {conversation.messages.map((m, i) => (
-               <div
-                  key={m.id}
-                  className={`${styles.messageRow} ${m.sender === "me" ? styles.messageRowMe : ""}`}
-               >
-                  {m.sender === "them" && (
-                     <div className={styles.messageAvatar}>
-                        {conversation.avatar}
+            {messages.length === 0 ? (
+               <div className={styles.emptyChatText}>No messages yet.</div>
+            ) : (
+               messages.map((m) => (
+                  <div
+                     key={m.id}
+                     className={`${styles.messageRow} ${
+                        m.sender === "me" ? styles.messageRowMe : ""
+                     }`}
+                  >
+                     {m.sender === "them" && (
+                        <div className={styles.messageAvatar}>
+                           {conversation.avatar}
+                        </div>
+                     )}
+                     <div className={styles.messageBubble}>
+                        <div className={styles.messageText}>{m.text}</div>
                      </div>
-                  )}
-                  <div className={styles.messageBubble}>
-                     <div className={styles.messageMeta}>
-                        {m.sender === "them" ? conversation.name : "You"} ·{" "}
-                        {m.timestamp}
-                     </div>
-                     <div className={styles.messageText}>{m.text}</div>
                   </div>
-               </div>
-            ))}
+               ))
+            )}
             <div ref={messagesEndRef} />
          </div>
 
