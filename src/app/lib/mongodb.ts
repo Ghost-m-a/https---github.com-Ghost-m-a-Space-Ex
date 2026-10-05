@@ -2,12 +2,6 @@ import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
-if (!MONGODB_URI) {
-   throw new Error(
-      "Please define MONGODB_URI in .env.local — get one at https://www.mongodb.com/cloud/atlas",
-   );
-}
-
 interface MongooseCache {
    conn: typeof mongoose | null;
    promise: Promise<typeof mongoose> | null;
@@ -25,10 +19,17 @@ const cached: MongooseCache = global.mongooseCache || {
 global.mongooseCache = cached;
 
 export async function connectDB() {
+   // ✅ Lazy check — only throws when a request actually needs the DB
+   if (!MONGODB_URI) {
+      throw new Error(
+         "MONGODB_URI is not set. Add it to your environment variables (Vercel → Settings → Environment Variables).",
+      );
+   }
+
    if (cached.conn) return cached.conn;
 
    if (!cached.promise) {
-      cached.promise = mongoose.connect(MONGODB_URI!, {
+      cached.promise = mongoose.connect(MONGODB_URI, {
          bufferCommands: false,
          maxPoolSize: 10,
          serverSelectionTimeoutMS: 10000,
