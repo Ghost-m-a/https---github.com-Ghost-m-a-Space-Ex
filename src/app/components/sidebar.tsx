@@ -31,12 +31,14 @@ import {
 } from "lucide-react";
 import { useWorkspace } from "../context/workspace-context";
 import BusinessModal from "./business-modal";
+import SettingsModal, { TabId } from "./settings-modal";
 import styles from "../styles/sidebar.module.css";
 
 interface MenuItem {
    icon: React.ReactNode;
    label: string;
-   href: string;
+   href?: string;
+   onClick?: () => void;
    badge?: string | number;
    badgeVariant?: "red" | "blue";
    hasSubmenu?: boolean;
@@ -61,6 +63,10 @@ const Sidebar = () => {
       setActiveBusiness,
       resetToPersonal,
    } = useWorkspace();
+
+   // ✅ Settings modal state
+   const [settingsOpen, setSettingsOpen] = useState(false);
+   const [settingsTab, setSettingsTab] = useState<TabId>("profile");
 
    // Load persisted collapse state
    useEffect(() => {
@@ -115,6 +121,12 @@ const Sidebar = () => {
    }, []);
 
    const toggleSidebar = useCallback(() => setIsCollapsed((prev) => !prev), []);
+
+   // ✅ Open settings modal helper
+   const openSettings = (tab: TabId = "profile") => {
+      setSettingsTab(tab);
+      setSettingsOpen(true);
+   };
 
    // =========================================
    // MENU DATA — SWITCHES BASED ON MODE
@@ -259,7 +271,6 @@ const Sidebar = () => {
             TOP HEADER: Personal / Business switcher + Add
             ========================================= */}
             <div className={styles.topHeader}>
-               {/* Personal Avatar */}
                <button
                   className={`${styles.profileAvatar} ${
                      mode === "personal" ? styles.avatarActive : ""
@@ -271,7 +282,6 @@ const Sidebar = () => {
                   <User size={20} />
                </button>
 
-               {/* Business Avatars (if any) */}
                {businesses.map((biz) => (
                   <button
                      key={biz.id}
@@ -288,7 +298,6 @@ const Sidebar = () => {
                   </button>
                ))}
 
-               {/* Add Business Button */}
                <button
                   className={styles.addButton}
                   onClick={() => setIsModalOpen(true)}
@@ -318,12 +327,49 @@ const Sidebar = () => {
                         <div className={styles.sectionDivider} />
                      )}
                      {section.items.map((item) => {
-                        const isActive = pathname === item.href;
+                        const isActive = item.href
+                           ? pathname === item.href
+                           : false;
+
+                        // If item has onClick, render a button
+                        if (item.onClick) {
+                           return (
+                              <button
+                                 key={item.label}
+                                 onClick={item.onClick}
+                                 className={styles.navItem}
+                                 style={{
+                                    background: "transparent",
+                                    border: "none",
+                                    cursor: "pointer",
+                                    textAlign: "left",
+                                 }}
+                              >
+                                 <div className={styles.navIconWrapper}>
+                                    {item.icon}
+                                 </div>
+                                 {!isCollapsed && (
+                                    <span className={styles.label}>
+                                       {item.label}
+                                    </span>
+                                 )}
+                                 {isCollapsed && (
+                                    <span className={styles.tooltip}>
+                                       {item.label}
+                                    </span>
+                                 )}
+                              </button>
+                           );
+                        }
+
+                        // Otherwise render a Link
                         return (
                            <Link
                               key={item.label}
-                              href={item.href}
-                              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
+                              href={item.href || "#"}
+                              className={`${styles.navItem} ${
+                                 isActive ? styles.active : ""
+                              }`}
                               aria-current={isActive ? "page" : undefined}
                            >
                               <div className={styles.navIconWrapper}>
@@ -383,7 +429,19 @@ const Sidebar = () => {
                      <span className={styles.tooltip}>Developer</span>
                   )}
                </Link>
-               <Link href="/settings" className={styles.navItem}>
+
+               {/* ✅ Settings opens the modal */}
+               <button
+                  type="button"
+                  className={styles.navItem}
+                  onClick={() => openSettings("profile")}
+                  style={{
+                     background: "transparent",
+                     border: "none",
+                     cursor: "pointer",
+                     textAlign: "left",
+                  }}
+               >
                   <div className={styles.navIconWrapper}>
                      <Settings size={20} />
                   </div>
@@ -393,7 +451,7 @@ const Sidebar = () => {
                   {isCollapsed && (
                      <span className={styles.tooltip}>Settings</span>
                   )}
-               </Link>
+               </button>
 
                <button
                   className={styles.collapseButton}
@@ -416,6 +474,13 @@ const Sidebar = () => {
          <BusinessModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
+         />
+
+         {/* ✅ Settings Modal */}
+         <SettingsModal
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            initialTab={settingsTab}
          />
       </>
    );
