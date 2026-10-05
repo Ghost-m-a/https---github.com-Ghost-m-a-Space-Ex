@@ -33,6 +33,9 @@ import { useWorkspace } from "../context/workspace-context";
 import BusinessModal from "./business-modal";
 import SettingsModal, { TabId } from "./settings-modal";
 import styles from "../styles/sidebar.module.css";
+import BusinessSettingsModal, {
+   BusinessTabId,
+} from "./business-settings-modal";
 
 interface MenuItem {
    icon: React.ReactNode;
@@ -48,6 +51,9 @@ interface Section {
    title: string;
    items: MenuItem[];
 }
+const [businessSettingsOpen, setBusinessSettingsOpen] = useState(false);
+const [businessSettingsTab, setBusinessSettingsTab] =
+   useState<BusinessTabId>("general");
 
 const Sidebar = () => {
    const [isCollapsed, setIsCollapsed] = useState(false);
@@ -429,12 +435,18 @@ const Sidebar = () => {
                      <span className={styles.tooltip}>Developer</span>
                   )}
                </Link>
-
                {/* ✅ Settings opens the modal */}
                <button
                   type="button"
                   className={styles.navItem}
-                  onClick={() => openSettings("profile")}
+                  onClick={() => {
+                     if (mode === "business") {
+                        setBusinessSettingsTab("general");
+                        setBusinessSettingsOpen(true);
+                     } else {
+                        openSettings("profile"); // personal settings
+                     }
+                  }}
                   style={{
                      background: "transparent",
                      border: "none",
@@ -452,7 +464,13 @@ const Sidebar = () => {
                      <span className={styles.tooltip}>Settings</span>
                   )}
                </button>
-
+               // At the end of the return, alongside the other modals:
+               <BusinessSettingsModal
+                  isOpen={businessSettingsOpen}
+                  onClose={() => setBusinessSettingsOpen(false)}
+                  businessId={activeBusiness?.id}
+                  initialTab={businessSettingsTab}
+               />
                <button
                   className={styles.collapseButton}
                   onClick={toggleSidebar}
