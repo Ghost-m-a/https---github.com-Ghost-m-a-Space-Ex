@@ -82,26 +82,48 @@ const MessagesPanel: React.FC<MessagesPanelProps> = ({ isOpen, onClose }) => {
    const handleSend = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!input.trim() || !activeConv || sending) return;
+
+      const sentText = input.trim();
       setSending(true);
-      const res = await fetch("/api/messages", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ conversationId: activeConv, text: input }),
-      });
-      if (res.ok) {
-         const data = await res.json();
-         setMessages((prev) => [
-            ...prev,
-            {
-               id: data.message.id,
-               sender: "me",
-               text: data.message.text,
-               timestamp: data.message.createdAt,
-            },
-         ]);
-         setInput("");
+      setInput("");
+
+      try {
+         const res = await fetch("/api/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+               conversationId: activeConv,
+               text: sentText,
+            }),
+         });
+
+         if (res.ok) {
+            const data = await res.json();
+            setMessages((prev) => [
+               ...prev,
+               {
+                  id: data.message.id,
+                  sender: "me",
+                  text: data.message.text,
+                  timestamp: data.message.createdAt,
+               },
+            ]);
+
+            // ✅ Refetch conversation twice to catch the bot reply
+            // (bot responds ~800ms after)
+            setTimeout(() => {
+               fetch(`/api/messages/${activeConv}`)
+                  .then((r) => r.json())
+                  .then((d) => {
+                     setMessages(Array.isArray(d.messages) ? d.messages : []);
+                     setConvMeta(d.conversation || null);
+                  })
+                  .catch(() => {});
+            }, 1200);
+         }
+      } finally {
+         setSending(false);
       }
-      setSending(false);
    };
 
    const filtered = conversations.filter((c) => {

@@ -62,13 +62,16 @@ export default function ConversationPage() {
    const handleSend = async (e: React.FormEvent) => {
       e.preventDefault();
       if (!input.trim() || sending) return;
+
+      const sentText = input.trim();
       setSending(true);
+      setInput("");
 
       try {
          const res = await fetch("/api/messages", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ conversationId: id, text: input }),
+            body: JSON.stringify({ conversationId: id, text: sentText }),
          });
 
          if (res.ok) {
@@ -82,7 +85,13 @@ export default function ConversationPage() {
                   timestamp: data.message.createdAt,
                },
             ]);
-            setInput("");
+
+            // Refetch after bot delay
+            setTimeout(async () => {
+               const r = await fetch(`/api/messages/${id}`);
+               const d = await r.json();
+               setMessages(Array.isArray(d.messages) ? d.messages : []);
+            }, 1200);
          }
       } finally {
          setSending(false);

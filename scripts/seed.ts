@@ -15,11 +15,7 @@ async function seed() {
    const uri = process.env.MONGODB_URI;
 
    if (!uri) {
-      console.error(
-         "❌ MONGODB_URI is not defined. Make sure it's set in .env.local",
-      );
-      console.error("   And that you run: npm run seed");
-      console.error("   Which uses: tsx --env-file=.env.local scripts/seed.ts");
+      console.error("❌ MONGODB_URI is not defined");
       process.exit(1);
    }
 
@@ -40,10 +36,12 @@ async function seed() {
       passwordHash: hashPassword("password123"),
    });
 
-   const teamWhop = await User.create({
-      name: "Team Whop",
-      email: "team@whop.com",
+   // ✅ Renamed from "Team Whop" to "Space-Ex Team"
+   const spaceExTeam = await User.create({
+      name: "Space-Ex Team",
+      email: "team@space-ex.com",
       passwordHash: hashPassword("randompassword"),
+      avatarColor: "#3b82f6",
    });
 
    const sarah = await User.create({
@@ -54,7 +52,7 @@ async function seed() {
 
    console.log("💬 Creating conversations...");
    const conv1 = await Conversation.create({
-      participants: [dr._id, teamWhop._id],
+      participants: [dr._id, spaceExTeam._id],
       lastMessage: "We're excited to see what you build!",
       lastMessageAt: new Date(),
       unreadCounts: { [dr._id.toString()]: 1 },
@@ -71,18 +69,18 @@ async function seed() {
    await Message.create([
       {
          conversationId: conv1._id,
-         senderId: teamWhop._id,
-         text: "Welcome to Whop!\n\nThousands of internet entrepreneurs like you launch on Whop every day, and you're only 4 steps away from joining them:\n\n1. Add apps to your whop\n2. Design your store page\n3. Set up Whop Payments\n4. Invite your first user",
+         senderId: spaceExTeam._id,
+         text: "Welcome to Space-Ex! 🚀\n\nYou're only 4 steps away from launching your first business:\n\n1. Create your business profile\n2. Set up your products\n3. Configure payments\n4. Invite your first customer",
       },
       {
          conversationId: conv1._id,
-         senderId: teamWhop._id,
-         text: "If you've still got questions, head over to Whop University: https://whop.com/whop/. We run live sessions twice a day where you can drop in and ask anything.",
+         senderId: spaceExTeam._id,
+         text: "Need help getting started? Just reply to this chat and our team will assist you. We typically respond within minutes.",
       },
       {
          conversationId: conv1._id,
-         senderId: teamWhop._id,
-         text: "We're excited to see what you build!",
+         senderId: spaceExTeam._id,
+         text: "We're excited to see what you build! ✨",
       },
       {
          conversationId: conv2._id,
@@ -101,10 +99,20 @@ async function seed() {
       },
    ]);
 
+   console.log("🔔 Creating welcome notification...");
+   await Notification.create({
+      userId: dr._id,
+      kind: "system",
+      title: "Welcome to Space-Ex! 🎉",
+      body: "Your account is ready. Start by creating your first business.",
+      href: "/business",
+      read: false,
+   });
+
    console.log("\n✅ Seeded successfully!\n");
    console.log("📋 Demo accounts:");
    console.log("   📧 dr@spaceex.com     🔑 password123");
-   console.log("   📧 team@whop.com      🔑 randompassword");
+   console.log("   📧 team@space-ex.com  🔑 randompassword");
    console.log("   📧 sarah@test.com     🔑 randompassword\n");
 
    await mongoose.disconnect();

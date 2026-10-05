@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import User from "@/app/lib/models/User";
+import Notification from "@/app/lib/models/Notification";
 import {
    createSessionToken,
    verifyPassword,
@@ -29,6 +30,27 @@ export async function POST(req: NextRequest) {
          );
       }
 
+      // ✅ Create welcome-back notification on login
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const recentWelcome = await Notification.findOne({
+         userId: user._id,
+         kind: "system",
+         title: /Welcome/i,
+         createdAt: { $gte: oneDayAgo },
+      });
+
+      // Only add a new one if user hasn't logged in the last 24h
+      if (!recentWelcome) {
+         await Notification.create({
+            userId: user._id,
+            kind: "system",
+            title: `Welcome back, ${user.name.split(" ")[0]}! 👋`,
+            body: "You have new activity waiting for you. Check your dashboard.",
+            href: "/",
+            read: false,
+         });
+      }
+
       const remember = Boolean(rememberMe);
       const token = await createSessionToken(
          {
@@ -41,13 +63,16 @@ export async function POST(req: NextRequest) {
       );
 
       const res = NextResponse.json({
-         user: { id: user._id.toString(), name: user.name, email: user.email },
+         user: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+         },
       });
 
       res.cookies.set(SESSION_COOKIE_NAME, token, getCookieOptions(remember));
       return res;
    } catch (err: unknown) {
-      // ✅ ALWAYS return JSON, never let the error bubble to Next.js
       const message = err instanceof Error ? err.message : "Unknown error";
       console.error("[Login API Error]", message);
       return NextResponse.json(

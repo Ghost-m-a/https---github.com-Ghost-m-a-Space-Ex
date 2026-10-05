@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import User from "@/app/lib/models/User";
+import Notification from "@/app/lib/models/Notification";
 import {
    createSessionToken,
    hashPassword,
@@ -53,6 +54,16 @@ export async function POST(req: NextRequest) {
          passwordHash: hashPassword(password),
       });
 
+      // ✅ Welcome notification for new users
+      await Notification.create({
+         userId: user._id,
+         kind: "system",
+         title: `Welcome to Space-Ex, ${user.name.split(" ")[0]}! 🎉`,
+         body: "Your account is ready. Start by creating your first business.",
+         href: "/business",
+         read: false,
+      });
+
       const token = await createSessionToken(
          {
             userId: user._id.toString(),
@@ -64,7 +75,11 @@ export async function POST(req: NextRequest) {
       );
 
       const res = NextResponse.json({
-         user: { id: user._id.toString(), name: user.name, email: user.email },
+         user: {
+            id: user._id.toString(),
+            name: user.name,
+            email: user.email,
+         },
       });
 
       res.cookies.set(SESSION_COOKIE_NAME, token, getCookieOptions(true));
