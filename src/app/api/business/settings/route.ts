@@ -28,8 +28,9 @@ export async function GET(req: NextRequest) {
             userId: session.userId,
          }).lean();
       } else {
+         // ✅ Fallback: get the user's first business
          business = await Business.findOne({ userId: session.userId })
-            .sort({ createdAt: -1 })
+            .sort({ createdAt: 1 })
             .lean();
       }
 

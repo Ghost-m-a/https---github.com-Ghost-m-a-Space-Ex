@@ -503,6 +503,10 @@ const Sidebar = () => {
             onClose={() => setBusinessSettingsOpen(false)}
             businessId={activeBusiness?.id}
             initialTab={businessSettingsTab}
+            onCreateBusiness={() => {
+               setBusinessSettingsOpen(false);
+               setIsModalOpen(true); // opens the BusinessModal
+            }}
          />
       </>
    );

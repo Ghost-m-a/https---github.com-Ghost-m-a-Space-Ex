@@ -5,6 +5,7 @@ import React, {
    useContext,
    useState,
    useEffect,
+   useCallback,
    ReactNode,
 } from "react";
 
@@ -16,19 +17,25 @@ export interface Business {
    revenue: string;
    migrateFrom: string;
    website: string;
-   createdAt: number;
+   createdAt: string | number;
 }
 
 interface WorkspaceContextType {
    mode: "personal" | "business";
    activeBusiness: Business | null;
    businesses: Business[];
+   isLoading: boolean;
    setMode: (mode: "personal" | "business") => void;
    setActiveBusiness: (biz: Business) => void;
-   addBusiness: (
-      biz: Omit<Business, "id" | "createdAt" | "initial">,
-   ) => Business;
+   addBusiness: (biz: {
+      name: string;
+      type: string;
+      revenue: string;
+      migrateFrom: string;
+      website: string;
+   }) => Promise<Business | null>;
    resetToPersonal: () => void;
+   refreshBusinesses: () => Promise<void>;
 }
 
 const WorkspaceContext = createContext<WorkspaceContextType | undefined>(
@@ -43,67 +50,97 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({
    const [activeBusiness, setActiveBusinessState] = useState<Business | null>(
       null,
    );
+   const [isLoading, setIsLoading] = useState(true);
    const [mounted, setMounted] = useState(false);
 
-   // Load from localStorage
-   useEffect(() => {
-      setMounted(true);
+   // Load businesses from MongoDB
+   const refreshBusinesses = useCallback(async () => {
       try {
-         const savedBusinesses = localStorage.getItem("businesses");
-         const savedActive = localStorage.getItem("activeBusiness");
-         const savedMode = localStorage.getItem("mode") as
+         const res = await fetch("/api/business");
+         const data = await res.json();
+         const list: Business[] = data.businesses || [];
+         setBusinesses(list);
+
+         // Restore active business from localStorage
+         const savedActiveId = localStorage.getItem("activeBusinessId");
+         if (savedActiveId) {
+            const found = list.find((b) => b.id === savedActiveId);
+            if (found) setActiveBusinessState(found);
+         }
+
+         // Restore mode
+         const savedMode = localStorage.getItem("workspaceMode") as
             | "personal"
             | "business"
             | null;
-
-         if (savedBusinesses) {
-            const parsed = JSON.parse(savedBusinesses);
-            setBusinesses(parsed);
-         }
-         if (savedActive) {
-            const parsed = JSON.parse(savedActive);
-            setActiveBusinessState(parsed);
-         }
-         if (savedMode) {
-            setMode(savedMode);
-         }
-      } catch (e) {
-         console.error("Failed to load workspace state", e);
+         if (savedMode) setMode(savedMode);
+      } catch (err) {
+         console.error("[Workspace] Failed to load businesses:", err);
       }
    }, []);
 
-   // Persist to localStorage
+   // On mount
+   useEffect(() => {
+      setMounted(true);
+      refreshBusinesses().finally(() => setIsLoading(false));
+   }, [refreshBusinesses]);
+
+   // Persist mode
+   useEffect(() => {
+      if (mounted) localStorage.setItem("workspaceMode", mode);
+   }, [mode, mounted]);
+
+   // Persist active business
    useEffect(() => {
       if (!mounted) return;
-      localStorage.setItem("businesses", JSON.stringify(businesses));
-      localStorage.setItem("activeBusiness", JSON.stringify(activeBusiness));
-      localStorage.setItem("mode", mode);
-   }, [businesses, activeBusiness, mode, mounted]);
+      if (activeBusiness) {
+         localStorage.setItem("activeBusinessId", activeBusiness.id);
+      } else {
+         localStorage.removeItem("activeBusinessId");
+      }
+   }, [activeBusiness, mounted]);
 
    const setActiveBusiness = (biz: Business) => {
       setActiveBusinessState(biz);
       setMode("business");
    };
 
-   const addBusiness = (
-      data: Omit<Business, "id" | "createdAt" | "initial">,
-   ): Business => {
-      const initial = data.name.charAt(0).toUpperCase() || "B";
-      const newBusiness: Business = {
-         ...data,
-         id: `biz-${Date.now()}`,
-         initial,
-         createdAt: Date.now(),
-      };
-      setBusinesses((prev) => [...prev, newBusiness]);
-      setActiveBusinessState(newBusiness);
-      setMode("business");
-      return newBusiness;
+   const addBusiness = async (data: {
+      name: string;
+      type: string;
+      revenue: string;
+      migrateFrom: string;
+      website: string;
+   }): Promise<Business | null> => {
+      try {
+         const res = await fetch("/api/business", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+         });
+
+         if (!res.ok) {
+            const err = await res.json();
+            console.error("[Workspace] Create failed:", err);
+            return null;
+         }
+
+         const result = await res.json();
+         const newBiz: Business = result.business;
+
+         setBusinesses((prev) => [...prev, newBiz]);
+         setActiveBusinessState(newBiz);
+         setMode("business");
+
+         return newBiz;
+      } catch (err) {
+         console.error("[Workspace] addBusiness error:", err);
+         return null;
+      }
    };
 
    const resetToPersonal = () => {
       setMode("personal");
-      setActiveBusinessState(null);
    };
 
    return (
@@ -112,10 +149,12 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({
             mode,
             activeBusiness,
             businesses,
+            isLoading,
             setMode,
             setActiveBusiness,
             addBusiness,
             resetToPersonal,
+            refreshBusinesses,
          }}
       >
          {children}

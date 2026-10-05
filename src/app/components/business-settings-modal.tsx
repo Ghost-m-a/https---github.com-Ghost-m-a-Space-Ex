@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { X, Search, Link2 } from "lucide-react";
+import React, { useEffect, useState, useCallback } from "react";
+import { X, Search, Link2, Building2, Plus } from "lucide-react";
 import styles from "../styles/business-settings.module.css";
 
 import GeneralTab from "./business-settings/general-tab";
@@ -40,6 +40,7 @@ interface BusinessSettingsModalProps {
    onClose: () => void;
    businessId?: string;
    initialTab?: BusinessTabId;
+   onCreateBusiness?: () => void;
 }
 
 const TABS: { id: BusinessTabId; label: string }[] = [
@@ -64,24 +65,53 @@ const BusinessSettingsModal: React.FC<BusinessSettingsModalProps> = ({
    onClose,
    businessId,
    initialTab = "general",
+   onCreateBusiness,
 }) => {
    const [activeTab, setActiveTab] = useState<BusinessTabId>(initialTab);
    const [search, setSearch] = useState("");
    const [business, setBusiness] = useState<any>(null);
    const [loading, setLoading] = useState(true);
+   const [notFound, setNotFound] = useState(false);
 
-   // Load business settings
+   // Reset activeTab when initialTab changes
    useEffect(() => {
+      setActiveTab(initialTab);
+   }, [initialTab]);
+
+   // ✅ Extracted load function so we can retry
+   const loadBusiness = useCallback(async () => {
       if (!isOpen) return;
+
       setLoading(true);
-      const url = businessId
-         ? `/api/business/settings?id=${businessId}`
-         : `/api/business/settings`;
-      fetch(url)
-         .then((r) => r.json())
-         .then((d) => setBusiness(d.business))
-         .finally(() => setLoading(false));
+      setNotFound(false);
+
+      try {
+         const url = businessId
+            ? `/api/business/settings?id=${businessId}`
+            : `/api/business/settings`;
+
+         const res = await fetch(url);
+         const data = await res.json();
+
+         if (data.business) {
+            setBusiness(data.business);
+         } else {
+            setBusiness(null);
+            setNotFound(true);
+         }
+      } catch (err) {
+         console.error("Failed to load business settings:", err);
+         setBusiness(null);
+         setNotFound(true);
+      } finally {
+         setLoading(false);
+      }
    }, [isOpen, businessId]);
+
+   // Load on open / businessId change
+   useEffect(() => {
+      loadBusiness();
+   }, [loadBusiness]);
 
    // Escape to close
    useEffect(() => {
@@ -113,9 +143,43 @@ const BusinessSettingsModal: React.FC<BusinessSettingsModalProps> = ({
    };
 
    const renderTab = () => {
-      if (loading) return <div className={styles.loading}>Loading...</div>;
-      if (!business)
-         return <div className={styles.loading}>No business found.</div>;
+      if (loading) {
+         return <div className={styles.loading}>Loading...</div>;
+      }
+
+      // ✅ Proper empty state instead of plain text
+      if (notFound || !business) {
+         return (
+            <div className={styles.emptyBoxLarge}>
+               <div className={styles.emptyIcon}>
+                  <Building2 size={48} strokeWidth={1.5} />
+               </div>
+               <div className={styles.emptyTitle}>No business yet</div>
+               <div className={styles.emptySubtitle}>
+                  You haven&apos;t created a business yet. Create your first
+                  business to access all the settings here.
+               </div>
+
+               <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+                  <button
+                     className={styles.btnSecondarySmall}
+                     onClick={() => loadBusiness()}
+                  >
+                     Refresh
+                  </button>
+                  <button
+                     className={styles.btnPrimary}
+                     onClick={() => {
+                        onClose();
+                        onCreateBusiness?.();
+                     }}
+                  >
+                     <Plus size={14} /> Create a business
+                  </button>
+               </div>
+            </div>
+         );
+      }
 
       const props = { business, updateBusiness };
 
@@ -176,7 +240,9 @@ const BusinessSettingsModal: React.FC<BusinessSettingsModalProps> = ({
                   {filteredTabs.map((tab) => (
                      <button
                         key={tab.id}
-                        className={`${styles.tabBtn} ${activeTab === tab.id ? styles.tabActive : ""}`}
+                        className={`${styles.tabBtn} ${
+                           activeTab === tab.id ? styles.tabActive : ""
+                        }`}
                         onClick={() => setActiveTab(tab.id)}
                      >
                         {tab.label}

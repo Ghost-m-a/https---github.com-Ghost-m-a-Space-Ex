@@ -133,7 +133,6 @@ const NAME_STYLES = [
 const generateRandomName = (): string => {
    const roll = Math.random();
 
-   // Pattern 1: Prefix + Suffix (e.g., "Nova Labs")
    if (roll < 0.5) {
       const prefix =
          NAME_PREFIXES[Math.floor(Math.random() * NAME_PREFIXES.length)];
@@ -142,7 +141,6 @@ const generateRandomName = (): string => {
       return `${prefix} ${suffix}`;
    }
 
-   // Pattern 2: Prefix + Style (e.g., "Apex Fitness")
    if (roll < 0.8) {
       const prefix =
          NAME_PREFIXES[Math.floor(Math.random() * NAME_PREFIXES.length)];
@@ -150,7 +148,6 @@ const generateRandomName = (): string => {
       return `${prefix} ${style}`;
    }
 
-   // Pattern 3: Just a Style (e.g., "Bloom Studio")
    const style = NAME_STYLES[Math.floor(Math.random() * NAME_STYLES.length)];
    const suffix =
       NAME_SUFFIXES[Math.floor(Math.random() * NAME_SUFFIXES.length)];
@@ -169,6 +166,10 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
    const [isShuffling, setIsShuffling] = useState(false);
 
+   // ✅ NEW: submission state
+   const [isSubmitting, setIsSubmitting] = useState(false);
+   const [error, setError] = useState("");
+
    const reset = () => {
       setStep("choose");
       setChoice(null);
@@ -179,6 +180,8 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
       setWebsite("");
       setOpenDropdown(null);
       setIsShuffling(false);
+      setIsSubmitting(false);
+      setError("");
    };
 
    const handleClose = () => {
@@ -186,38 +189,56 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
       onClose();
    };
 
-   // Handle "I have a business" → blank input
    const handleHaveBusiness = () => {
       setChoice("have");
       setName("");
       setStep("name");
    };
 
-   // Handle "I want a business" → pre-filled random suggestion
    const handleWantBusiness = () => {
       setChoice("want");
       setName(generateRandomName());
       setStep("name");
    };
 
-   // Regenerate random name (only for "want" flow)
    const handleShuffle = () => {
       setIsShuffling(true);
       setName(generateRandomName());
       setTimeout(() => setIsShuffling(false), 300);
    };
 
-   const handleCreate = () => {
-      if (!name.trim()) return;
-      addBusiness({
-         name: name.trim(),
-         type,
-         revenue,
-         migrateFrom,
-         website,
-      });
-      reset();
-      onClose();
+   // ✅ NEW: async create handler
+   const handleCreate = async () => {
+      if (!name.trim() || isSubmitting) return;
+
+      setError("");
+      setIsSubmitting(true);
+
+      try {
+         const created = await addBusiness({
+            name: name.trim(),
+            type,
+            revenue,
+            migrateFrom,
+            website,
+         });
+
+         if (created) {
+            reset();
+            onClose();
+         } else {
+            setError("Failed to create business. Please try again.");
+         }
+      } catch (err) {
+         console.error("Create business error:", err);
+         setError(
+            err instanceof Error
+               ? err.message
+               : "Something went wrong. Please try again.",
+         );
+      } finally {
+         setIsSubmitting(false);
+      }
    };
 
    if (!isOpen) return null;
@@ -270,7 +291,6 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
                <>
                   <h1 className={styles.title}>Name your business</h1>
 
-                  {/* Info banner for the "want" flow */}
                   {choice === "want" && (
                      <p className={styles.suggestionHint}>
                         Here&apos;s an idea to get you started — click{" "}
@@ -298,7 +318,6 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
                            autoFocus
                         />
 
-                        {/* Show the shuffle/regenerate button only in "want" flow */}
                         {choice === "want" ? (
                            <button
                               type="button"
@@ -334,6 +353,22 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
                <>
                   <h1 className={styles.title}>Tell us about your business</h1>
                   <div className={styles.formContainer}>
+                     {/* Error banner */}
+                     {error && (
+                        <div
+                           style={{
+                              padding: "10px 14px",
+                              background: "rgba(239, 68, 68, 0.1)",
+                              border: "1px solid rgba(239, 68, 68, 0.3)",
+                              borderRadius: "8px",
+                              color: "#fca5a5",
+                              fontSize: "13px",
+                           }}
+                        >
+                           {error}
+                        </div>
+                     )}
+
                      {/* Type of business */}
                      <div className={styles.field}>
                         <label className={styles.label}>Type of business</label>
@@ -471,8 +506,13 @@ const BusinessModal: React.FC<BusinessModalProps> = ({ isOpen, onClose }) => {
                      <button
                         className={styles.continueBtn}
                         onClick={handleCreate}
+                        disabled={isSubmitting}
+                        style={{
+                           opacity: isSubmitting ? 0.7 : 1,
+                           cursor: isSubmitting ? "wait" : "pointer",
+                        }}
                      >
-                        Continue
+                        {isSubmitting ? "Creating..." : "Continue"}
                      </button>
                   </div>
                </>
