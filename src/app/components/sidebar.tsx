@@ -13,7 +13,6 @@ import {
    Network,
    Compass,
    Settings,
-   PanelLeft,
    ChevronsLeft,
    ChevronsRight,
    LineChart,
@@ -32,10 +31,10 @@ import {
 import { useWorkspace } from "../context/workspace-context";
 import BusinessModal from "./business-modal";
 import SettingsModal, { TabId } from "./settings-modal";
-import styles from "../styles/sidebar.module.css";
 import BusinessSettingsModal, {
    BusinessTabId,
 } from "./business-settings-modal";
+import styles from "../styles/sidebar.module.css";
 
 interface MenuItem {
    icon: React.ReactNode;
@@ -51,11 +50,11 @@ interface Section {
    title: string;
    items: MenuItem[];
 }
-const [businessSettingsOpen, setBusinessSettingsOpen] = useState(false);
-const [businessSettingsTab, setBusinessSettingsTab] =
-   useState<BusinessTabId>("general");
 
 const Sidebar = () => {
+   // =========================================
+   // ALL HOOKS INSIDE THE COMPONENT
+   // =========================================
    const [isCollapsed, setIsCollapsed] = useState(false);
    const [isMounted, setIsMounted] = useState(false);
    const [isModalOpen, setIsModalOpen] = useState(false);
@@ -70,9 +69,14 @@ const Sidebar = () => {
       resetToPersonal,
    } = useWorkspace();
 
-   // ✅ Settings modal state
+   // Personal settings modal state
    const [settingsOpen, setSettingsOpen] = useState(false);
    const [settingsTab, setSettingsTab] = useState<TabId>("profile");
+
+   // Business settings modal state
+   const [businessSettingsOpen, setBusinessSettingsOpen] = useState(false);
+   const [businessSettingsTab, setBusinessSettingsTab] =
+      useState<BusinessTabId>("general");
 
    // Load persisted collapse state
    useEffect(() => {
@@ -128,14 +132,20 @@ const Sidebar = () => {
 
    const toggleSidebar = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
-   // ✅ Open settings modal helper
+   // Open personal settings
    const openSettings = (tab: TabId = "profile") => {
       setSettingsTab(tab);
       setSettingsOpen(true);
    };
 
+   // Open business settings
+   const openBusinessSettings = (tab: BusinessTabId = "general") => {
+      setBusinessSettingsTab(tab);
+      setBusinessSettingsOpen(true);
+   };
+
    // =========================================
-   // MENU DATA — SWITCHES BASED ON MODE
+   // MENU DATA
    // =========================================
    const personalSections: Section[] = [
       {
@@ -273,9 +283,7 @@ const Sidebar = () => {
             className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
             aria-label="Main navigation"
          >
-            {/* =========================================
-            TOP HEADER: Personal / Business switcher + Add
-            ========================================= */}
+            {/* TOP HEADER */}
             <div className={styles.topHeader}>
                <button
                   className={`${styles.profileAvatar} ${
@@ -318,9 +326,7 @@ const Sidebar = () => {
                </button>
             </div>
 
-            {/* =========================================
-            SECTIONS
-            ========================================= */}
+            {/* SECTIONS */}
             <nav className={styles.navMenu}>
                {sections.map((section, sIdx) => (
                   <div key={section.title} className={styles.sectionGroup}>
@@ -337,7 +343,6 @@ const Sidebar = () => {
                            ? pathname === item.href
                            : false;
 
-                        // If item has onClick, render a button
                         if (item.onClick) {
                            return (
                               <button
@@ -368,7 +373,6 @@ const Sidebar = () => {
                            );
                         }
 
-                        // Otherwise render a Link
                         return (
                            <Link
                               key={item.label}
@@ -420,9 +424,7 @@ const Sidebar = () => {
                ))}
             </nav>
 
-            {/* =========================================
-            BOTTOM: Developer / Settings / Collapse
-            ========================================= */}
+            {/* BOTTOM SECTION */}
             <div className={styles.bottomSection}>
                <Link href="/developer" className={styles.navItem}>
                   <div className={styles.navIconWrapper}>
@@ -435,16 +437,16 @@ const Sidebar = () => {
                      <span className={styles.tooltip}>Developer</span>
                   )}
                </Link>
-               {/* ✅ Settings opens the modal */}
+
+               {/* ✅ SETTINGS — opens Personal OR Business settings based on mode */}
                <button
                   type="button"
                   className={styles.navItem}
                   onClick={() => {
                      if (mode === "business") {
-                        setBusinessSettingsTab("general");
-                        setBusinessSettingsOpen(true);
+                        openBusinessSettings("general");
                      } else {
-                        openSettings("profile"); // personal settings
+                        openSettings("profile");
                      }
                   }}
                   style={{
@@ -464,13 +466,7 @@ const Sidebar = () => {
                      <span className={styles.tooltip}>Settings</span>
                   )}
                </button>
-               // At the end of the return, alongside the other modals:
-               <BusinessSettingsModal
-                  isOpen={businessSettingsOpen}
-                  onClose={() => setBusinessSettingsOpen(false)}
-                  businessId={activeBusiness?.id}
-                  initialTab={businessSettingsTab}
-               />
+
                <button
                   className={styles.collapseButton}
                   onClick={toggleSidebar}
@@ -494,11 +490,19 @@ const Sidebar = () => {
             onClose={() => setIsModalOpen(false)}
          />
 
-         {/* ✅ Settings Modal */}
+         {/* Personal Settings Modal */}
          <SettingsModal
             isOpen={settingsOpen}
             onClose={() => setSettingsOpen(false)}
             initialTab={settingsTab}
+         />
+
+         {/* Business Settings Modal */}
+         <BusinessSettingsModal
+            isOpen={businessSettingsOpen}
+            onClose={() => setBusinessSettingsOpen(false)}
+            businessId={activeBusiness?.id}
+            initialTab={businessSettingsTab}
          />
       </>
    );

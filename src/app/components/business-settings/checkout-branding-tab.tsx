@@ -22,8 +22,7 @@ const CheckoutBrandingTab: React.FC<Props> = ({ business, updateBusiness }) => {
          <div className={styles.brandingControls}>
             <p className={styles.sectionSubtitle}>
                Customize the look and feel of your checkout page. These are the
-               default settings for all checkout links. Individual links can
-               override these.
+               default settings for all checkout links.
             </p>
 
             <div className={styles.brandingGroup}>
@@ -62,7 +61,6 @@ const CheckoutBrandingTab: React.FC<Props> = ({ business, updateBusiness }) => {
                      <option value="system">System font (default)</option>
                      <option value="inter">Inter</option>
                      <option value="roboto">Roboto</option>
-                     <option value="serif">Serif</option>
                   </select>
                </div>
             </div>
@@ -99,36 +97,8 @@ const CheckoutBrandingTab: React.FC<Props> = ({ business, updateBusiness }) => {
                   </div>
                   <div className={styles.phonePrice}>$19.99</div>
                   <div className={styles.phonePer}>per month</div>
-
-                  <div className={styles.phoneCard}>
-                     <div className={styles.phoneRow}>
-                        <span>Total due today</span>
-                        <strong>$19.99</strong>
-                     </div>
-                  </div>
-
-                  <div className={styles.phoneField}>
-                     <span className={styles.phoneFieldLabel}>Email</span>
-                     <div className={styles.phoneFieldValue}>
-                        www.lord5566@gmail.com
-                     </div>
-                  </div>
-
-                  <div className={styles.phoneError}>
-                     <div className={styles.phoneErrorIcon}>!</div>
-                     <div className={styles.phoneErrorText}>
-                        No payment methods are available for this purchase.
-                     </div>
-                  </div>
-
                   <button className={styles.phonePayBtn}>Pay</button>
-
-                  <div className={styles.phoneTerms}>
-                     <input type="checkbox" /> By subscribing you agree to{" "}
-                     {business.name}&apos;s terms and conditions
-                  </div>
                </div>
-
                <div className={styles.phoneThemeToggle}>
                   <button
                      className={!isDark ? styles.phoneThemeActive : ""}

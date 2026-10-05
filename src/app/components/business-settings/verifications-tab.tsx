@@ -13,9 +13,7 @@ const VerificationsTab: React.FC<Props> = ({ business, updateBusiness }) => {
    const v = business.verification || {};
 
    const start = (kind: string) => {
-      updateBusiness({
-         verification: { ...v, [kind]: "pending" },
-      });
+      updateBusiness({ verification: { ...v, [kind]: "pending" } });
    };
 
    return (
@@ -35,19 +33,10 @@ const VerificationsTab: React.FC<Props> = ({ business, updateBusiness }) => {
                   <span>Individual verification</span>
                </div>
                <button
-                  className={
-                     v.individual === "none"
-                        ? styles.btnPrimary
-                        : styles.btnSecondarySmall
-                  }
+                  className={styles.btnPrimary}
                   onClick={() => start("individual")}
-                  disabled={v.individual !== "none"}
                >
-                  {v.individual === "verified"
-                     ? "Verified"
-                     : v.individual === "pending"
-                       ? "Pending"
-                       : "Get verified"}
+                  Get verified
                </button>
             </div>
 
@@ -57,19 +46,10 @@ const VerificationsTab: React.FC<Props> = ({ business, updateBusiness }) => {
                   <span>Business verification</span>
                </div>
                <button
-                  className={
-                     v.business === "none"
-                        ? styles.btnPrimary
-                        : styles.btnSecondarySmall
-                  }
+                  className={styles.btnPrimary}
                   onClick={() => start("business")}
-                  disabled={v.business !== "none"}
                >
-                  {v.business === "verified"
-                     ? "Verified"
-                     : v.business === "pending"
-                       ? "Pending"
-                       : "Get verified"}
+                  Get verified
                </button>
             </div>
          </div>
@@ -102,23 +82,20 @@ const VerificationsTab: React.FC<Props> = ({ business, updateBusiness }) => {
                   sub: "Apply for financing to unlock",
                   icon: <Sparkles size={16} />,
                },
-            ].map((cap) => {
-               const status = v[cap.key];
-               return (
-                  <div key={cap.key} className={styles.rowCard}>
-                     <div className={styles.rowCardLeft}>
-                        {cap.icon}
-                        <div>
-                           <div className={styles.toggleLabel}>{cap.label}</div>
-                           <div className={styles.toggleSub}>{cap.sub}</div>
-                        </div>
+            ].map((cap) => (
+               <div key={cap.key} className={styles.rowCard}>
+                  <div className={styles.rowCardLeft}>
+                     {cap.icon}
+                     <div>
+                        <div className={styles.toggleLabel}>{cap.label}</div>
+                        <div className={styles.toggleSub}>{cap.sub}</div>
                      </div>
-                     <span className={styles.badgeMuted}>
-                        {status === "active" ? "Active" : "Inactive"}
-                     </span>
                   </div>
-               );
-            })}
+                  <span className={styles.badgeMuted}>
+                     {v[cap.key] === "active" ? "Active" : "Inactive"}
+                  </span>
+               </div>
+            ))}
          </div>
       </div>
    );

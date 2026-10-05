@@ -11,10 +11,6 @@ interface Props {
 const InvoicesTab: React.FC<Props> = ({ business, updateBusiness }) => {
    const i = business.invoices || {};
 
-   const update = (key: string, value: unknown) => {
-      updateBusiness({ invoices: { ...i, [key]: value } });
-   };
-
    return (
       <div className={styles.tabContent}>
          <div className={styles.listBox}>
@@ -35,7 +31,12 @@ const InvoicesTab: React.FC<Props> = ({ business, updateBusiness }) => {
                   <button
                      className={`${styles.switch} ${i.customPrefixEnabled ? styles.switchOn : ""}`}
                      onClick={() =>
-                        update("customPrefixEnabled", !i.customPrefixEnabled)
+                        updateBusiness({
+                           invoices: {
+                              ...i,
+                              customPrefixEnabled: !i.customPrefixEnabled,
+                           },
+                        })
                      }
                   >
                      <span className={styles.switchThumb} />

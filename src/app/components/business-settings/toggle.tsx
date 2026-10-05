@@ -10,12 +10,7 @@ interface ToggleProps {
    sub?: string;
 }
 
-export const Toggle: React.FC<ToggleProps> = ({
-   checked,
-   onChange,
-   label,
-   sub,
-}) => (
+const Toggle: React.FC<ToggleProps> = ({ checked, onChange, label, sub }) => (
    <div className={styles.toggleRow}>
       <div className={styles.toggleText}>
          <div className={styles.toggleLabel}>{label}</div>

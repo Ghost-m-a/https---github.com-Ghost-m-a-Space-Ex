@@ -27,26 +27,25 @@ const AnalyticsTab: React.FC<Props> = ({ business }) => {
    return (
       <div className={styles.tabContent}>
          <div className={styles.listBox}>
-            {PIXELS.map((p) => {
-               const active = pixels[p.key];
-               return (
-                  <button key={p.key} className={styles.pixelRow}>
-                     <div
-                        className={styles.pixelIcon}
-                        style={{ backgroundColor: p.color }}
-                     >
-                        {p.name[0]}
+            {PIXELS.map((p) => (
+               <button key={p.key} className={styles.pixelRow}>
+                  <div
+                     className={styles.pixelIcon}
+                     style={{ backgroundColor: p.color }}
+                  >
+                     {p.name[0]}
+                  </div>
+                  <div className={styles.pixelInfo}>
+                     <div className={styles.pixelName}>{p.name}</div>
+                     <div className={styles.pixelStatus}>
+                        {pixels[p.key]
+                           ? "Pixel is active"
+                           : "Pixel is inactive"}
                      </div>
-                     <div className={styles.pixelInfo}>
-                        <div className={styles.pixelName}>{p.name}</div>
-                        <div className={styles.pixelStatus}>
-                           {active ? "Pixel is active" : "Pixel is inactive"}
-                        </div>
-                     </div>
-                     <ChevronRight size={16} className={styles.pixelChevron} />
-                  </button>
-               );
-            })}
+                  </div>
+                  <ChevronRight size={16} className={styles.pixelChevron} />
+               </button>
+            ))}
          </div>
       </div>
    );

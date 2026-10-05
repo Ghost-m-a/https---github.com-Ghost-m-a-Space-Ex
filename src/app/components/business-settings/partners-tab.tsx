@@ -7,7 +7,6 @@ const PartnersTab = () => {
    const [tab, setTab] = useState<"pending" | "all">("pending");
    const [pending, setPending] = useState<any[]>([]);
    const [all, setAll] = useState<any[]>([]);
-   const [loading, setLoading] = useState(true);
 
    useEffect(() => {
       fetch("/api/user/partners")
@@ -16,7 +15,7 @@ const PartnersTab = () => {
             setPending(d.pending || []);
             setAll(d.all || []);
          })
-         .finally(() => setLoading(false));
+         .catch(() => {});
    }, []);
 
    const list = tab === "pending" ? pending : all;
@@ -43,9 +42,7 @@ const PartnersTab = () => {
             </button>
          </div>
 
-         {loading ? (
-            <div className={styles.emptyBox}>Loading...</div>
-         ) : list.length === 0 ? (
+         {list.length === 0 ? (
             <div className={styles.emptyBox}>
                {tab === "pending"
                   ? "No pending partner requests"
