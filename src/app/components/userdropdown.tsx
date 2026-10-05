@@ -18,6 +18,7 @@ import {
    Moon,
 } from "lucide-react";
 import styles from "../styles/navbar.module.css";
+import SettingsModal, { TabId } from "./settings-modal";
 
 // =========================================
 // TYPES
@@ -33,27 +34,60 @@ interface AuthUser {
 interface MenuItemProps {
    icon: React.ReactNode;
    label: string;
-   href: string;
+   href?: string;
+   onClick?: () => void;
    hasSubmenu?: boolean;
 }
 
 // =========================================
-// REUSABLE MENU ITEM
+// REUSABLE MENU ITEM (supports link OR button)
 // =========================================
 const MenuItem: React.FC<MenuItemProps> = ({
    icon,
    label,
    href,
+   onClick,
    hasSubmenu,
-}) => (
-   <Link href={href} className={styles.menuItem}>
-      <div className={styles.menuItemContent}>
-         <span className={styles.menuItemIcon}>{icon}</span>
-         <span className={styles.menuItemLabel}>{label}</span>
-      </div>
-      {hasSubmenu && <ChevronRight size={16} className={styles.submenuIcon} />}
-   </Link>
-);
+}) => {
+   const content = (
+      <>
+         <div className={styles.menuItemContent}>
+            <span className={styles.menuItemIcon}>{icon}</span>
+            <span className={styles.menuItemLabel}>{label}</span>
+         </div>
+         {hasSubmenu && (
+            <ChevronRight size={16} className={styles.submenuIcon} />
+         )}
+      </>
+   );
+
+   // If onClick provided (or no href), render a button
+   if (onClick || !href) {
+      return (
+         <button
+            type="button"
+            className={styles.menuItem}
+            onClick={onClick}
+            style={{
+               width: "100%",
+               textAlign: "left",
+               background: "transparent",
+               border: "none",
+               cursor: "pointer",
+            }}
+         >
+            {content}
+         </button>
+      );
+   }
+
+   // Otherwise render a Link
+   return (
+      <Link href={href} className={styles.menuItem}>
+         {content}
+      </Link>
+   );
+};
 
 // =========================================
 // USER DROPDOWN COMPONENT
@@ -67,17 +101,19 @@ export const UserDropdown: React.FC = () => {
    const [isLoggingOut, setIsLoggingOut] = useState(false);
    const dropdownRef = useRef<HTMLDivElement>(null);
 
+   // ✅ NEW: settings modal state
+   const [settingsOpen, setSettingsOpen] = useState(false);
+   const [settingsTab, setSettingsTab] = useState<TabId>("profile");
+
    // -----------------------------------------
    // 1. Load saved theme + user on mount
    // -----------------------------------------
    useEffect(() => {
       setMounted(true);
 
-      // Load theme
       const savedTheme = (localStorage.getItem("theme") as ThemeType) || "dark";
       setTheme(savedTheme);
 
-      // Load current user
       fetch("/api/auth/me")
          .then((r) => r.json())
          .then((d) => setUser(d.user))
@@ -176,16 +212,33 @@ export const UserDropdown: React.FC = () => {
    };
 
    // -----------------------------------------
+   // 7. Open settings modal on a specific tab
+   // -----------------------------------------
+   const openSettings = (tab: TabId = "profile") => {
+      setIsOpen(false);
+      setSettingsTab(tab);
+      setSettingsOpen(true);
+   };
+
+   // -----------------------------------------
    // MENU DATA
    // -----------------------------------------
    const mainMenu: MenuItemProps[] = [
       {
          icon: <Info size={18} />,
          label: "Resolution center",
-         href: "/resolution-center",
+         onClick: () => openSettings("resolution"),
       },
-      { icon: <FileText size={18} />, label: "Orders", href: "/orders" },
-      { icon: <Settings size={18} />, label: "Settings", href: "/settings" },
+      {
+         icon: <FileText size={18} />,
+         label: "Orders",
+         onClick: () => openSettings("orders"),
+      },
+      {
+         icon: <Settings size={18} />,
+         label: "Settings",
+         onClick: () => openSettings("profile"),
+      },
    ];
 
    const secondaryMenu: MenuItemProps[] = [
@@ -231,115 +284,137 @@ export const UserDropdown: React.FC = () => {
    const displayEmail = user?.email || "Sign in to your account";
 
    return (
-      <div className={styles.dropdownContainer} ref={dropdownRef}>
-         {/* =========================================
-          TRIGGER BUTTON
-          ========================================= */}
-         <button
-            type="button"
-            onClick={(e) => {
-               e.stopPropagation();
-               setIsOpen((prev) => !prev);
-            }}
-            className={styles.triggerButton}
-            aria-label="User menu"
-            aria-haspopup="menu"
-            aria-expanded={isOpen}
-         >
-            <div className={styles.avatarSmall}>{initials}</div>
-            <ChevronDown
-               size={16}
-               className={styles.chevronDown}
-               style={{
-                  transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
-                  transition: "transform 0.2s ease",
+      <>
+         <div className={styles.dropdownContainer} ref={dropdownRef}>
+            {/* =========================================
+            TRIGGER BUTTON
+            ========================================= */}
+            <button
+               type="button"
+               onClick={(e) => {
+                  e.stopPropagation();
+                  setIsOpen((prev) => !prev);
                }}
-            />
-         </button>
+               className={styles.triggerButton}
+               aria-label="User menu"
+               aria-haspopup="menu"
+               aria-expanded={isOpen}
+            >
+               <div className={styles.avatarSmall}>{initials}</div>
+               <ChevronDown
+                  size={16}
+                  className={styles.chevronDown}
+                  style={{
+                     transform: isOpen ? "rotate(180deg)" : "rotate(0deg)",
+                     transition: "transform 0.2s ease",
+                  }}
+               />
+            </button>
 
-         {/* =========================================
-          DROPDOWN MENU
-          ========================================= */}
-         {isOpen && (
-            <div className={styles.menuDropdown} role="menu">
-               {/* ---------- HEADER ---------- */}
-               <div className={styles.menuHeader}>
-                  <div className={styles.avatarLarge}>{initials}</div>
-                  <div className={styles.headerInfo}>
-                     <span className={styles.userName}>{displayName}</span>
-                     <Link href="/profile" className={styles.viewProfile}>
-                        {displayEmail}
-                     </Link>
-                  </div>
-               </div>
-
-               <div className={styles.divider} />
-
-               {/* ---------- MAIN MENU ---------- */}
-               <div className={styles.menuGroup}>
-                  {mainMenu.map((item) => (
-                     <MenuItem key={item.label} {...item} />
-                  ))}
-               </div>
-
-               <div className={styles.divider} />
-
-               {/* ---------- SECONDARY MENU ---------- */}
-               <div className={styles.menuGroup}>
-                  {secondaryMenu.map((item) => (
-                     <MenuItem key={item.label} {...item} />
-                  ))}
-
-                  {/* Sign out (uses button for onClick handler) */}
-                  <button
-                     type="button"
-                     className={styles.menuItem}
-                     onClick={handleLogout}
-                     disabled={isLoggingOut}
-                     style={{
-                        width: "100%",
-                        textAlign: "left",
-                        background: "transparent",
-                        border: "none",
-                        cursor: isLoggingOut ? "not-allowed" : "pointer",
-                        opacity: isLoggingOut ? 0.6 : 1,
-                     }}
-                  >
-                     <div className={styles.menuItemContent}>
-                        <span className={styles.menuItemIcon}>
-                           <LogOut size={18} />
-                        </span>
-                        <span className={styles.menuItemLabel}>
-                           {isLoggingOut ? "Signing out..." : "Sign out"}
-                        </span>
-                     </div>
-                  </button>
-               </div>
-
-               <div className={styles.divider} />
-
-               {/* ---------- THEME SWITCHER ---------- */}
-               <div className={styles.themeSwitcherContainer}>
-                  <div className={styles.themeSwitcherTrack}>
-                     {themes.map((t) => (
+            {/* =========================================
+            DROPDOWN MENU
+            ========================================= */}
+            {isOpen && (
+               <div className={styles.menuDropdown} role="menu">
+                  {/* ---------- HEADER ---------- */}
+                  <div className={styles.menuHeader}>
+                     <div className={styles.avatarLarge}>{initials}</div>
+                     <div className={styles.headerInfo}>
+                        <span className={styles.userName}>{displayName}</span>
                         <button
-                           key={t.key}
                            type="button"
-                           onClick={() => setTheme(t.key)}
-                           className={`${styles.themeButton} ${
-                              theme === t.key ? styles.themeButtonActive : ""
-                           }`}
-                           aria-label={t.label}
-                           aria-pressed={theme === t.key}
-                           title={t.label}
+                           onClick={() => openSettings("profile")}
+                           className={styles.viewProfile}
+                           style={{
+                              background: "transparent",
+                              border: "none",
+                              padding: 0,
+                              textAlign: "left",
+                              cursor: "pointer",
+                           }}
                         >
-                           {t.icon}
+                           {displayEmail}
                         </button>
+                     </div>
+                  </div>
+
+                  <div className={styles.divider} />
+
+                  {/* ---------- MAIN MENU ---------- */}
+                  <div className={styles.menuGroup}>
+                     {mainMenu.map((item) => (
+                        <MenuItem key={item.label} {...item} />
                      ))}
                   </div>
+
+                  <div className={styles.divider} />
+
+                  {/* ---------- SECONDARY MENU ---------- */}
+                  <div className={styles.menuGroup}>
+                     {secondaryMenu.map((item) => (
+                        <MenuItem key={item.label} {...item} />
+                     ))}
+
+                     {/* Sign out */}
+                     <button
+                        type="button"
+                        className={styles.menuItem}
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        style={{
+                           width: "100%",
+                           textAlign: "left",
+                           background: "transparent",
+                           border: "none",
+                           cursor: isLoggingOut ? "not-allowed" : "pointer",
+                           opacity: isLoggingOut ? 0.6 : 1,
+                        }}
+                     >
+                        <div className={styles.menuItemContent}>
+                           <span className={styles.menuItemIcon}>
+                              <LogOut size={18} />
+                           </span>
+                           <span className={styles.menuItemLabel}>
+                              {isLoggingOut ? "Signing out..." : "Sign out"}
+                           </span>
+                        </div>
+                     </button>
+                  </div>
+
+                  <div className={styles.divider} />
+
+                  {/* ---------- THEME SWITCHER ---------- */}
+                  <div className={styles.themeSwitcherContainer}>
+                     <div className={styles.themeSwitcherTrack}>
+                        {themes.map((t) => (
+                           <button
+                              key={t.key}
+                              type="button"
+                              onClick={() => setTheme(t.key)}
+                              className={`${styles.themeButton} ${
+                                 theme === t.key ? styles.themeButtonActive : ""
+                              }`}
+                              aria-label={t.label}
+                              aria-pressed={theme === t.key}
+                              title={t.label}
+                           >
+                              {t.icon}
+                           </button>
+                        ))}
+                     </div>
+                  </div>
                </div>
-            </div>
-         )}
-      </div>
+            )}
+         </div>
+
+         {/* =========================================
+          SETTINGS MODAL
+          ========================================= */}
+         <SettingsModal
+            isOpen={settingsOpen}
+            onClose={() => setSettingsOpen(false)}
+            initialTab={settingsTab}
+         />
+      </>
    );
 };
