@@ -27,20 +27,51 @@ export default function SignupPage() {
 
       setLoading(true);
       try {
+         const controller = new AbortController();
+         const timeoutId = setTimeout(() => controller.abort(), 15000);
+
          const res = await fetch("/api/auth/signup", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ name, email, password, acceptedTerms }),
+            signal: controller.signal,
          });
-         const data = await res.json();
-         if (!res.ok) {
-            setError(data.error || "Signup failed");
+
+         clearTimeout(timeoutId);
+
+         const text = await res.text();
+         let data: { error?: string } = {};
+
+         try {
+            data = JSON.parse(text);
+         } catch {
+            console.error(
+               "Server returned non-JSON response:",
+               text.slice(0, 200),
+            );
+            setError(
+               "Server error — check the terminal for details. Visit /api/debug to diagnose.",
+            );
             return;
          }
+
+         if (!res.ok) {
+            setError(data.error || `Request failed (${res.status})`);
+            return;
+         }
+
          router.push("/");
          router.refresh();
-      } catch {
-         setError("Network error. Please try again.");
+      } catch (err: unknown) {
+         if (err instanceof Error && err.name === "AbortError") {
+            setError("Request timed out — check your MongoDB connection.");
+         } else {
+            setError(
+               err instanceof Error
+                  ? `Network error: ${err.message}`
+                  : "Network error. Please try again.",
+            );
+         }
       } finally {
          setLoading(false);
       }

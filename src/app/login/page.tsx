@@ -24,20 +24,53 @@ function LoginForm() {
       setLoading(true);
 
       try {
+         const controller = new AbortController();
+         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+
          const res = await fetch("/api/auth/login", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password, rememberMe }),
+            signal: controller.signal,
          });
-         const data = await res.json();
-         if (!res.ok) {
-            setError(data.error || "Login failed");
+
+         clearTimeout(timeoutId);
+
+         // ✅ Read as text first — handles both JSON and HTML error pages
+         const text = await res.text();
+         let data: { error?: string; user?: unknown } = {};
+
+         try {
+            data = JSON.parse(text);
+         } catch {
+            // Server returned HTML (crash page) — show a helpful message
+            console.error(
+               "Server returned non-JSON response:",
+               text.slice(0, 200),
+            );
+            setError(
+               "Server error — check the terminal for details. Visit /api/debug to diagnose.",
+            );
             return;
          }
+
+         if (!res.ok) {
+            setError(data.error || `Request failed (${res.status})`);
+            return;
+         }
+
          router.push(from);
          router.refresh();
-      } catch {
-         setError("Network error. Please try again.");
+      } catch (err: unknown) {
+         if (err instanceof Error && err.name === "AbortError") {
+            setError("Request timed out — check your MongoDB connection.");
+         } else {
+            setError(
+               err instanceof Error
+                  ? `Network error: ${err.message}`
+                  : "Network error. Please try again.",
+            );
+         }
       } finally {
          setLoading(false);
       }
