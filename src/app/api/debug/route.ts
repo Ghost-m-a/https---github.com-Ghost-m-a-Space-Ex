@@ -2,17 +2,19 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import mongoose from "mongoose";
 
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 export async function GET() {
    const checks: Record<string, unknown> = {
       timestamp: new Date().toISOString(),
-      env: {
-         hasMongoUri: Boolean(process.env.MONGODB_URI),
-         mongoUriPrefix: process.env.MONGODB_URI
-            ? process.env.MONGODB_URI.split("@")[1]?.split("/")[0]
-            : null,
-         hasJwtSecret: Boolean(process.env.JWT_SECRET),
-         nodeEnv: process.env.NODE_ENV,
-      },
+      nodeEnv: process.env.NODE_ENV,
+      hasMongoUri: Boolean(process.env.MONGODB_URI),
+      mongoUriPrefix: process.env.MONGODB_URI
+         ? process.env.MONGODB_URI.substring(0, 30) + "..."
+         : null,
+      hasJwtSecret: Boolean(process.env.JWT_SECRET),
+      jwtSecretLength: process.env.JWT_SECRET?.length || 0,
    };
 
    try {
@@ -23,7 +25,6 @@ export async function GET() {
       checks.mongoState = mongoose.connection.readyState;
       checks.mongoDatabase = mongoose.connection.name;
 
-      // Try a quick ping
       if (mongoose.connection.db) {
          await mongoose.connection.db.admin().ping();
          checks.mongoPing = "ok";

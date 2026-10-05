@@ -9,40 +9,50 @@ import {
 } from "@/app/lib/auth";
 
 export async function POST(req: NextRequest) {
-   const { email, password, rememberMe } = await req.json();
+   try {
+      const { email, password, rememberMe } = await req.json();
 
-   if (!email || !password) {
+      if (!email || !password) {
+         return NextResponse.json(
+            { error: "Email and password are required" },
+            { status: 400 },
+         );
+      }
+
+      await connectDB();
+
+      const user = await User.findOne({ email: email.toLowerCase() });
+      if (!user || !verifyPassword(password, user.passwordHash)) {
+         return NextResponse.json(
+            { error: "Invalid email or password" },
+            { status: 401 },
+         );
+      }
+
+      const remember = Boolean(rememberMe);
+      const token = await createSessionToken(
+         {
+            userId: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            rememberMe: remember,
+         },
+         remember,
+      );
+
+      const res = NextResponse.json({
+         user: { id: user._id.toString(), name: user.name, email: user.email },
+      });
+
+      res.cookies.set(SESSION_COOKIE_NAME, token, getCookieOptions(remember));
+      return res;
+   } catch (err: unknown) {
+      // ✅ ALWAYS return JSON, never let the error bubble to Next.js
+      const message = err instanceof Error ? err.message : "Unknown error";
+      console.error("[Login API Error]", message);
       return NextResponse.json(
-         { error: "Email and password are required" },
-         { status: 400 },
+         { error: `Server error: ${message}` },
+         { status: 500 },
       );
    }
-
-   await connectDB();
-
-   const user = await User.findOne({ email: email.toLowerCase() });
-   if (!user || !verifyPassword(password, user.passwordHash)) {
-      return NextResponse.json(
-         { error: "Invalid email or password" },
-         { status: 401 },
-      );
-   }
-
-   const remember = Boolean(rememberMe);
-   const token = await createSessionToken(
-      {
-         userId: user._id.toString(),
-         email: user.email,
-         name: user.name,
-         rememberMe: remember,
-      },
-      remember,
-   );
-
-   const res = NextResponse.json({
-      user: { id: user._id.toString(), name: user.name, email: user.email },
-   });
-
-   res.cookies.set(SESSION_COOKIE_NAME, token, getCookieOptions(remember));
-   return res;
 }
