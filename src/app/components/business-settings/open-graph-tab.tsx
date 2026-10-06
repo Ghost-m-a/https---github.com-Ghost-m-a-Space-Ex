@@ -22,9 +22,9 @@ const OpenGraphTab: React.FC<Props> = ({ business }) => (
                <div className={styles.ogLeft}>
                   <div className={styles.ogBrand}>
                      <div className={styles.ogBrandIcon}>
-                        {business.name?.[0] || "S"}
+                        {business?.name?.[0] || "S"}
                      </div>
-                     <span>{business.name}</span>
+                     <span>{business?.name}</span>
                   </div>
                   <div className={styles.ogTitle}>
                      Providing everyone a sustainable income on the internet.

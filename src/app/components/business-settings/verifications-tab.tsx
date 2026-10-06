@@ -10,7 +10,7 @@ interface Props {
 }
 
 const VerificationsTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const v = business.verification || {};
+   const v = business?.verification || {};
 
    const start = (kind: string) => {
       updateBusiness({ verification: { ...v, [kind]: "pending" } });

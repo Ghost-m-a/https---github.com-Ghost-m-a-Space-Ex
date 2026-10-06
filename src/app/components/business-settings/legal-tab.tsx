@@ -11,7 +11,7 @@ interface Props {
 }
 
 const LegalTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const l = business.legal || {};
+   const l = business?.legal || {};
 
    const docs = [
       { key: "termsUrl", label: "Terms of Service" },

@@ -9,11 +9,11 @@ interface Props {
    updateBusiness: (patch: Record<string, unknown>) => Promise<void>;
 }
 
-const ITEMS: { key: string; label: string; sub?: string }[] = [
+const ITEMS = [
    {
       key: "cardEmails",
       label: "Card emails",
-      sub: "Declined transactions, large charges, and cashback summaries for your team's cards",
+      sub: "Declined transactions, large charges, and cashback summaries",
    },
    { key: "disputes", label: "Disputes", sub: "New disputes and decisions" },
    { key: "failedAdsPayment", label: "Failed ads payment" },
@@ -26,12 +26,12 @@ const ITEMS: { key: string; label: string; sub?: string }[] = [
    {
       key: "paymentsReview",
       label: "Payments needing review",
-      sub: "A card payment was authorized and is waiting for your team to capture or void it",
+      sub: "A card payment was authorized and is waiting for capture",
    },
    {
       key: "resolutionCenter",
       label: "Resolution center",
-      sub: "New cases, changes on your cases, and decisions",
+      sub: "New cases, changes, and decisions",
    },
    {
       key: "supportAllMessages",
@@ -52,7 +52,7 @@ const ITEMS: { key: string; label: string; sub?: string }[] = [
 ];
 
 const NotificationsTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const prefs = business.notificationPrefs || {};
+   const prefs = business?.notificationPrefs || {};
 
    const update = (key: string, value: boolean) => {
       updateBusiness({ notificationPrefs: { ...prefs, [key]: value } });

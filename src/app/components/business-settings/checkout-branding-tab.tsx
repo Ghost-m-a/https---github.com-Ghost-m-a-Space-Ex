@@ -9,7 +9,7 @@ interface Props {
 }
 
 const CheckoutBrandingTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const b = business.checkoutBranding || {};
+   const b = business?.checkoutBranding || {};
 
    const update = (key: string, value: unknown) => {
       updateBusiness({ checkoutBranding: { ...b, [key]: value } });
@@ -21,8 +21,7 @@ const CheckoutBrandingTab: React.FC<Props> = ({ business, updateBusiness }) => {
       <div className={styles.brandingLayout}>
          <div className={styles.brandingControls}>
             <p className={styles.sectionSubtitle}>
-               Customize the look and feel of your checkout page. These are the
-               default settings for all checkout links.
+               Customize the look and feel of your checkout page.
             </p>
 
             <div className={styles.brandingGroup}>
@@ -88,12 +87,14 @@ const CheckoutBrandingTab: React.FC<Props> = ({ business, updateBusiness }) => {
 
          <div className={styles.brandingPreview}>
             <div
-               className={`${styles.phoneFrame} ${isDark ? styles.phoneDark : styles.phoneLight}`}
+               className={`${styles.phoneFrame} ${
+                  isDark ? styles.phoneDark : styles.phoneLight
+               }`}
             >
                <div className={styles.phoneContent}>
-                  <div className={styles.phoneBrand}>{business.name}</div>
+                  <div className={styles.phoneBrand}>{business?.name}</div>
                   <div className={styles.phoneSub}>
-                     Subscribe to {business.name}
+                     Subscribe to {business?.name}
                   </div>
                   <div className={styles.phonePrice}>$19.99</div>
                   <div className={styles.phonePer}>per month</div>

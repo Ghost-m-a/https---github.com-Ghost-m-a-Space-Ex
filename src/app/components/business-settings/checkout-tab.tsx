@@ -10,7 +10,7 @@ interface Props {
 }
 
 const CheckoutTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const c = business.checkout || {};
+   const c = business?.checkout || {};
 
    const update = (key: string, value: unknown) => {
       updateBusiness({ checkout: { ...c, [key]: value } });
@@ -25,10 +25,9 @@ const CheckoutTab: React.FC<Props> = ({ business, updateBusiness }) => {
                      Payment orchestration
                   </div>
                   <div className={styles.highlightSub}>
-                     With payment orchestration enabled, Space-Ex will
-                     automatically route payments to multiple payment providers
-                     to increase your payment authorization rate by up to 10%.
-                     Space-Ex will charge you a fee of 0.8% per transaction.
+                     Automatically route payments to multiple providers to
+                     increase authorization rates by up to 10%. A 0.8% fee per
+                     transaction applies.
                   </div>
                </div>
                <button

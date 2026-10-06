@@ -24,18 +24,22 @@ const PartnersTab = () => {
       <div className={styles.tabContent}>
          <p className={styles.sectionSubtitle}>
             Review requests from partners who want to be attributed to your
-            business. Only business owners can respond.
+            business.
          </p>
 
          <div className={styles.subTabs}>
             <button
-               className={`${styles.subTab} ${tab === "pending" ? styles.subTabActive : ""}`}
+               className={`${styles.subTab} ${
+                  tab === "pending" ? styles.subTabActive : ""
+               }`}
                onClick={() => setTab("pending")}
             >
                Pending
             </button>
             <button
-               className={`${styles.subTab} ${tab === "all" ? styles.subTabActive : ""}`}
+               className={`${styles.subTab} ${
+                  tab === "all" ? styles.subTabActive : ""
+               }`}
                onClick={() => setTab("all")}
             >
                All requests

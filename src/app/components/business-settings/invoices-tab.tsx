@@ -9,7 +9,7 @@ interface Props {
 }
 
 const InvoicesTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const i = business.invoices || {};
+   const i = business?.invoices || {};
 
    return (
       <div className={styles.tabContent}>
@@ -29,7 +29,9 @@ const InvoicesTab: React.FC<Props> = ({ business, updateBusiness }) => {
                      Configure
                   </button>
                   <button
-                     className={`${styles.switch} ${i.customPrefixEnabled ? styles.switchOn : ""}`}
+                     className={`${styles.switch} ${
+                        i.customPrefixEnabled ? styles.switchOn : ""
+                     }`}
                      onClick={() =>
                         updateBusiness({
                            invoices: {

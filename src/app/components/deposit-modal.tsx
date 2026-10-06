@@ -18,7 +18,6 @@ const DepositModal: React.FC<Props> = ({
    onSuccess,
 }) => {
    const [amount, setAmount] = useState("");
-   const [method, setMethod] = useState("bank_transfer");
    const [submitting, setSubmitting] = useState(false);
    const [error, setError] = useState("");
 
@@ -30,10 +29,15 @@ const DepositModal: React.FC<Props> = ({
       }
       setSubmitting(true);
       setError("");
+
       const res = await fetch("/api/business/deposit", {
          method: "POST",
          headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ businessId, amount: num, method }),
+         body: JSON.stringify({
+            businessId,
+            amount: num,
+            method: "bank_transfer",
+         }),
       });
       const data = await res.json();
       setSubmitting(false);

@@ -35,7 +35,6 @@ const SendModal: React.FC<Props> = ({
    const [submitting, setSubmitting] = useState(false);
    const [error, setError] = useState("");
 
-   // Search users
    useEffect(() => {
       if (!isOpen || step !== "recipient") return;
       const timer = setTimeout(() => {
@@ -47,7 +46,6 @@ const SendModal: React.FC<Props> = ({
       return () => clearTimeout(timer);
    }, [query, isOpen, step]);
 
-   // Reset on close
    useEffect(() => {
       if (!isOpen) {
          setStep("recipient");

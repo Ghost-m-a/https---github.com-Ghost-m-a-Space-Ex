@@ -10,7 +10,7 @@ interface Props {
 }
 
 const PaymentsTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const p = business.payments || {};
+   const p = business?.payments || {};
 
    const update = (key: string, value: unknown) => {
       updateBusiness({ payments: { ...p, [key]: value } });
@@ -39,7 +39,9 @@ const PaymentsTab: React.FC<Props> = ({ business, updateBusiness }) => {
             ].map((opt) => (
                <button
                   key={opt.key}
-                  className={`${styles.methodCard} ${p.threeDSecure === opt.key ? styles.methodCardActive : ""}`}
+                  className={`${styles.methodCard} ${
+                     p.threeDSecure === opt.key ? styles.methodCardActive : ""
+                  }`}
                   onClick={() => update("threeDSecure", opt.key)}
                >
                   <div className={styles.methodRadio}>

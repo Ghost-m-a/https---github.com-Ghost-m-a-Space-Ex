@@ -8,7 +8,6 @@ import {
    Download,
    Settings2,
    ChevronDown,
-   X,
    Search,
    ChevronLeft,
    ChevronRight,
@@ -75,17 +74,23 @@ export default function ProductsPage() {
 
    const load = async () => {
       setLoading(true);
-      const url = activeBusiness?.id
-         ? `/api/business/products?businessId=${activeBusiness.id}`
-         : `/api/business/products`;
-      const res = await fetch(url);
-      const data = await res.json();
-      setProducts(data.products || []);
-      setLoading(false);
+      try {
+         const url = activeBusiness?.id
+            ? `/api/business/products?businessId=${activeBusiness.id}`
+            : `/api/business/products`;
+         const res = await fetch(url);
+         const data = await res.json();
+         setProducts(data.products || []);
+      } catch {
+         setProducts([]);
+      } finally {
+         setLoading(false);
+      }
    };
 
    useEffect(() => {
       load();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
    }, [activeBusiness?.id]);
 
    // Filter
@@ -94,7 +99,6 @@ export default function ProductsPage() {
       if (visibilityFilter.length > 0) {
          list = list.filter((p) => visibilityFilter.includes(p.visibility));
       }
-      // Sort
       list = [...list].sort((a, b) => {
          const cmp = a.name.localeCompare(b.name);
          return sortDir === "asc" ? cmp : -cmp;
@@ -135,8 +139,8 @@ export default function ProductsPage() {
                p.price,
                p.visibility,
                p.discoverStatus,
-               p.stats.allTimeRevenue,
-               p.stats.activeUsers,
+               p.stats?.allTimeRevenue || 0,
+               p.stats?.activeUsers || 0,
             ].join(","),
          ),
       ].join("\n");
@@ -163,7 +167,7 @@ export default function ProductsPage() {
                </button>
                <button
                   className={styles.iconBtn}
-                  onClick={() => setShowColumnPicker(true)}
+                  onClick={() => setShowColumnPicker((v) => !v)}
                   aria-label="Column settings"
                >
                   <Settings2 size={16} />
@@ -263,76 +267,96 @@ export default function ProductsPage() {
                         </tr>
                      </thead>
                      <tbody>
-                        {paginated.map((p) => (
-                           <tr
-                              key={p.id}
-                              onClick={() =>
-                                 router.push(`/business/products/${p.id}`)
-                              }
-                              className={styles.row}
-                           >
-                              {isColumnVisible("name") && (
-                                 <td>
-                                    <div className={styles.nameCell}>
-                                       <div className={styles.productAvatar}>
-                                          {p.name[0]}
+                        {paginated.map((p) => {
+                           // ✅ Defensive normalization
+                           const apps = Array.isArray(p.includedApps)
+                              ? p.includedApps
+                              : [];
+                           const stats = p.stats || {
+                              allTimeRevenue: 0,
+                              activeUsers: 0,
+                              checkoutConversion: 0,
+                              totalSales: 0,
+                           };
+
+                           return (
+                              <tr
+                                 key={p.id}
+                                 onClick={() =>
+                                    router.push(`/business/products/${p.id}`)
+                                 }
+                                 className={styles.row}
+                              >
+                                 {isColumnVisible("name") && (
+                                    <td>
+                                       <div className={styles.nameCell}>
+                                          <div className={styles.productAvatar}>
+                                             {p.name?.[0] || "?"}
+                                          </div>
+                                          <div>{p.name}</div>
                                        </div>
-                                       <div>{p.name}</div>
-                                    </div>
-                                 </td>
-                              )}
-                              {isColumnVisible("price") && (
-                                 <td>
-                                    {p.accessType === "free"
-                                       ? "Free"
-                                       : `$${p.price} ${p.currency}`}
-                                 </td>
-                              )}
-                              {isColumnVisible("visibility") && (
-                                 <td>
-                                    <span
-                                       className={`${styles.badge} ${styles[p.visibility]}`}
-                                    >
-                                       {p.visibility}
-                                    </span>
-                                 </td>
-                              )}
-                              {isColumnVisible("discoverStatus") && (
-                                 <td>
-                                    {p.discoverStatus === "listed"
-                                       ? "Listed"
-                                       : "Unlisted"}
-                                 </td>
-                              )}
-                              {isColumnVisible("includedApps") && (
-                                 <td className={styles.appsCell}>
-                                    {p.includedApps.length === 0 ? (
-                                       <span className={styles.muted}>—</span>
-                                    ) : (
-                                       p.includedApps.slice(0, 3).map((app) => (
-                                          <span
-                                             key={app}
-                                             className={styles.appPill}
-                                          >
-                                             {app}
+                                    </td>
+                                 )}
+                                 {isColumnVisible("price") && (
+                                    <td>
+                                       {p.accessType === "free"
+                                          ? "Free"
+                                          : `$${p.price} ${p.currency}`}
+                                    </td>
+                                 )}
+                                 {isColumnVisible("visibility") && (
+                                    <td>
+                                       <span
+                                          className={`${styles.badge} ${styles[p.visibility]}`}
+                                       >
+                                          {p.visibility}
+                                       </span>
+                                    </td>
+                                 )}
+                                 {isColumnVisible("discoverStatus") && (
+                                    <td>
+                                       {p.discoverStatus === "listed"
+                                          ? "Listed"
+                                          : "Unlisted"}
+                                    </td>
+                                 )}
+                                 {isColumnVisible("includedApps") && (
+                                    <td className={styles.appsCell}>
+                                       {apps.length === 0 ? (
+                                          <span className={styles.muted}>
+                                             —
                                           </span>
-                                       ))
-                                    )}
-                                 </td>
-                              )}
-                              {isColumnVisible("checkoutConversion") && (
-                                 <td>
-                                    {p.stats.checkoutConversion.toFixed(1)}%
-                                 </td>
-                              )}
-                              {isColumnVisible("allTimeRevenue") && (
-                                 <td>${p.stats.allTimeRevenue.toFixed(2)}</td>
-                              )}
-                              {isColumnVisible("activeUsers") && (
-                                 <td>{p.stats.activeUsers}</td>
-                              )}
-                           </tr>
-                        ))}
+                                       ) : (
+                                          apps.slice(0, 3).map((app) => (
+                                             <span
+                                                key={app}
+                                                className={styles.appPill}
+                                             >
+                                                {app}
+                                             </span>
+                                          ))
+                                       )}
+                                    </td>
+                                 )}
+                                 {isColumnVisible("checkoutConversion") && (
+                                    <td>
+                                       {(stats.checkoutConversion || 0).toFixed(
+                                          1,
+                                       )}
+                                       %
+                                    </td>
+                                 )}
+                                 {isColumnVisible("allTimeRevenue") && (
+                                    <td>
+                                       ${(stats.allTimeRevenue || 0).toFixed(2)}
+                                    </td>
+                                 )}
+                                 {isColumnVisible("activeUsers") && (
+                                    <td>{stats.activeUsers || 0}</td>
+                                 )}
+                              </tr>
+                           );
+                        })}
                      </tbody>
                   </table>
                </div>

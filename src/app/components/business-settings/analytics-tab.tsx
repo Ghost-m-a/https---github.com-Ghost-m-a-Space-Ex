@@ -9,7 +9,7 @@ interface Props {
    updateBusiness: (patch: Record<string, unknown>) => Promise<void>;
 }
 
-const PIXELS: { key: string; name: string; color: string }[] = [
+const PIXELS = [
    { key: "spaceExPixel", name: "Space-Ex Pixel", color: "#3b82f6" },
    { key: "googleAnalytics", name: "Google Analytics", color: "#f59e0b" },
    { key: "hyros", name: "Hyros", color: "#6b7280" },
@@ -22,7 +22,7 @@ const PIXELS: { key: string; name: string; color: string }[] = [
 ];
 
 const AnalyticsTab: React.FC<Props> = ({ business }) => {
-   const pixels = business.analyticsPixels || {};
+   const pixels = business?.analyticsPixels || {};
 
    return (
       <div className={styles.tabContent}>

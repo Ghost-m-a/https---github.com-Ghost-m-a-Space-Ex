@@ -40,7 +40,7 @@ interface MenuItemProps {
 }
 
 // =========================================
-// REUSABLE MENU ITEM (supports link OR button)
+// REUSABLE MENU ITEM (link or button)
 // =========================================
 const MenuItem: React.FC<MenuItemProps> = ({
    icon,
@@ -61,7 +61,6 @@ const MenuItem: React.FC<MenuItemProps> = ({
       </>
    );
 
-   // If onClick provided (or no href), render a button
    if (onClick || !href) {
       return (
          <button
@@ -81,7 +80,6 @@ const MenuItem: React.FC<MenuItemProps> = ({
       );
    }
 
-   // Otherwise render a Link
    return (
       <Link href={href} className={styles.menuItem}>
          {content}
@@ -101,7 +99,7 @@ export const UserDropdown: React.FC = () => {
    const [isLoggingOut, setIsLoggingOut] = useState(false);
    const dropdownRef = useRef<HTMLDivElement>(null);
 
-   // ✅ NEW: settings modal state
+   // ✅ Settings modal state
    const [settingsOpen, setSettingsOpen] = useState(false);
    const [settingsTab, setSettingsTab] = useState<TabId>("profile");
 
@@ -180,7 +178,7 @@ export const UserDropdown: React.FC = () => {
    }, []);
 
    // -----------------------------------------
-   // 5. Close dropdown on Escape key
+   // 5. Close dropdown on Escape
    // -----------------------------------------
    useEffect(() => {
       const handleEscape = (e: KeyboardEvent) => {
@@ -191,7 +189,7 @@ export const UserDropdown: React.FC = () => {
    }, []);
 
    // -----------------------------------------
-   // 6. Logout handler
+   // 6. Logout
    // -----------------------------------------
    const handleLogout = async (e: React.MouseEvent) => {
       e.preventDefault();
@@ -212,7 +210,7 @@ export const UserDropdown: React.FC = () => {
    };
 
    // -----------------------------------------
-   // 7. Open settings modal on a specific tab
+   // 7. Open settings modal
    // -----------------------------------------
    const openSettings = (tab: TabId = "profile") => {
       setIsOpen(false);
@@ -268,7 +266,7 @@ export const UserDropdown: React.FC = () => {
    ];
 
    // -----------------------------------------
-   // DERIVED USER DISPLAY DATA
+   // DERIVED USER DATA
    // -----------------------------------------
    const initials = user
       ? user.name
@@ -286,9 +284,7 @@ export const UserDropdown: React.FC = () => {
    return (
       <>
          <div className={styles.dropdownContainer} ref={dropdownRef}>
-            {/* =========================================
-            TRIGGER BUTTON
-            ========================================= */}
+            {/* Trigger Button */}
             <button
                type="button"
                onClick={(e) => {
@@ -311,16 +307,15 @@ export const UserDropdown: React.FC = () => {
                />
             </button>
 
-            {/* =========================================
-            DROPDOWN MENU
-            ========================================= */}
+            {/* Dropdown Menu */}
             {isOpen && (
                <div className={styles.menuDropdown} role="menu">
-                  {/* ---------- HEADER ---------- */}
+                  {/* Header */}
                   <div className={styles.menuHeader}>
                      <div className={styles.avatarLarge}>{initials}</div>
                      <div className={styles.headerInfo}>
                         <span className={styles.userName}>{displayName}</span>
+                        {/* ✅ Email is now a button that opens Profile settings */}
                         <button
                            type="button"
                            onClick={() => openSettings("profile")}
@@ -331,6 +326,8 @@ export const UserDropdown: React.FC = () => {
                               padding: 0,
                               textAlign: "left",
                               cursor: "pointer",
+                              font: "inherit",
+                              color: "inherit",
                            }}
                         >
                            {displayEmail}
@@ -340,7 +337,7 @@ export const UserDropdown: React.FC = () => {
 
                   <div className={styles.divider} />
 
-                  {/* ---------- MAIN MENU ---------- */}
+                  {/* Main Menu */}
                   <div className={styles.menuGroup}>
                      {mainMenu.map((item) => (
                         <MenuItem key={item.label} {...item} />
@@ -349,7 +346,7 @@ export const UserDropdown: React.FC = () => {
 
                   <div className={styles.divider} />
 
-                  {/* ---------- SECONDARY MENU ---------- */}
+                  {/* Secondary Menu */}
                   <div className={styles.menuGroup}>
                      {secondaryMenu.map((item) => (
                         <MenuItem key={item.label} {...item} />
@@ -383,7 +380,7 @@ export const UserDropdown: React.FC = () => {
 
                   <div className={styles.divider} />
 
-                  {/* ---------- THEME SWITCHER ---------- */}
+                  {/* Theme Switcher */}
                   <div className={styles.themeSwitcherContainer}>
                      <div className={styles.themeSwitcherTrack}>
                         {themes.map((t) => (
@@ -407,9 +404,7 @@ export const UserDropdown: React.FC = () => {
             )}
          </div>
 
-         {/* =========================================
-          SETTINGS MODAL
-          ========================================= */}
+         {/* Settings Modal */}
          <SettingsModal
             isOpen={settingsOpen}
             onClose={() => setSettingsOpen(false)}

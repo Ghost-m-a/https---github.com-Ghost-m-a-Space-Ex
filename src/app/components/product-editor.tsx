@@ -11,10 +11,7 @@ import {
    X,
    Globe,
    DollarSign,
-   ExternalLink,
    ChevronDown,
-   Palette,
-   Wrench,
    Settings2,
 } from "lucide-react";
 import { useWorkspace } from "../context/workspace-context";
@@ -64,228 +61,115 @@ interface FAQ {
    answer: string;
 }
 
-interface ProductState {
-   name: string;
-   headline: string;
-   description: string;
-   bannerImage: string;
-   labels: string[];
-   collectShippingAddress: boolean;
-   accessType: "free" | "paid";
-   pricingType: "one-time" | "recurring";
-   price: number;
-   currency: string;
-   recurringInterval: "monthly" | "yearly";
-   launchAsWaitlist: boolean;
-   askQuestionsBeforeCheckout: boolean;
-   includedApps: string[];
-   faqs: FAQ[];
-   appearanceColor: string;
-   growthTools: { showMemberCount: boolean };
-   productSettings: {
-      purchaseButtonText: string;
-      productTaxCode: string;
-      productUrl: string;
-      addAffiliateRate: boolean;
-      affiliateRate: number;
-      checkoutRedirect: boolean;
-      checkoutRedirectUrl: string;
-      visibleOnStorePage: boolean;
-   };
-   visibility: "visible" | "hidden" | "archived";
-   discoverStatus: "listed" | "unlisted";
-}
-
-const DEFAULT_STATE: ProductState = {
-   name: "",
-   headline: "",
-   description: "",
-   bannerImage: "",
-   labels: [],
-   collectShippingAddress: false,
-   accessType: "free",
-   pricingType: "one-time",
-   price: 0,
-   currency: "USD",
-   recurringInterval: "monthly",
-   launchAsWaitlist: false,
-   askQuestionsBeforeCheckout: false,
-   includedApps: [],
-   faqs: [],
-   appearanceColor: "#3b82f6",
-   growthTools: { showMemberCount: true },
-   productSettings: {
-      purchaseButtonText: "Join",
-      productTaxCode: "",
-      productUrl: "",
-      addAffiliateRate: true,
-      affiliateRate: 30,
-      checkoutRedirect: false,
-      checkoutRedirectUrl: "",
-      visibleOnStorePage: true,
-   },
-   visibility: "visible",
-   discoverStatus: "unlisted",
-};
-
 const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    const router = useRouter();
    const { activeBusiness } = useWorkspace();
    const [viewMode, setViewMode] = useState<ViewMode>("desktop");
-   const [state, setState] = useState<ProductState>(DEFAULT_STATE);
+   const [name, setName] = useState("");
+   const [headline, setHeadline] = useState("");
+   const [description, setDescription] = useState("");
+   const [bannerImage, setBannerImage] = useState("");
+   const [labels, setLabels] = useState<string[]>([]);
+   const [newLabel, setNewLabel] = useState("");
+   const [collectShippingAddress, setCollectShippingAddress] = useState(false);
+   const [accessType, setAccessType] = useState<"free" | "paid">("free");
+   const [pricingType, setPricingType] = useState<"one-time" | "recurring">(
+      "one-time",
+   );
+   const [price, setPrice] = useState(0);
+   const [currency, setCurrency] = useState("USD");
+   const [recurringInterval, setRecurringInterval] = useState<
+      "monthly" | "yearly"
+   >("monthly");
+   const [launchAsWaitlist, setLaunchAsWaitlist] = useState(false);
+   const [askQuestionsBeforeCheckout, setAskQuestionsBeforeCheckout] =
+      useState(false);
+   const [includedApps, setIncludedApps] = useState<string[]>([]);
+   const [faqs, setFaqs] = useState<FAQ[]>([]);
+   const [appearanceColor, setAppearanceColor] = useState("#3b82f6");
+   const [showMemberCount, setShowMemberCount] = useState(true);
+   const [purchaseButtonText, setPurchaseButtonText] = useState("Join");
+   const [productTaxCode, setProductTaxCode] = useState("");
+   const [productUrl, setProductUrl] = useState("");
+   const [addAffiliateRate, setAddAffiliateRate] = useState(true);
+   const [affiliateRate, setAffiliateRate] = useState(30);
+   const [checkoutRedirect, setCheckoutRedirect] = useState(false);
+   const [visibleOnStorePage, setVisibleOnStorePage] = useState(true);
    const [aiPrompt, setAiPrompt] = useState("");
    const [saving, setSaving] = useState(false);
    const [loading, setLoading] = useState(mode === "edit");
    const [error, setError] = useState("");
-   const [newLabel, setNewLabel] = useState("");
-   const [showFaqForm, setShowFaqForm] = useState(false);
-   const [expandedSections, setExpandedSections] = useState({
-      details: true,
-      pricing: true,
-      apps: false,
-      appearance: false,
-      growth: false,
-      settings: false,
-   });
 
    const businessName = activeBusiness?.name || "Space/Ex";
    const businessInitial = businessName.charAt(0).toUpperCase();
 
-   // Load existing product for edit mode
    useEffect(() => {
       if (mode === "edit" && productId) {
          setLoading(true);
          fetch(`/api/business/products/${productId}`)
             .then((r) => r.json())
             .then((d) => {
-               if (d.product) {
-                  setState({
-                     name: d.product.name || "",
-                     headline: d.product.headline || "",
-                     description: d.product.description || "",
-                     bannerImage: d.product.bannerImage || "",
-                     labels: d.product.labels || [],
-                     collectShippingAddress:
-                        d.product.collectShippingAddress || false,
-                     accessType: d.product.accessType || "free",
-                     pricingType: d.product.pricingType || "one-time",
-                     price: d.product.price || 0,
-                     currency: d.product.currency || "USD",
-                     recurringInterval:
-                        d.product.recurringInterval || "monthly",
-                     launchAsWaitlist: d.product.launchAsWaitlist || false,
-                     askQuestionsBeforeCheckout:
-                        d.product.askQuestionsBeforeCheckout || false,
-                     includedApps: d.product.includedApps || [],
-                     faqs: d.product.faqs || [],
-                     appearanceColor: d.product.appearanceColor || "#3b82f6",
-                     growthTools: {
-                        showMemberCount:
-                           d.product.growthTools?.showMemberCount !== false,
-                     },
-                     productSettings: {
-                        purchaseButtonText:
-                           d.product.productSettings?.purchaseButtonText ||
-                           "Join",
-                        productTaxCode:
-                           d.product.productSettings?.productTaxCode || "",
-                        productUrl: d.product.productSettings?.productUrl || "",
-                        addAffiliateRate:
-                           d.product.productSettings?.addAffiliateRate !==
-                           false,
-                        affiliateRate:
-                           d.product.productSettings?.affiliateRate || 30,
-                        checkoutRedirect:
-                           d.product.productSettings?.checkoutRedirect || false,
-                        checkoutRedirectUrl:
-                           d.product.productSettings?.checkoutRedirectUrl || "",
-                        visibleOnStorePage:
-                           d.product.productSettings?.visibleOnStorePage !==
-                           false,
-                     },
-                     visibility: d.product.visibility || "visible",
-                     discoverStatus: d.product.discoverStatus || "unlisted",
-                  });
-               }
+               const p = d.product;
+               if (!p) return;
+               setName(p.name || "");
+               setHeadline(p.headline || "");
+               setDescription(p.description || "");
+               setBannerImage(p.bannerImage || "");
+               setLabels(p.labels || []);
+               setCollectShippingAddress(!!p.collectShippingAddress);
+               setAccessType(p.accessType || "free");
+               setPricingType(p.pricingType || "one-time");
+               setPrice(p.price || 0);
+               setCurrency(p.currency || "USD");
+               setRecurringInterval(p.recurringInterval || "monthly");
+               setLaunchAsWaitlist(!!p.launchAsWaitlist);
+               setAskQuestionsBeforeCheckout(!!p.askQuestionsBeforeCheckout);
+               setIncludedApps(p.includedApps || []);
+               setFaqs(p.faqs || []);
+               setAppearanceColor(p.appearanceColor || "#3b82f6");
+               setShowMemberCount(p.growthTools?.showMemberCount !== false);
+               setPurchaseButtonText(
+                  p.productSettings?.purchaseButtonText || "Join",
+               );
+               setProductTaxCode(p.productSettings?.productTaxCode || "");
+               setProductUrl(p.productSettings?.productUrl || "");
+               setAddAffiliateRate(
+                  p.productSettings?.addAffiliateRate !== false,
+               );
+               setAffiliateRate(p.productSettings?.affiliateRate || 30);
+               setCheckoutRedirect(!!p.productSettings?.checkoutRedirect);
+               setVisibleOnStorePage(
+                  p.productSettings?.visibleOnStorePage !== false,
+               );
             })
             .catch(console.error)
             .finally(() => setLoading(false));
       }
    }, [mode, productId]);
 
-   const update = <K extends keyof ProductState>(
-      key: K,
-      value: ProductState[K],
-   ) => {
-      setState((prev) => ({ ...prev, [key]: value }));
-   };
-
-   const updateSettings = <K extends keyof ProductState["productSettings"]>(
-      key: K,
-      value: ProductState["productSettings"][K],
-   ) => {
-      setState((prev) => ({
-         ...prev,
-         productSettings: { ...prev.productSettings, [key]: value },
-      }));
-   };
-
-   const toggleApp = (key: string) => {
-      setState((prev) => ({
-         ...prev,
-         includedApps: prev.includedApps.includes(key)
-            ? prev.includedApps.filter((a) => a !== key)
-            : [...prev.includedApps, key],
-      }));
-   };
-
    const addLabel = () => {
-      if (newLabel.trim() && !state.labels.includes(newLabel.trim())) {
-         update("labels", [...state.labels, newLabel.trim()]);
+      if (newLabel.trim() && !labels.includes(newLabel.trim())) {
+         setLabels([...labels, newLabel.trim()]);
          setNewLabel("");
       }
    };
 
-   const removeLabel = (label: string) => {
-      update(
-         "labels",
-         state.labels.filter((l) => l !== label),
-      );
-   };
-
-   const addFaq = () => {
-      update("faqs", [...state.faqs, { question: "", answer: "" }]);
-      setShowFaqForm(true);
-   };
-
-   const updateFaq = (idx: number, patch: Partial<FAQ>) => {
-      const next = [...state.faqs];
-      next[idx] = { ...next[idx], ...patch };
-      update("faqs", next);
-   };
-
-   const removeFaq = (idx: number) => {
-      update(
-         "faqs",
-         state.faqs.filter((_, i) => i !== idx),
+   const toggleApp = (key: string) => {
+      setIncludedApps((prev) =>
+         prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key],
       );
    };
 
    const generateAI = () => {
-      // Local AI-style generation using the prompt
       const baseName =
          aiPrompt.split(/[.,]/)[0].trim().slice(0, 60) || "New Product";
-      const capitalized = baseName.charAt(0).toUpperCase() + baseName.slice(1);
-      update("name", capitalized || "Premium Membership");
-      update(
-         "headline",
-         aiPrompt.slice(0, 100) || "Get access to exclusive content",
-      );
-      update("description", `This product includes: ${aiPrompt.slice(0, 400)}`);
+      setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
+      setHeadline(aiPrompt.slice(0, 100) || "Get access to exclusive content");
+      setDescription(`This product includes: ${aiPrompt.slice(0, 400)}`);
    };
 
    const handleSave = async () => {
-      if (!state.name.trim()) {
+      if (!name.trim()) {
          setError("Product name is required");
          return;
       }
@@ -304,52 +188,69 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                businessId: activeBusiness?.id,
-               ...state,
+               name,
+               headline,
+               description,
+               bannerImage,
+               labels,
+               collectShippingAddress,
+               accessType,
+               pricingType,
+               price,
+               currency,
+               recurringInterval,
+               launchAsWaitlist,
+               askQuestionsBeforeCheckout,
+               includedApps,
+               faqs,
+               appearanceColor,
+               growthTools: { showMemberCount },
+               productSettings: {
+                  purchaseButtonText,
+                  productTaxCode,
+                  productUrl,
+                  addAffiliateRate,
+                  affiliateRate,
+                  checkoutRedirect,
+                  checkoutRedirectUrl: "",
+                  visibleOnStorePage,
+               },
             }),
          });
 
          const data = await res.json();
-
          if (!res.ok) {
             setError(data.error || "Failed to save product");
             return;
          }
-
          router.push("/business/products");
          router.refresh();
-      } catch (err) {
-         console.error(err);
+      } catch {
          setError("Network error. Please try again.");
       } finally {
          setSaving(false);
       }
    };
 
-   const toggleSection = (key: keyof typeof expandedSections) => {
-      setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
-   };
-
-   if (loading) {
-      return <div className={styles.loading}>Loading product...</div>;
-   }
+   if (loading) return <div className={styles.loading}>Loading product...</div>;
 
    return (
       <div className={styles.editor}>
-         {/* Top Bar */}
          <header className={styles.topBar}>
             <button
                className={styles.backBtn}
                onClick={() => router.push("/business/products")}
             >
-               <ArrowLeft size={16} />
-               <span>Add product</span>
+               <ArrowLeft size={16} /> <span>Add product</span>
             </button>
 
             <div className={styles.viewTabs}>
                {(["desktop", "mobile", "member"] as ViewMode[]).map((v) => (
                   <button
                      key={v}
-                     className={`${styles.viewTab} ${viewMode === v ? styles.viewTabActive : ""}`}
+                     className={`${styles.viewTab} ${
+                        viewMode === v ? styles.viewTabActive : ""
+                     }`}
                      onClick={() => setViewMode(v)}
                   >
                      {v === "desktop" && "💻 Desktop"}
@@ -360,9 +261,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
             </div>
          </header>
 
-         {/* Two-column Layout */}
          <div className={styles.body}>
-            {/* LEFT PANEL — Editor */}
             <aside className={styles.leftPanel}>
                {/* AI Section */}
                <div className={styles.aiSection}>
@@ -371,12 +270,11 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      <span>Describe what you want to sell</span>
                   </div>
                   <p className={styles.aiSub}>
-                     AI drafts the name, page copy, pricing and apps. You review
-                     everything before it goes live.
+                     AI drafts the name, page copy, pricing and apps.
                   </p>
                   <textarea
                      className={styles.aiInput}
-                     placeholder="e.g. A monthly community for indie game devs with weekly critique calls and a course library"
+                     placeholder="e.g. A monthly community for indie game devs with weekly critique calls"
                      value={aiPrompt}
                      onChange={(e) => setAiPrompt(e.target.value.slice(0, 600))}
                      rows={4}
@@ -401,535 +299,361 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
 
                {/* Details */}
                <section className={styles.section}>
-                  <button
-                     className={styles.sectionHeader}
-                     onClick={() => toggleSection("details")}
-                  >
-                     <span>Details</span>
-                     <ChevronDown
-                        size={16}
-                        className={
-                           expandedSections.details ? styles.chevronOpen : ""
-                        }
-                     />
-                  </button>
+                  <h3 className={styles.sectionHeader}>Details</h3>
                   <p className={styles.sectionSub}>
                      The name buyers see on your product page.
                   </p>
 
-                  {expandedSections.details && (
-                     <div className={styles.sectionBody}>
-                        <label className={styles.fieldLabel}>Name *</label>
-                        <input
-                           className={styles.input}
-                           value={state.name}
-                           onChange={(e) =>
-                              update("name", e.target.value.slice(0, 80))
-                           }
-                           placeholder="Basic access"
-                        />
-                        <div className={styles.charCount}>
-                           {state.name.length} / 80
-                        </div>
+                  <label className={styles.fieldLabel}>Name *</label>
+                  <input
+                     className={styles.input}
+                     value={name}
+                     onChange={(e) => setName(e.target.value.slice(0, 80))}
+                     placeholder="Basic access"
+                  />
+                  <div className={styles.charCount}>{name.length} / 80</div>
 
-                        <label className={styles.fieldLabel}>
-                           Labels <span className={styles.helpIcon}>?</span>
-                        </label>
-                        <div className={styles.labelsInput}>
-                           {state.labels.map((label) => (
-                              <span key={label} className={styles.labelChip}>
-                                 {label}
-                                 <button onClick={() => removeLabel(label)}>
-                                    <X size={12} />
-                                 </button>
-                              </span>
-                           ))}
-                           <input
-                              className={styles.labelInput}
-                              placeholder="Type a label and press enter"
-                              value={newLabel}
-                              onChange={(e) =>
-                                 setNewLabel(e.target.value.slice(0, 20))
-                              }
-                              onKeyDown={(e) => {
-                                 if (e.key === "Enter") {
-                                    e.preventDefault();
-                                    addLabel();
-                                 }
-                              }}
-                           />
-                        </div>
-                        <div className={styles.charCount}>
-                           {newLabel.length} / 20
-                        </div>
-
-                        <div className={styles.toggleRow}>
-                           <div>
-                              <div className={styles.toggleLabel}>
-                                 Collect shipping address{" "}
-                                 <span className={styles.helpIcon}>?</span>
-                              </div>
-                           </div>
+                  <label className={styles.fieldLabel}>Labels</label>
+                  <div className={styles.labelsInput}>
+                     {labels.map((label) => (
+                        <span key={label} className={styles.labelChip}>
+                           {label}
                            <button
-                              className={`${styles.switch} ${state.collectShippingAddress ? styles.switchOn : ""}`}
                               onClick={() =>
-                                 update(
-                                    "collectShippingAddress",
-                                    !state.collectShippingAddress,
-                                 )
+                                 setLabels(labels.filter((l) => l !== label))
                               }
                            >
-                              <span className={styles.switchThumb} />
+                              <X size={12} />
                            </button>
-                        </div>
+                        </span>
+                     ))}
+                     <input
+                        className={styles.labelInput}
+                        placeholder="Type a label and press enter"
+                        value={newLabel}
+                        onChange={(e) =>
+                           setNewLabel(e.target.value.slice(0, 20))
+                        }
+                        onKeyDown={(e) => {
+                           if (e.key === "Enter") {
+                              e.preventDefault();
+                              addLabel();
+                           }
+                        }}
+                     />
+                  </div>
+
+                  <div className={styles.toggleRow}>
+                     <div className={styles.toggleLabel}>
+                        Collect shipping address
                      </div>
-                  )}
+                     <button
+                        className={`${styles.switch} ${
+                           collectShippingAddress ? styles.switchOn : ""
+                        }`}
+                        onClick={() =>
+                           setCollectShippingAddress(!collectShippingAddress)
+                        }
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
                </section>
 
                {/* Pricing */}
                <section className={styles.section}>
-                  <button
-                     className={styles.sectionHeader}
-                     onClick={() => toggleSection("pricing")}
-                  >
-                     <span>Pricing</span>
-                     <ChevronDown
-                        size={16}
-                        className={
-                           expandedSections.pricing ? styles.chevronOpen : ""
-                        }
-                     />
-                  </button>
-                  <p className={styles.sectionSub}>
-                     Choose how people get access to this product.
-                  </p>
+                  <h3 className={styles.sectionHeader}>Pricing</h3>
 
-                  {expandedSections.pricing && (
-                     <div className={styles.sectionBody}>
-                        <div className={styles.accessGrid}>
+                  <div className={styles.accessGrid}>
+                     <button
+                        className={`${styles.accessCard} ${
+                           accessType === "free" ? styles.accessCardActive : ""
+                        }`}
+                        onClick={() => setAccessType("free")}
+                     >
+                        <Globe size={16} />
+                        <span>Free access</span>
+                     </button>
+                     <button
+                        className={`${styles.accessCard} ${
+                           accessType === "paid" ? styles.accessCardActive : ""
+                        }`}
+                        onClick={() => setAccessType("paid")}
+                     >
+                        <DollarSign size={16} />
+                        <span>Paid access</span>
+                     </button>
+                  </div>
+
+                  {accessType === "paid" && (
+                     <div className={styles.paidSection}>
+                        <div className={styles.pricingTypes}>
                            <button
-                              className={`${styles.accessCard} ${state.accessType === "free" ? styles.accessCardActive : ""}`}
-                              onClick={() => update("accessType", "free")}
+                              className={`${styles.pricingTypeBtn} ${
+                                 pricingType === "one-time" ? styles.active : ""
+                              }`}
+                              onClick={() => setPricingType("one-time")}
                            >
-                              <Globe size={16} />
-                              <span>Free access</span>
-                              {state.accessType === "free" && (
-                                 <span className={styles.radio}>●</span>
-                              )}
+                              One-time
                            </button>
                            <button
-                              className={`${styles.accessCard} ${state.accessType === "paid" ? styles.accessCardActive : ""}`}
-                              onClick={() => update("accessType", "paid")}
+                              className={`${styles.pricingTypeBtn} ${
+                                 pricingType === "recurring"
+                                    ? styles.active
+                                    : ""
+                              }`}
+                              onClick={() => setPricingType("recurring")}
                            >
-                              <DollarSign size={16} />
-                              <span>Paid access</span>
-                              {state.accessType === "paid" && (
-                                 <span className={styles.radio}>●</span>
-                              )}
+                              Recurring
                            </button>
                         </div>
 
-                        {state.accessType === "paid" && (
-                           <div className={styles.paidSection}>
-                              <label className={styles.fieldLabel}>
-                                 Pricing type
-                              </label>
-                              <div className={styles.pricingTypes}>
-                                 <button
-                                    className={`${styles.pricingTypeBtn} ${state.pricingType === "one-time" ? styles.active : ""}`}
-                                    onClick={() =>
-                                       update("pricingType", "one-time")
-                                    }
-                                 >
-                                    One-time
-                                 </button>
-                                 <button
-                                    className={`${styles.pricingTypeBtn} ${state.pricingType === "recurring" ? styles.active : ""}`}
-                                    onClick={() =>
-                                       update("pricingType", "recurring")
-                                    }
-                                 >
-                                    Recurring
-                                 </button>
-                              </div>
+                        <div className={styles.priceInput}>
+                           <span>$</span>
+                           <input
+                              type="number"
+                              value={price}
+                              onChange={(e) => setPrice(Number(e.target.value))}
+                              min={0}
+                           />
+                           <select
+                              value={currency}
+                              onChange={(e) => setCurrency(e.target.value)}
+                           >
+                              <option value="USD">USD</option>
+                              <option value="EUR">EUR</option>
+                              <option value="GBP">GBP</option>
+                           </select>
+                        </div>
 
-                              <label className={styles.fieldLabel}>Price</label>
-                              <div className={styles.priceInput}>
-                                 <span>$</span>
-                                 <input
-                                    type="number"
-                                    value={state.price}
-                                    onChange={(e) =>
-                                       update("price", Number(e.target.value))
-                                    }
-                                    min={0}
-                                 />
-                                 <select
-                                    value={state.currency}
-                                    onChange={(e) =>
-                                       update("currency", e.target.value)
-                                    }
-                                 >
-                                    <option value="USD">USD</option>
-                                    <option value="EUR">EUR</option>
-                                    <option value="GBP">GBP</option>
-                                 </select>
-                              </div>
-
-                              {state.pricingType === "recurring" && (
-                                 <>
-                                    <label className={styles.fieldLabel}>
-                                       Billing interval
-                                    </label>
-                                    <select
-                                       className={styles.input}
-                                       value={state.recurringInterval}
-                                       onChange={(e) =>
-                                          update(
-                                             "recurringInterval",
-                                             e.target.value as
-                                                | "monthly"
-                                                | "yearly",
-                                          )
-                                       }
-                                    >
-                                       <option value="monthly">Monthly</option>
-                                       <option value="yearly">Yearly</option>
-                                    </select>
-                                 </>
-                              )}
-                           </div>
+                        {pricingType === "recurring" && (
+                           <select
+                              className={styles.input}
+                              value={recurringInterval}
+                              onChange={(e) =>
+                                 setRecurringInterval(
+                                    e.target.value as "monthly" | "yearly",
+                                 )
+                              }
+                           >
+                              <option value="monthly">Monthly</option>
+                              <option value="yearly">Yearly</option>
+                           </select>
                         )}
-
-                        <div className={styles.toggleRow}>
-                           <div className={styles.toggleLabel}>
-                              Launch as a waitlist
-                           </div>
-                           <button
-                              className={`${styles.switch} ${state.launchAsWaitlist ? styles.switchOn : ""}`}
-                              onClick={() =>
-                                 update(
-                                    "launchAsWaitlist",
-                                    !state.launchAsWaitlist,
-                                 )
-                              }
-                           >
-                              <span className={styles.switchThumb} />
-                           </button>
-                        </div>
-
-                        <div className={styles.toggleRow}>
-                           <div className={styles.toggleLabel}>
-                              Ask questions before checkout
-                           </div>
-                           <button
-                              className={`${styles.switch} ${state.askQuestionsBeforeCheckout ? styles.switchOn : ""}`}
-                              onClick={() =>
-                                 update(
-                                    "askQuestionsBeforeCheckout",
-                                    !state.askQuestionsBeforeCheckout,
-                                 )
-                              }
-                           >
-                              <span className={styles.switchThumb} />
-                           </button>
-                        </div>
-
-                        <button className={styles.linkBtn}>
-                           <Settings2 size={14} /> Plan settings
-                        </button>
                      </div>
                   )}
+
+                  <div className={styles.toggleRow}>
+                     <div className={styles.toggleLabel}>
+                        Launch as a waitlist
+                     </div>
+                     <button
+                        className={`${styles.switch} ${
+                           launchAsWaitlist ? styles.switchOn : ""
+                        }`}
+                        onClick={() => setLaunchAsWaitlist(!launchAsWaitlist)}
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
+
+                  <div className={styles.toggleRow}>
+                     <div className={styles.toggleLabel}>
+                        Ask questions before checkout
+                     </div>
+                     <button
+                        className={`${styles.switch} ${
+                           askQuestionsBeforeCheckout ? styles.switchOn : ""
+                        }`}
+                        onClick={() =>
+                           setAskQuestionsBeforeCheckout(
+                              !askQuestionsBeforeCheckout,
+                           )
+                        }
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
+
+                  <button className={styles.linkBtn}>
+                     <Settings2 size={14} /> Plan settings
+                  </button>
                </section>
 
                {/* Apps */}
                <section className={styles.section}>
-                  <button
-                     className={styles.sectionHeader}
-                     onClick={() => toggleSection("apps")}
-                  >
-                     <span>Apps</span>
-                     <ChevronDown
-                        size={16}
-                        className={
-                           expandedSections.apps ? styles.chevronOpen : ""
-                        }
-                     />
-                  </button>
+                  <h3 className={styles.sectionHeader}>Apps</h3>
                   <p className={styles.sectionSub}>
                      The content included with this product.
                   </p>
 
-                  {expandedSections.apps && (
-                     <div className={styles.sectionBody}>
-                        <div className={styles.appsGroupLabel}>ADD NEW</div>
-                        <div className={styles.appsGrid}>
-                           {APP_OPTIONS.map((app) => (
-                              <button
-                                 key={app.key}
-                                 className={`${styles.appChip} ${state.includedApps.includes(app.key) ? styles.appChipActive : ""}`}
-                                 onClick={() => toggleApp(app.key)}
-                                 style={
-                                    state.includedApps.includes(app.key)
-                                       ? {
-                                            borderColor: app.color,
-                                            background: `${app.color}15`,
-                                         }
-                                       : {}
-                                 }
-                              >
-                                 <span
-                                    className={styles.appDot}
-                                    style={{ background: app.color }}
-                                 />
-                                 {app.label}
-                              </button>
-                           ))}
-                        </div>
-
-                        <div className={styles.appsGroupLabel}>
-                           ALREADY IN THIS COMPANY
-                        </div>
-                        <div className={styles.companyLabel}>HOME</div>
-                        <div className={styles.appChipDisabled}>
+                  <div className={styles.appsGroupLabel}>ADD NEW</div>
+                  <div className={styles.appsGrid}>
+                     {APP_OPTIONS.map((app) => (
+                        <button
+                           key={app.key}
+                           className={`${styles.appChip} ${
+                              includedApps.includes(app.key)
+                                 ? styles.appChipActive
+                                 : ""
+                           }`}
+                           onClick={() => toggleApp(app.key)}
+                        >
                            <span
                               className={styles.appDot}
-                              style={{ background: "#3b82f6" }}
+                              style={{ background: app.color }}
                            />
-                           Public forum
-                        </div>
-                     </div>
-                  )}
+                           {app.label}
+                        </button>
+                     ))}
+                  </div>
                </section>
 
                {/* Appearance */}
                <section className={styles.section}>
-                  <button
-                     className={styles.sectionHeader}
-                     onClick={() => toggleSection("appearance")}
-                  >
-                     <span>Appearance</span>
-                     <ChevronDown
-                        size={16}
-                        className={
-                           expandedSections.appearance ? styles.chevronOpen : ""
-                        }
-                     />
-                  </button>
-                  <p className={styles.sectionSub}>Theme and accent color.</p>
+                  <h3 className={styles.sectionHeader}>Appearance</h3>
 
-                  {expandedSections.appearance && (
-                     <div className={styles.sectionBody}>
-                        <div className={styles.colorSectionLabel}>Default</div>
+                  <div className={styles.colorSectionLabel}>Default</div>
+                  <button
+                     className={styles.colorSwatchLarge}
+                     style={{ background: "#3b82f6" }}
+                     onClick={() => setAppearanceColor("#3b82f6")}
+                  />
+
+                  <div className={styles.colorSectionLabel}>Custom</div>
+                  <div className={styles.colorGrid}>
+                     {COLOR_PALETTE.map((color) => (
                         <button
-                           className={`${styles.colorSwatchLarge} ${state.appearanceColor === "#3b82f6" ? styles.colorSwatchActive : ""}`}
-                           style={{ background: "#3b82f6" }}
-                           onClick={() => update("appearanceColor", "#3b82f6")}
+                           key={color}
+                           className={styles.colorSwatch}
+                           style={{ background: color }}
+                           onClick={() => setAppearanceColor(color)}
                         />
-
-                        <div className={styles.colorSectionLabel}>Custom</div>
-                        <div className={styles.colorGrid}>
-                           {COLOR_PALETTE.map((color) => (
-                              <button
-                                 key={color}
-                                 className={`${styles.colorSwatch} ${state.appearanceColor === color ? styles.colorSwatchActive : ""}`}
-                                 style={{ background: color }}
-                                 onClick={() =>
-                                    update("appearanceColor", color)
-                                 }
-                              />
-                           ))}
-                        </div>
-                     </div>
-                  )}
-               </section>
-
-               {/* Growth Tools */}
-               <section className={styles.section}>
-                  <button
-                     className={styles.sectionHeader}
-                     onClick={() => toggleSection("growth")}
-                  >
-                     <span>Growth tools</span>
-                     <ChevronDown size={16} className={styles.chevronOpen} />
-                  </button>
-                  <p className={styles.sectionSub}>
-                     Discount rate, sale banner, and member visibility.
-                  </p>
-
-                  <div className={styles.sectionBody}>
-                     <div className={styles.toggleRow}>
-                        <div>
-                           <div className={styles.toggleLabel}>
-                              Show member count on store page
-                           </div>
-                           <div className={styles.toggleSub}>
-                              Display the number of people who have joined this
-                              product on its public store page.
-                           </div>
-                        </div>
-                        <button
-                           className={`${styles.switch} ${state.growthTools.showMemberCount ? styles.switchOn : ""}`}
-                           onClick={() =>
-                              update("growthTools", {
-                                 ...state.growthTools,
-                                 showMemberCount:
-                                    !state.growthTools.showMemberCount,
-                              })
-                           }
-                        >
-                           <span className={styles.switchThumb} />
-                        </button>
-                     </div>
+                     ))}
                   </div>
                </section>
 
-               {/* Product Settings */}
+               {/* Growth tools */}
                <section className={styles.section}>
-                  <button
-                     className={styles.sectionHeader}
-                     onClick={() => toggleSection("settings")}
-                  >
-                     <span>Product settings</span>
-                     <ChevronDown
-                        size={16}
-                        className={
-                           expandedSections.settings ? styles.chevronOpen : ""
-                        }
-                     />
-                  </button>
+                  <h3 className={styles.sectionHeader}>Growth tools</h3>
+
+                  <div className={styles.toggleRow}>
+                     <div>
+                        <div className={styles.toggleLabel}>
+                           Show member count on store page
+                        </div>
+                        <div className={styles.toggleSub}>
+                           Display the number of people who have joined this
+                           product on its public store page.
+                        </div>
+                     </div>
+                     <button
+                        className={`${styles.switch} ${
+                           showMemberCount ? styles.switchOn : ""
+                        }`}
+                        onClick={() => setShowMemberCount(!showMemberCount)}
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
+               </section>
+
+               {/* Product settings */}
+               <section className={styles.section}>
+                  <h3 className={styles.sectionHeader}>Product settings</h3>
                   <p className={styles.sectionSub}>
                      URL, taxes, affiliates, and more.
                   </p>
 
-                  {expandedSections.settings && (
-                     <div className={styles.sectionBody}>
-                        <label className={styles.fieldLabel}>
-                           Purchase button text{" "}
-                           <span className={styles.helpIcon}>?</span>
-                        </label>
-                        <select
-                           className={styles.input}
-                           value={state.productSettings.purchaseButtonText}
-                           onChange={(e) =>
-                              updateSettings(
-                                 "purchaseButtonText",
-                                 e.target.value,
-                              )
-                           }
-                        >
-                           {BUTTON_TEXT_OPTIONS.map((opt) => (
-                              <option key={opt}>{opt}</option>
-                           ))}
-                        </select>
+                  <label className={styles.fieldLabel}>
+                     Purchase button text
+                  </label>
+                  <select
+                     className={styles.input}
+                     value={purchaseButtonText}
+                     onChange={(e) => setPurchaseButtonText(e.target.value)}
+                  >
+                     {BUTTON_TEXT_OPTIONS.map((opt) => (
+                        <option key={opt}>{opt}</option>
+                     ))}
+                  </select>
 
-                        <label className={styles.fieldLabel}>
-                           Product tax code
-                        </label>
-                        <select
-                           className={styles.input}
-                           value={state.productSettings.productTaxCode}
-                           onChange={(e) =>
-                              updateSettings("productTaxCode", e.target.value)
-                           }
-                        >
-                           <option value="">Use preset</option>
-                           <option value="digital">Digital goods</option>
-                           <option value="physical">Physical goods</option>
-                           <option value="services">Services</option>
-                        </select>
-                        <div className={styles.fieldHint}>
-                           This will be used for calculating automatic tax.
-                           Defaults to the preset product tax code from your tax
-                           settings.
-                        </div>
+                  <label className={styles.fieldLabel}>Product tax code</label>
+                  <select
+                     className={styles.input}
+                     value={productTaxCode}
+                     onChange={(e) => setProductTaxCode(e.target.value)}
+                  >
+                     <option value="">Use preset</option>
+                     <option value="digital">Digital goods</option>
+                     <option value="physical">Physical goods</option>
+                     <option value="services">Services</option>
+                  </select>
 
-                        <label className={styles.fieldLabel}>Product URL</label>
+                  <label className={styles.fieldLabel}>Product URL</label>
+                  <input
+                     className={styles.input}
+                     value={productUrl}
+                     onChange={(e) => setProductUrl(e.target.value)}
+                     placeholder="yourbusiness.com/product"
+                  />
+
+                  <div className={styles.toggleRow}>
+                     <div className={styles.toggleLabel}>
+                        Add affiliate rate
+                     </div>
+                     <button
+                        className={`${styles.switch} ${
+                           addAffiliateRate ? styles.switchOn : ""
+                        }`}
+                        onClick={() => setAddAffiliateRate(!addAffiliateRate)}
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
+
+                  {addAffiliateRate && (
+                     <div className={styles.affiliateInput}>
                         <input
-                           className={styles.input}
-                           value={
-                              state.productSettings.productUrl ||
-                              `space-ex.com/${activeBusiness?.id?.slice(-6) || "space-ex"}/${state.name.toLowerCase().replace(/\s+/g, "-").slice(0, 30) || "product"}`
-                           }
+                           type="number"
+                           value={affiliateRate}
                            onChange={(e) =>
-                              updateSettings("productUrl", e.target.value)
+                              setAffiliateRate(Number(e.target.value))
                            }
-                           placeholder="yourbusiness.com/product"
+                           min={0}
+                           max={100}
                         />
-
-                        <div className={styles.toggleRow}>
-                           <div className={styles.toggleLabel}>
-                              Add affiliate rate{" "}
-                              <span className={styles.helpIcon}>?</span>
-                           </div>
-                           <button
-                              className={`${styles.switch} ${state.productSettings.addAffiliateRate ? styles.switchOn : ""}`}
-                              onClick={() =>
-                                 updateSettings(
-                                    "addAffiliateRate",
-                                    !state.productSettings.addAffiliateRate,
-                                 )
-                              }
-                           >
-                              <span className={styles.switchThumb} />
-                           </button>
-                        </div>
-
-                        {state.productSettings.addAffiliateRate && (
-                           <div className={styles.affiliateInput}>
-                              <input
-                                 type="number"
-                                 value={state.productSettings.affiliateRate}
-                                 onChange={(e) =>
-                                    updateSettings(
-                                       "affiliateRate",
-                                       Number(e.target.value),
-                                    )
-                                 }
-                                 min={0}
-                                 max={100}
-                              />
-                              <span>%</span>
-                           </div>
-                        )}
-
-                        <div className={styles.toggleRow}>
-                           <div className={styles.toggleLabel}>
-                              Checkout redirect{" "}
-                              <span className={styles.helpIcon}>?</span>
-                           </div>
-                           <button
-                              className={`${styles.switch} ${state.productSettings.checkoutRedirect ? styles.switchOn : ""}`}
-                              onClick={() =>
-                                 updateSettings(
-                                    "checkoutRedirect",
-                                    !state.productSettings.checkoutRedirect,
-                                 )
-                              }
-                           >
-                              <span className={styles.switchThumb} />
-                           </button>
-                        </div>
-
-                        <div className={styles.toggleRow}>
-                           <div className={styles.toggleLabel}>
-                              Visible on your store page{" "}
-                              <span className={styles.helpIcon}>?</span>
-                           </div>
-                           <button
-                              className={`${styles.switch} ${state.productSettings.visibleOnStorePage ? styles.switchOn : ""}`}
-                              onClick={() =>
-                                 updateSettings(
-                                    "visibleOnStorePage",
-                                    !state.productSettings.visibleOnStorePage,
-                                 )
-                              }
-                           >
-                              <span className={styles.switchThumb} />
-                           </button>
-                        </div>
+                        <span>%</span>
                      </div>
                   )}
+
+                  <div className={styles.toggleRow}>
+                     <div className={styles.toggleLabel}>Checkout redirect</div>
+                     <button
+                        className={`${styles.switch} ${
+                           checkoutRedirect ? styles.switchOn : ""
+                        }`}
+                        onClick={() => setCheckoutRedirect(!checkoutRedirect)}
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
+
+                  <div className={styles.toggleRow}>
+                     <div className={styles.toggleLabel}>
+                        Visible on your store page
+                     </div>
+                     <button
+                        className={`${styles.switch} ${
+                           visibleOnStorePage ? styles.switchOn : ""
+                        }`}
+                        onClick={() =>
+                           setVisibleOnStorePage(!visibleOnStorePage)
+                        }
+                     >
+                        <span className={styles.switchThumb} />
+                     </button>
+                  </div>
                </section>
 
                {error && <div className={styles.error}>{error}</div>}
@@ -937,7 +661,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                <button
                   className={styles.saveBtn}
                   onClick={handleSave}
-                  disabled={saving || !state.name.trim()}
+                  disabled={saving || !name.trim()}
                >
                   {saving
                      ? "Saving..."
@@ -947,16 +671,15 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                </button>
             </aside>
 
-            {/* RIGHT PANEL — Live Preview */}
+            {/* Preview */}
             <main
                className={`${styles.preview} ${styles[`preview-${viewMode}`]}`}
             >
                <div className={styles.previewInner}>
-                  {/* Brand header */}
                   <div className={styles.previewBrand}>
                      <div
                         className={styles.previewBrandIcon}
-                        style={{ background: state.appearanceColor }}
+                        style={{ background: appearanceColor }}
                      >
                         {businessInitial}
                      </div>
@@ -965,54 +688,42 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      </span>
                   </div>
 
-                  {/* Product page mockup */}
                   <div className={styles.productPreview}>
                      <div className={styles.previewMain}>
-                        {/* Media area */}
                         <div className={styles.previewMedia}>
-                           {state.bannerImage ? (
-                              <img
-                                 src={state.bannerImage}
-                                 alt="Product"
-                                 className={styles.previewImage}
+                           <div className={styles.previewMediaEmpty}>
+                              <ImageIcon
+                                 size={24}
+                                 className={styles.previewMediaIcon}
                               />
-                           ) : (
-                              <div className={styles.previewMediaEmpty}>
-                                 <ImageIcon
-                                    size={24}
-                                    className={styles.previewMediaIcon}
-                                 />
-                                 <div className={styles.previewMediaTitle}>
-                                    Add your first product video or photo
-                                 </div>
-                                 <div className={styles.previewMediaSub}>
-                                    This should illustrate something about the
-                                    product.
-                                 </div>
-                                 <div className={styles.previewMediaActions}>
-                                    <button className={styles.previewSmallBtn}>
-                                       <Upload size={14} /> Upload
-                                    </button>
-                                    <button className={styles.previewSmallBtn}>
-                                       <ImageIcon size={14} /> Free stock photos
-                                    </button>
-                                 </div>
+                              <div className={styles.previewMediaTitle}>
+                                 Add your first product video or photo
                               </div>
-                           )}
+                              <div className={styles.previewMediaSub}>
+                                 This should illustrate something about the
+                                 product.
+                              </div>
+                              <div className={styles.previewMediaActions}>
+                                 <button className={styles.previewSmallBtn}>
+                                    <Upload size={14} /> Upload
+                                 </button>
+                                 <button className={styles.previewSmallBtn}>
+                                    <ImageIcon size={14} /> Free stock photos
+                                 </button>
+                              </div>
+                           </div>
                         </div>
 
-                        {/* Headline */}
                         <div className={styles.previewHeadline}>
-                           {state.headline || (
+                           {headline || (
                               <span className={styles.previewPlaceholder}>
                                  Write a headline...
                               </span>
                            )}
                         </div>
 
-                        {/* Description */}
                         <div className={styles.previewDescription}>
-                           {state.description || (
+                           {description || (
                               <span className={styles.previewPlaceholderSmall}>
                                  Write a description...
                               </span>
@@ -1023,87 +734,32 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                            <Sparkles size={12} /> Generate with AI
                         </button>
 
-                        {/* FAQs */}
                         <div className={styles.previewFaq}>
                            <div className={styles.previewFaqTitle}>
                               Frequently asked questions
                            </div>
-                           {state.faqs.length === 0 ? (
-                              <button
-                                 className={styles.previewAddFaq}
-                                 onClick={addFaq}
-                              >
-                                 Add FAQ <Plus size={14} />
-                              </button>
-                           ) : (
-                              <div className={styles.faqList}>
-                                 {state.faqs.map((faq, i) => (
-                                    <div key={i} className={styles.faqItem}>
-                                       <input
-                                          className={styles.faqInput}
-                                          placeholder="Question"
-                                          value={faq.question}
-                                          onChange={(e) =>
-                                             updateFaq(i, {
-                                                question: e.target.value,
-                                             })
-                                          }
-                                       />
-                                       <textarea
-                                          className={styles.faqTextarea}
-                                          placeholder="Answer"
-                                          value={faq.answer}
-                                          onChange={(e) =>
-                                             updateFaq(i, {
-                                                answer: e.target.value,
-                                             })
-                                          }
-                                          rows={2}
-                                       />
-                                       <button
-                                          className={styles.faqRemove}
-                                          onClick={() => removeFaq(i)}
-                                       >
-                                          <X size={14} />
-                                       </button>
-                                    </div>
-                                 ))}
-                                 <button
-                                    className={styles.previewAddFaq}
-                                    onClick={addFaq}
-                                 >
-                                    Add FAQ <Plus size={14} />
-                                 </button>
-                              </div>
-                           )}
+                           <button
+                              className={styles.previewAddFaq}
+                              onClick={() =>
+                                 setFaqs([
+                                    ...faqs,
+                                    { question: "", answer: "" },
+                                 ])
+                              }
+                           >
+                              Add FAQ <Plus size={14} />
+                           </button>
                         </div>
                      </div>
 
-                     {/* Sidebar */}
                      <div className={styles.previewSide}>
-                        {/* Banner upload */}
-                        {!state.bannerImage && (
-                           <div className={styles.previewBannerUpload}>
-                              <div className={styles.previewBannerIcon}>
-                                 <ImageIcon size={16} />
-                              </div>
-                              <div className={styles.previewBannerTitle}>
-                                 Add banner image
-                              </div>
-                              <div className={styles.previewBannerSub}>
-                                 Shown across the top of your product page.
-                              </div>
-                           </div>
-                        )}
-
-                        {/* Title + price */}
                         <div className={styles.previewTitleBlock}>
                            <div className={styles.previewTitleLabel}>Title</div>
                            <div className={styles.previewTitleRow}>
                               <span className={styles.previewPriceLabel}>
-                                 {state.accessType === "free"
+                                 {accessType === "free"
                                     ? "$0 once"
-                                    : `$${state.price} ${state.currency}`}
+                                    : `$${price} ${currency}`}
                               </span>
                               <ChevronDown
                                  size={14}
@@ -1118,11 +774,11 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
 
                         <button
                            className={styles.previewCTA}
-                           style={{ background: state.appearanceColor }}
+                           style={{ background: appearanceColor }}
                         >
-                           {state.accessType === "free"
+                           {accessType === "free"
                               ? "Join for Free"
-                              : state.productSettings.purchaseButtonText}
+                              : purchaseButtonText}
                         </button>
 
                         <div className={styles.previewFooter}>

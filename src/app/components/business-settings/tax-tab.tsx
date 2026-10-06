@@ -11,7 +11,7 @@ interface Props {
 }
 
 const TaxTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const t = business.tax || {};
+   const t = business?.tax || {};
 
    return (
       <div className={styles.tabContent}>

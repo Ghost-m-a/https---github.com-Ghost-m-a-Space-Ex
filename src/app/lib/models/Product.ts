@@ -61,7 +61,6 @@ export interface IProduct extends Document {
    visibility: Visibility;
    discoverStatus: DiscoverStatus;
 
-   // denormalized stats (updated on transaction events)
    stats: {
       allTimeRevenue: number;
       activeUsers: number;
@@ -102,7 +101,11 @@ const ProductSchema = new Schema<IProduct>(
       bannerImage: { type: String, default: "" },
       productImage: { type: String, default: "" },
 
-      labels: [{ type: String, trim: true, maxlength: 20 }],
+      // ✅ Defaults so missing data never crashes the UI
+      labels: {
+         type: [{ type: String, trim: true, maxlength: 20 }],
+         default: [],
+      },
       collectShippingAddress: { type: Boolean, default: false },
 
       accessType: {
@@ -126,20 +129,27 @@ const ProductSchema = new Schema<IProduct>(
       launchAsWaitlist: { type: Boolean, default: false },
       askQuestionsBeforeCheckout: { type: Boolean, default: false },
 
-      includedApps: [
-         {
-            type: String,
-            enum: [
-               "forums",
-               "chat",
-               "courses",
-               "content",
-               "livestreaming",
-               "events",
-            ],
-         },
-      ],
-      faqs: [FAQSchema],
+      // ✅ Default to empty array
+      includedApps: {
+         type: [
+            {
+               type: String,
+               enum: [
+                  "forums",
+                  "chat",
+                  "courses",
+                  "content",
+                  "livestreaming",
+                  "events",
+               ],
+            },
+         ],
+         default: [],
+      },
+      faqs: {
+         type: [FAQSchema],
+         default: [],
+      },
 
       appearanceColor: { type: String, default: "#3b82f6" },
 

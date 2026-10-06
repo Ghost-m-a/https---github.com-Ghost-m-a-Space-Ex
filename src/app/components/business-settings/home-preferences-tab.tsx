@@ -10,7 +10,7 @@ interface Props {
 }
 
 const HomePreferencesTab: React.FC<Props> = ({ business, updateBusiness }) => {
-   const h = business.homePreferences || {};
+   const h = business?.homePreferences || {};
 
    return (
       <div className={styles.tabContent}>
