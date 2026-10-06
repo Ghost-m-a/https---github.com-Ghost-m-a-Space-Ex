@@ -1,14 +1,18 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
-import Website from "@/app/lib/models/Website";
 import Business from "@/app/lib/models/Business";
+import Website from "@/app/lib/models/Website";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+
+async function requireUser(req: NextRequest) {
+   const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+   if (!token) return null;
+   return await verifySessionToken(token);
+}
 
 export async function GET(req: NextRequest) {
    try {
-      const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-      if (!token) return NextResponse.json({ websites: [] });
-      const session = await verifySessionToken(token);
+      const session = await requireUser(req);
       if (!session) return NextResponse.json({ websites: [] });
 
       const url = new URL(req.url);
@@ -27,7 +31,6 @@ export async function GET(req: NextRequest) {
             .sort({ createdAt: 1 })
             .lean();
       }
-
       if (!business) return NextResponse.json({ websites: [] });
 
       const websites = await Website.find({ businessId: business._id }).lean();
@@ -51,14 +54,11 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
    try {
-      const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-      if (!token)
-         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      const session = await verifySessionToken(token);
+      const session = await requireUser(req);
       if (!session)
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-      const { businessId, domain, name } = await req.json();
+      const { businessId, domain, name, blueprintId } = await req.json();
 
       if (!businessId || !domain || !name) {
          return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -82,6 +82,9 @@ export async function POST(req: NextRequest) {
          name: name.trim(),
          status: "draft",
          visits: 0,
+         pageViews: 0,
+         checkouts: 0,
+         blueprintId: blueprintId || "",
       });
 
       return NextResponse.json({
@@ -90,6 +93,9 @@ export async function POST(req: NextRequest) {
             domain: website.domain,
             name: website.name,
             status: website.status,
+            visits: 0,
+            pageViews: 0,
+            checkouts: 0,
          },
       });
    } catch (err) {

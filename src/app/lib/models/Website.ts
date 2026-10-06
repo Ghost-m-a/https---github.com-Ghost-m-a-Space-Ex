@@ -11,6 +11,7 @@ export interface IWebsite extends Document {
    conversions: number;
    topPages: { path: string; visits: number }[];
    topSources: { source: string; visits: number }[];
+   blueprintId?: string;
    createdAt: Date;
    updatedAt: Date;
 }
@@ -46,6 +47,7 @@ const WebsiteSchema = new Schema<IWebsite>(
             visits: { type: Number, default: 0 },
          },
       ],
+      blueprintId: { type: String, default: "" },
    },
    { timestamps: true },
 );

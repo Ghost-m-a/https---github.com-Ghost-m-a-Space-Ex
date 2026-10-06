@@ -14,6 +14,8 @@ import Transaction from "../src/app/lib/models/Transaction";
 import Website from "../src/app/lib/models/Website";
 import LiveEvent from "../src/app/lib/models/LiveEvent";
 import Product from "../src/app/lib/models/Product";
+import Post from "../src/app/lib/models/Post";
+import Follow from "../src/app/lib/models/Follow";
 
 function hashPassword(password: string): string {
    const salt = crypto.randomBytes(16).toString("hex");
@@ -53,6 +55,8 @@ async function seed() {
       Website.deleteMany({}),
       LiveEvent.deleteMany({}),
       Product.deleteMany({}),
+      Post.deleteMany({}),
+      Follow.deleteMany({}),
    ]);
    console.log("✅ Data cleared");
 
@@ -123,7 +127,7 @@ async function seed() {
       },
    });
 
-   // Space-Ex Team (the bot account)
+   // Space-Ex Team (bot account)
    const spaceExTeam = await User.create({
       name: "Space-Ex Team",
       email: "team@space-ex.com",
@@ -133,7 +137,7 @@ async function seed() {
       avatarColor: "#3b82f6",
    });
 
-   // Sarah Jenkins (friend account)
+   // Sarah Jenkins
    const sarah = await User.create({
       name: "Sarah Jenkins",
       email: "sarah@test.com",
@@ -144,7 +148,7 @@ async function seed() {
       avatarColor: "#ec4899",
    });
 
-   // Alex Ventures (partner account)
+   // Alex Ventures
    const alex = await User.create({
       name: "Alex Ventures",
       email: "alex@ventures.com",
@@ -432,12 +436,112 @@ async function seed() {
    console.log("✅ Products created");
 
    // =========================================
+   // CREATE FOLLOWS + POSTS
+   // ✅ MOVED HERE — after users are defined
+   // =========================================
+   console.log("👥 Creating follows + posts...");
+
+   // Dr follows Sarah and Space-Ex Team
+   await Follow.create([
+      { followerId: dr._id, followingId: sarah._id },
+      { followerId: dr._id, followingId: spaceExTeam._id },
+   ]);
+
+   // Sarah and Alex follow each other (for demo data)
+   await Follow.create([
+      { followerId: sarah._id, followingId: alex._id },
+      { followerId: alex._id, followingId: sarah._id },
+   ]);
+
+   // Local time constants (avoid name clash with Transaction block)
+   const postNow = Date.now();
+   const postMinute = 60 * 1000;
+   const postHour = 60 * postMinute;
+   const postDay = 24 * postHour;
+
+   await Post.create([
+      {
+         author: {
+            id: sarah._id,
+            name: sarah.name,
+            username: "sarahj",
+            avatar: "S",
+            verified: true,
+         },
+         forum: "Public forum",
+         content:
+            "Just wrapped a $50k launch using the Economic Intelligence playbook. The 3x-faster pipeline strategy is real — happy to share details if anyone's interested 👇",
+         stats: { comments: 24, likes: 156, views: 12400, shares: 12 },
+         likedBy: [dr._id],
+         createdAt: new Date(postNow - 45 * postMinute),
+      },
+      {
+         author: {
+            id: spaceExTeam._id,
+            name: spaceExTeam.name,
+            username: "spaceex",
+            avatar: "S",
+            verified: true,
+         },
+         forum: "Space-Ex Team",
+         content:
+            "🚀 New feature alert: You can now accept payments in 135+ currencies with automatic conversion. No more juggling Stripe accounts.",
+         stats: { comments: 48, likes: 892, views: 45200, shares: 67 },
+         likedBy: [],
+         createdAt: new Date(postNow - 2 * postHour),
+      },
+      {
+         author: {
+            id: alex._id,
+            name: alex.name,
+            username: "alexv",
+            avatar: "A",
+            verified: false,
+         },
+         forum: "Public forum",
+         content:
+            "Reminder: Most founders don't fail because of bad products. They fail because of bad distribution. Focus 80% of your time on getting your first 100 users before polishing anything else.",
+         media: {
+            type: "link",
+            url: "space-ex.com/blog/distribution-first",
+            title: "The Distribution-First Playbook",
+            description:
+               "How to get your first 100 users without spending a dollar on ads. A step-by-step guide covering SEO, communities, and partnerships.",
+            price: 0,
+            isOpen: true,
+            rating: 4.8,
+            reviewCount: 12,
+         },
+         stats: { comments: 8, likes: 234, views: 8900, shares: 41 },
+         likedBy: [],
+         createdAt: new Date(postNow - 5 * postHour),
+      },
+      {
+         author: {
+            id: sarah._id,
+            name: sarah.name,
+            username: "sarahj",
+            avatar: "S",
+            verified: true,
+         },
+         forum: "Public forum",
+         content:
+            "Reading through the Space-Ex analytics and noticed my conversion rate jumped 3.2% after adding the checkout branding. Small tweaks, big returns.",
+         stats: { comments: 3, likes: 47, views: 1200, shares: 2 },
+         likedBy: [],
+         createdAt: new Date(postNow - postDay),
+      },
+   ]);
+
+   console.log("✅ Follows + posts created");
+
+   // =========================================
    // CREATE TRANSACTIONS
    // =========================================
    console.log("💸 Creating transactions...");
 
-   const now = Date.now();
-   const day = 24 * 60 * 60 * 1000;
+   const txNow = Date.now();
+   const txDay = 24 * 60 * 60 * 1000;
 
    await Transaction.create([
       {
@@ -447,7 +551,7 @@ async function seed() {
          status: "completed",
          description: "Initial funding",
          metadata: { method: "bank_transfer" },
-         createdAt: new Date(now - 10 * day),
+         createdAt: new Date(txNow - 10 * txDay),
       },
       {
          businessId: spaceExBiz._id,
@@ -460,7 +564,7 @@ async function seed() {
             email: "john@example.com",
             avatar: "JS",
          },
-         createdAt: new Date(now - 8 * day),
+         createdAt: new Date(txNow - 8 * txDay),
       },
       {
          businessId: spaceExBiz._id,
@@ -473,7 +577,7 @@ async function seed() {
             email: "sarah@test.com",
             avatar: "SJ",
          },
-         createdAt: new Date(now - 5 * day),
+         createdAt: new Date(txNow - 5 * txDay),
       },
       {
          businessId: spaceExBiz._id,
@@ -481,7 +585,7 @@ async function seed() {
          amount: 12.4,
          status: "completed",
          description: "Figma subscription",
-         createdAt: new Date(now - 3 * day),
+         createdAt: new Date(txNow - 3 * txDay),
       },
       {
          businessId: spaceExBiz._id,
@@ -489,7 +593,7 @@ async function seed() {
          amount: 85.0,
          status: "completed",
          description: "Meta Ads campaign",
-         createdAt: new Date(now - 2 * day),
+         createdAt: new Date(txNow - 2 * txDay),
       },
       {
          businessId: spaceExBiz._id,
@@ -502,7 +606,7 @@ async function seed() {
             email: "john@example.com",
             avatar: "JS",
          },
-         createdAt: new Date(now - 1 * day),
+         createdAt: new Date(txNow - 1 * txDay),
       },
       {
          businessId: spaceExBiz._id,
@@ -515,7 +619,7 @@ async function seed() {
             email: "mike@demo.io",
             avatar: "MC",
          },
-         createdAt: new Date(now - 3 * 60 * 60 * 1000),
+         createdAt: new Date(txNow - 3 * 60 * 60 * 1000),
       },
       {
          businessId: spaceExBiz._id,
@@ -528,7 +632,7 @@ async function seed() {
             email: "emma@mail.com",
             avatar: "EW",
          },
-         createdAt: new Date(now - 1 * 60 * 60 * 1000),
+         createdAt: new Date(txNow - 1 * 60 * 60 * 1000),
       },
    ]);
 
@@ -890,6 +994,8 @@ async function seed() {
    console.log("   • 4 users");
    console.log("   • 1 business (Space/Ex)");
    console.log("   • 4 products (Pro, Starter, Free, VIP)");
+   console.log("   • 4 follows (Dr → Sarah + Team, Sarah ↔ Alex)");
+   console.log("   • 4 posts in Townhall");
    console.log(`   • 8 transactions (Balance: $${balance.toFixed(2)})`);
    console.log("   • 1 website (space-ex.com, 1240 visits)");
    console.log("   • 5 live events");
@@ -906,7 +1012,9 @@ async function seed() {
    console.log("   1. Start the dev server:  npm run dev");
    console.log("   2. Visit:  http://localhost:3000/login");
    console.log("   3. Log in with:  dr@spaceex.com / password123\n");
-   console.log("   💡 Try Business mode (S avatar) → Products / Analytics\n");
+   console.log(
+      "   💡 Try Townhall at /townhall — real posts, follows, likes\n",
+   );
 
    await mongoose.disconnect();
    console.log("🔌 Disconnected");

@@ -1,0 +1,379 @@
+.page {
+   display: flex;
+   flex-direction: column;
+   gap: 32px;
+   padding: 8px 0;
+   max-width: 1400px;
+}
+
+.title {
+   font-size: 26px;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin: 0;
+}
+
+/* Hero */
+.hero {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 32px;
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 16px;
+   overflow: hidden;
+   padding: 40px;
+   align-items: center;
+   min-height: 300px;
+}
+
+.heroLeft {
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+}
+
+.heroTitle {
+   font-size: 32px;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin: 0;
+   line-height: 1.15;
+}
+
+.heroSub {
+   font-size: 14px;
+   color: var(--text-secondary);
+   line-height: 1.5;
+   margin: 0 0 12px;
+   max-width: 420px;
+}
+
+.heroBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 8px;
+   padding: 12px 20px;
+   background: var(--accent-blue);
+   color: #fff;
+   border: none;
+   border-radius: 10px;
+   font-size: 14px;
+   font-weight: 500;
+   cursor: pointer;
+   align-self: flex-start;
+   transition: background 0.15s;
+}
+
+.heroBtn:hover {
+   background: #2563eb;
+}
+
+.heroRight {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+}
+
+.heroMockup {
+   width: 100%;
+   max-width: 400px;
+   background: #f5e6d3;
+   border-radius: 12px;
+   padding: 20px;
+   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+   transform: rotate(-2deg);
+}
+
+.heroMockupHeader {
+   background: #fff;
+   border-radius: 8px;
+   padding: 16px;
+   font-size: 14px;
+   font-weight: 600;
+   color: #1a1a1a;
+   margin-bottom: 12px;
+}
+
+.heroMockupGrid {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 8px;
+}
+
+.heroMockupCard {
+   background: #fff;
+   border-radius: 8px;
+   padding: 20px 12px;
+   text-align: center;
+   font-size: 13px;
+   font-weight: 600;
+   color: #1a1a1a;
+}
+
+/* Sections */
+.section {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+}
+
+.sectionHeader {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.sectionTitle {
+   font-size: 18px;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin: 0;
+}
+
+.exploreLink {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   color: var(--text-secondary);
+   font-size: 13px;
+   text-decoration: none;
+   cursor: pointer;
+}
+
+.exploreLink:hover {
+   color: var(--text-primary);
+}
+
+/* Existing Websites */
+.websitesGrid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+   gap: 16px;
+}
+
+.websiteCard {
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 12px;
+   padding: 20px;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+}
+
+.websiteHeader {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.websiteDomain {
+   font-weight: 600;
+   font-size: 13.5px;
+   color: var(--text-primary);
+}
+
+.badge {
+   padding: 3px 10px;
+   border-radius: 999px;
+   font-size: 11px;
+   font-weight: 600;
+   text-transform: capitalize;
+}
+
+.badge_live {
+   background: rgba(16, 185, 129, 0.15);
+   color: #10b981;
+}
+.badge_draft {
+   background: rgba(245, 158, 11, 0.15);
+   color: #f59e0b;
+}
+.badge_building {
+   background: rgba(59, 130, 246, 0.15);
+   color: #3b82f6;
+}
+
+.websiteName {
+   font-size: 12px;
+   color: var(--text-muted);
+   margin-top: -8px;
+}
+
+.websiteStats {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 12px;
+   padding: 12px 0;
+   border-top: 1px solid var(--border-color);
+   border-bottom: 1px solid var(--border-color);
+}
+
+.statValue {
+   font-size: 16px;
+   font-weight: 700;
+   color: var(--text-primary);
+}
+
+.statLabel {
+   font-size: 11px;
+   color: var(--text-muted);
+   margin-top: 2px;
+}
+
+.websiteActions {
+   display: flex;
+   gap: 8px;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.ghostBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 6px 12px;
+   background: transparent;
+   border: 1px solid var(--border-subtle);
+   border-radius: 6px;
+   color: var(--text-primary);
+   font-size: 12.5px;
+   cursor: pointer;
+}
+
+.ghostBtn:hover {
+   background: var(--bg-tertiary);
+}
+
+.iconGhostBtn {
+   padding: 6px;
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+/* Blueprints */
+.blueprintsGrid {
+   display: grid;
+   grid-template-columns: repeat(4, 1fr);
+   gap: 16px;
+}
+
+.blueprintCard {
+   position: relative;
+   background: transparent;
+   border: none;
+   padding: 0;
+   cursor: pointer;
+   text-align: left;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+   transition: transform 0.15s;
+}
+
+.blueprintCard:hover:not(:disabled) {
+   transform: translateY(-4px);
+}
+.blueprintCard:disabled {
+   opacity: 0.6;
+   cursor: wait;
+}
+
+.blueprintPreview {
+   aspect-ratio: 16 / 10;
+   border-radius: 12px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   position: relative;
+   overflow: hidden;
+   border: 1px solid var(--border-color);
+}
+
+.blueprintMockContent {
+   text-align: center;
+   padding: 20px;
+}
+
+.blueprintMockIcon {
+   font-size: 32px;
+   margin-bottom: 8px;
+}
+
+.blueprintMockTitle {
+   font-size: 15px;
+   font-weight: 700;
+   color: #fff;
+   margin-bottom: 6px;
+   text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.blueprintMockSub {
+   font-size: 11.5px;
+   color: rgba(255, 255, 255, 0.85);
+   font-weight: 500;
+}
+
+.blueprintInfo {
+   padding: 0 4px;
+}
+
+.blueprintName {
+   font-size: 14px;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin-bottom: 4px;
+}
+
+.blueprintMeta {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   font-size: 12px;
+   color: var(--text-muted);
+}
+
+.blueprintDot {
+   width: 6px;
+   height: 6px;
+   border-radius: 50%;
+   background: #f59e0b;
+}
+
+.blueprintLoading {
+   position: absolute;
+   inset: 0;
+   background: rgba(0, 0, 0, 0.6);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #fff;
+   font-size: 13px;
+   font-weight: 500;
+   border-radius: 12px;
+}
+
+/* Responsive */
+@media (max-width: 1100px) {
+   .blueprintsGrid {
+      grid-template-columns: repeat(2, 1fr);
+   }
+   .hero {
+      grid-template-columns: 1fr;
+      padding: 24px;
+   }
+   .heroTitle {
+      font-size: 24px;
+   }
+}
+@media (max-width: 600px) {
+   .blueprintsGrid {
+      grid-template-columns: 1fr;
+   }
+}
