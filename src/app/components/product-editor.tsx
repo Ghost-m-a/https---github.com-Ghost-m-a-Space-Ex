@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
    ArrowLeft,
@@ -13,6 +13,8 @@ import {
    DollarSign,
    ChevronDown,
    Settings2,
+   Trash2,
+   HelpCircle,
 } from "lucide-react";
 import { useWorkspace } from "../context/workspace-context";
 import styles from "../styles/productEditor.module.css";
@@ -63,14 +65,26 @@ interface FAQ {
 
 const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    const router = useRouter();
-   const { activeBusiness } = useWorkspace();
+   const { activeBusiness, isLoading: workspaceLoading } = useWorkspace();
+   const fileInputRef = useRef<HTMLInputElement>(null);
+
+   // UI state
    const [viewMode, setViewMode] = useState<ViewMode>("desktop");
+   const [aiPrompt, setAiPrompt] = useState("");
+   const [newLabel, setNewLabel] = useState("");
+   const [saving, setSaving] = useState(false);
+   const [loading, setLoading] = useState(mode === "edit");
+   const [uploading, setUploading] = useState(false);
+   const [error, setError] = useState("");
+   const [success, setSuccess] = useState("");
+
+   // Form state
    const [name, setName] = useState("");
    const [headline, setHeadline] = useState("");
    const [description, setDescription] = useState("");
    const [bannerImage, setBannerImage] = useState("");
+   const [productImage, setProductImage] = useState("");
    const [labels, setLabels] = useState<string[]>([]);
-   const [newLabel, setNewLabel] = useState("");
    const [collectShippingAddress, setCollectShippingAddress] = useState(false);
    const [accessType, setAccessType] = useState<"free" | "paid">("free");
    const [pricingType, setPricingType] = useState<"one-time" | "recurring">(
@@ -94,87 +108,236 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    const [addAffiliateRate, setAddAffiliateRate] = useState(true);
    const [affiliateRate, setAffiliateRate] = useState(30);
    const [checkoutRedirect, setCheckoutRedirect] = useState(false);
+   const [checkoutRedirectUrl, setCheckoutRedirectUrl] = useState("");
    const [visibleOnStorePage, setVisibleOnStorePage] = useState(true);
-   const [aiPrompt, setAiPrompt] = useState("");
-   const [saving, setSaving] = useState(false);
-   const [loading, setLoading] = useState(mode === "edit");
-   const [error, setError] = useState("");
 
-   const businessName = activeBusiness?.name || "Space/Ex";
-   const businessInitial = businessName.charAt(0).toUpperCase();
+   // Get the correct business from workspace
+   const businessName = activeBusiness?.name || "";
+   const businessInitial = businessName
+      ? businessName.charAt(0).toUpperCase()
+      : "?";
 
+   // Load product for edit mode
    useEffect(() => {
-      if (mode === "edit" && productId) {
-         setLoading(true);
-         fetch(`/api/business/products/${productId}`)
-            .then((r) => r.json())
-            .then((d) => {
-               const p = d.product;
-               if (!p) return;
-               setName(p.name || "");
-               setHeadline(p.headline || "");
-               setDescription(p.description || "");
-               setBannerImage(p.bannerImage || "");
-               setLabels(p.labels || []);
-               setCollectShippingAddress(!!p.collectShippingAddress);
-               setAccessType(p.accessType || "free");
-               setPricingType(p.pricingType || "one-time");
-               setPrice(p.price || 0);
-               setCurrency(p.currency || "USD");
-               setRecurringInterval(p.recurringInterval || "monthly");
-               setLaunchAsWaitlist(!!p.launchAsWaitlist);
-               setAskQuestionsBeforeCheckout(!!p.askQuestionsBeforeCheckout);
-               setIncludedApps(p.includedApps || []);
-               setFaqs(p.faqs || []);
-               setAppearanceColor(p.appearanceColor || "#3b82f6");
-               setShowMemberCount(p.growthTools?.showMemberCount !== false);
-               setPurchaseButtonText(
-                  p.productSettings?.purchaseButtonText || "Join",
-               );
-               setProductTaxCode(p.productSettings?.productTaxCode || "");
-               setProductUrl(p.productSettings?.productUrl || "");
-               setAddAffiliateRate(
-                  p.productSettings?.addAffiliateRate !== false,
-               );
-               setAffiliateRate(p.productSettings?.affiliateRate || 30);
-               setCheckoutRedirect(!!p.productSettings?.checkoutRedirect);
-               setVisibleOnStorePage(
-                  p.productSettings?.visibleOnStorePage !== false,
-               );
-            })
-            .catch(console.error)
-            .finally(() => setLoading(false));
-      }
+      if (mode !== "edit" || !productId) return;
+
+      setLoading(true);
+      fetch(`/api/business/products/${productId}`)
+         .then((r) => r.json())
+         .then((d) => {
+            const p = d.product;
+            if (!p) {
+               setError("Product not found");
+               return;
+            }
+            setName(p.name || "");
+            setHeadline(p.headline || "");
+            setDescription(p.description || "");
+            setBannerImage(p.bannerImage || "");
+            setProductImage(p.productImage || "");
+            setLabels(Array.isArray(p.labels) ? p.labels : []);
+            setCollectShippingAddress(!!p.collectShippingAddress);
+            setAccessType(p.accessType || "free");
+            setPricingType(p.pricingType || "one-time");
+            setPrice(p.price || 0);
+            setCurrency(p.currency || "USD");
+            setRecurringInterval(p.recurringInterval || "monthly");
+            setLaunchAsWaitlist(!!p.launchAsWaitlist);
+            setAskQuestionsBeforeCheckout(!!p.askQuestionsBeforeCheckout);
+            setIncludedApps(
+               Array.isArray(p.includedApps) ? p.includedApps : [],
+            );
+            setFaqs(Array.isArray(p.faqs) ? p.faqs : []);
+            setAppearanceColor(p.appearanceColor || "#3b82f6");
+            setShowMemberCount(p.growthTools?.showMemberCount !== false);
+            setPurchaseButtonText(
+               p.productSettings?.purchaseButtonText || "Join",
+            );
+            setProductTaxCode(p.productSettings?.productTaxCode || "");
+            setProductUrl(p.productSettings?.productUrl || "");
+            setAddAffiliateRate(p.productSettings?.addAffiliateRate !== false);
+            setAffiliateRate(p.productSettings?.affiliateRate || 30);
+            setCheckoutRedirect(!!p.productSettings?.checkoutRedirect);
+            setCheckoutRedirectUrl(
+               p.productSettings?.checkoutRedirectUrl || "",
+            );
+            setVisibleOnStorePage(
+               p.productSettings?.visibleOnStorePage !== false,
+            );
+         })
+         .catch((err) => {
+            console.error(err);
+            setError("Failed to load product");
+         })
+         .finally(() => setLoading(false));
    }, [mode, productId]);
 
+   // =========================================
+   // IMAGE UPLOAD (base64 for now — swap for S3/Cloudinary later)
+   // =========================================
+   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      if (file.size > 5 * 1024 * 1024) {
+         setError("Image must be under 5MB");
+         return;
+      }
+      if (!file.type.startsWith("image/")) {
+         setError("Only image files are allowed");
+         return;
+      }
+
+      setUploading(true);
+      const reader = new FileReader();
+      reader.onload = (event) => {
+         const result = event.target?.result as string;
+         setBannerImage(result);
+         setUploading(false);
+      };
+      reader.onerror = () => {
+         setError("Failed to read image");
+         setUploading(false);
+      };
+      reader.readAsDataURL(file);
+   };
+
+   // =========================================
+   // AI GENERATION (local — swap for OpenAI later)
+   // =========================================
+   const generateAI = () => {
+      if (!aiPrompt.trim()) return;
+
+      const text = aiPrompt.trim();
+      const firstSentence = text.split(/[.!?\n]/)[0].trim();
+      const words = firstSentence.split(/\s+/);
+
+      // Generate name from first 2-3 meaningful words
+      let generatedName = "";
+      if (words.length >= 3) {
+         generatedName = words.slice(0, 3).join(" ");
+      } else if (words.length >= 1) {
+         generatedName = words.join(" ");
+      } else {
+         generatedName = "New Product";
+      }
+      generatedName = generatedName.slice(0, 60);
+      generatedName =
+         generatedName.charAt(0).toUpperCase() + generatedName.slice(1);
+
+      // Generate headline
+      const headline = text.length > 120 ? text.slice(0, 117) + "..." : text;
+
+      // Generate description
+      const description = `This product includes:\n\n${text}\n\nGet instant access after checkout. Lifetime updates and support included.`;
+
+      // Suggest apps based on keywords
+      const apps: string[] = [];
+      const lower = text.toLowerCase();
+      if (
+         lower.includes("forum") ||
+         lower.includes("community") ||
+         lower.includes("discussion")
+      ) {
+         apps.push("forums");
+      }
+      if (lower.includes("chat") || lower.includes("message"))
+         apps.push("chat");
+      if (
+         lower.includes("course") ||
+         lower.includes("lesson") ||
+         lower.includes("learn")
+      ) {
+         apps.push("courses");
+      }
+      if (lower.includes("content") || lower.includes("library"))
+         apps.push("content");
+      if (lower.includes("live") || lower.includes("stream"))
+         apps.push("livestreaming");
+      if (
+         lower.includes("event") ||
+         lower.includes("meetup") ||
+         lower.includes("call")
+      ) {
+         apps.push("events");
+      }
+      if (apps.length === 0) apps.push("content", "chat");
+
+      // Apply
+      setName(generatedName);
+      setHeadline(headline);
+      setDescription(description);
+      setIncludedApps(apps);
+
+      // Suggest price if mentioned
+      const priceMatch = text.match(/\$(\d+)/);
+      if (priceMatch) {
+         setAccessType("paid");
+         setPrice(Number(priceMatch[1]));
+      }
+
+      setSuccess("AI generated your product — review the fields and adjust.");
+      setTimeout(() => setSuccess(""), 3000);
+   };
+
+   // =========================================
+   // LABELS
+   // =========================================
    const addLabel = () => {
-      if (newLabel.trim() && !labels.includes(newLabel.trim())) {
-         setLabels([...labels, newLabel.trim()]);
+      const trimmed = newLabel.trim();
+      if (trimmed && !labels.includes(trimmed) && labels.length < 5) {
+         setLabels([...labels, trimmed]);
          setNewLabel("");
       }
    };
 
+   const removeLabel = (label: string) => {
+      setLabels(labels.filter((l) => l !== label));
+   };
+
+   // =========================================
+   // FAQS
+   // =========================================
+   const addFaq = () => {
+      setFaqs([...faqs, { question: "", answer: "" }]);
+   };
+
+   const updateFaq = (idx: number, patch: Partial<FAQ>) => {
+      const next = [...faqs];
+      next[idx] = { ...next[idx], ...patch };
+      setFaqs(next);
+   };
+
+   const removeFaq = (idx: number) => {
+      setFaqs(faqs.filter((_, i) => i !== idx));
+   };
+
+   // =========================================
+   // APPS
+   // =========================================
    const toggleApp = (key: string) => {
       setIncludedApps((prev) =>
          prev.includes(key) ? prev.filter((a) => a !== key) : [...prev, key],
       );
    };
 
-   const generateAI = () => {
-      const baseName =
-         aiPrompt.split(/[.,]/)[0].trim().slice(0, 60) || "New Product";
-      setName(baseName.charAt(0).toUpperCase() + baseName.slice(1));
-      setHeadline(aiPrompt.slice(0, 100) || "Get access to exclusive content");
-      setDescription(`This product includes: ${aiPrompt.slice(0, 400)}`);
-   };
-
+   // =========================================
+   // SAVE
+   // =========================================
    const handleSave = async () => {
+      setError("");
+      setSuccess("");
+
       if (!name.trim()) {
          setError("Product name is required");
          return;
       }
+      if (!activeBusiness?.id) {
+         setError("No active business. Create or select one first.");
+         return;
+      }
+
       setSaving(true);
-      setError("");
 
       try {
          const url =
@@ -183,65 +346,114 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                : "/api/business/products";
          const method = mode === "edit" ? "PATCH" : "POST";
 
+         const body: Record<string, unknown> = {
+            name: name.trim(),
+            headline,
+            description,
+            bannerImage,
+            productImage,
+            labels,
+            collectShippingAddress,
+            accessType,
+            pricingType,
+            price,
+            currency,
+            recurringInterval:
+               pricingType === "recurring" ? recurringInterval : "",
+            launchAsWaitlist,
+            askQuestionsBeforeCheckout,
+            includedApps,
+            faqs,
+            appearanceColor,
+            growthTools: { showMemberCount },
+            productSettings: {
+               purchaseButtonText,
+               productTaxCode,
+               productUrl,
+               addAffiliateRate,
+               affiliateRate,
+               checkoutRedirect,
+               checkoutRedirectUrl,
+               visibleOnStorePage,
+            },
+         };
+
+         if (mode === "create") {
+            body.businessId = activeBusiness.id;
+         }
+
          const res = await fetch(url, {
             method,
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-               businessId: activeBusiness?.id,
-               name,
-               headline,
-               description,
-               bannerImage,
-               labels,
-               collectShippingAddress,
-               accessType,
-               pricingType,
-               price,
-               currency,
-               recurringInterval,
-               launchAsWaitlist,
-               askQuestionsBeforeCheckout,
-               includedApps,
-               faqs,
-               appearanceColor,
-               growthTools: { showMemberCount },
-               productSettings: {
-                  purchaseButtonText,
-                  productTaxCode,
-                  productUrl,
-                  addAffiliateRate,
-                  affiliateRate,
-                  checkoutRedirect,
-                  checkoutRedirectUrl: "",
-                  visibleOnStorePage,
-               },
-            }),
+            body: JSON.stringify(body),
          });
 
          const data = await res.json();
+
          if (!res.ok) {
             setError(data.error || "Failed to save product");
             return;
          }
-         router.push("/business/products");
-         router.refresh();
-      } catch {
+
+         setSuccess(mode === "edit" ? "Product updated!" : "Product created!");
+
+         // Redirect after short delay
+         setTimeout(() => {
+            router.push("/business/products");
+            router.refresh();
+         }, 600);
+      } catch (err) {
+         console.error(err);
          setError("Network error. Please try again.");
       } finally {
          setSaving(false);
       }
    };
 
-   if (loading) return <div className={styles.loading}>Loading product...</div>;
+   // =========================================
+   // LOADING / ERROR STATES
+   // =========================================
+   if (loading || workspaceLoading) {
+      return (
+         <div className={styles.loading}>
+            <div className={styles.spinner} />
+            Loading...
+         </div>
+      );
+   }
+
+   if (!activeBusiness) {
+      return (
+         <div className={styles.loading}>
+            <div>No business selected. Create one from the sidebar first.</div>
+            <button
+               onClick={() => router.push("/business/products")}
+               style={{
+                  marginTop: 16,
+                  padding: "10px 20px",
+                  background: "var(--accent-blue)",
+                  color: "#fff",
+                  border: "none",
+                  borderRadius: 8,
+                  cursor: "pointer",
+               }}
+            >
+               Back to products
+            </button>
+         </div>
+      );
+   }
 
    return (
       <div className={styles.editor}>
+         {/* Top Bar */}
          <header className={styles.topBar}>
             <button
                className={styles.backBtn}
                onClick={() => router.push("/business/products")}
             >
-               <ArrowLeft size={16} /> <span>Add product</span>
+               <ArrowLeft size={16} />
+               <span>{mode === "edit" ? "Edit product" : "Add product"}</span>
             </button>
 
             <div className={styles.viewTabs}>
@@ -261,20 +473,23 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
             </div>
          </header>
 
+         {/* Two Column Layout */}
          <div className={styles.body}>
+            {/* LEFT PANEL */}
             <aside className={styles.leftPanel}>
-               {/* AI Section */}
+               {/* AI SECTION */}
                <div className={styles.aiSection}>
                   <div className={styles.aiHeader}>
                      <Sparkles size={14} className={styles.aiIcon} />
                      <span>Describe what you want to sell</span>
                   </div>
                   <p className={styles.aiSub}>
-                     AI drafts the name, page copy, pricing and apps.
+                     AI drafts the name, page copy, pricing and apps. You review
+                     everything before it goes live.
                   </p>
                   <textarea
                      className={styles.aiInput}
-                     placeholder="e.g. A monthly community for indie game devs with weekly critique calls"
+                     placeholder="e.g. A monthly community for indie game devs with weekly critique calls and a course library"
                      value={aiPrompt}
                      onChange={(e) => setAiPrompt(e.target.value.slice(0, 600))}
                      rows={4}
@@ -297,9 +512,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   <span>OR FILL IT IN YOURSELF</span>
                </div>
 
-               {/* Details */}
+               {/* DETAILS SECTION */}
                <section className={styles.section}>
-                  <h3 className={styles.sectionHeader}>Details</h3>
+                  <h3 className={styles.sectionTitle}>Details</h3>
                   <p className={styles.sectionSub}>
                      The name buyers see on your product page.
                   </p>
@@ -313,15 +528,17 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   />
                   <div className={styles.charCount}>{name.length} / 80</div>
 
-                  <label className={styles.fieldLabel}>Labels</label>
+                  <label className={styles.fieldLabel}>
+                     Labels <HelpCircle size={12} style={{ opacity: 0.5 }} />
+                  </label>
                   <div className={styles.labelsInput}>
                      {labels.map((label) => (
                         <span key={label} className={styles.labelChip}>
                            {label}
                            <button
-                              onClick={() =>
-                                 setLabels(labels.filter((l) => l !== label))
-                              }
+                              type="button"
+                              onClick={() => removeLabel(label)}
+                              aria-label={`Remove ${label}`}
                            >
                               <X size={12} />
                            </button>
@@ -329,7 +546,11 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      ))}
                      <input
                         className={styles.labelInput}
-                        placeholder="Type a label and press enter"
+                        placeholder={
+                           labels.length >= 5
+                              ? "Max 5 labels"
+                              : "Type a label and press enter"
+                        }
                         value={newLabel}
                         onChange={(e) =>
                            setNewLabel(e.target.value.slice(0, 20))
@@ -340,14 +561,22 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                               addLabel();
                            }
                         }}
+                        disabled={labels.length >= 5}
                      />
                   </div>
 
                   <div className={styles.toggleRow}>
-                     <div className={styles.toggleLabel}>
-                        Collect shipping address
+                     <div>
+                        <div className={styles.toggleLabel}>
+                           Collect shipping address
+                        </div>
+                        <div className={styles.toggleSub}>
+                           Ask for a delivery address at checkout for physical
+                           goods.
+                        </div>
                      </div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            collectShippingAddress ? styles.switchOn : ""
                         }`}
@@ -360,12 +589,16 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   </div>
                </section>
 
-               {/* Pricing */}
+               {/* PRICING SECTION */}
                <section className={styles.section}>
-                  <h3 className={styles.sectionHeader}>Pricing</h3>
+                  <h3 className={styles.sectionTitle}>Pricing</h3>
+                  <p className={styles.sectionSub}>
+                     Choose how people get access to this product.
+                  </p>
 
                   <div className={styles.accessGrid}>
                      <button
+                        type="button"
                         className={`${styles.accessCard} ${
                            accessType === "free" ? styles.accessCardActive : ""
                         }`}
@@ -373,8 +606,12 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      >
                         <Globe size={16} />
                         <span>Free access</span>
+                        {accessType === "free" && (
+                           <span className={styles.radio}>●</span>
+                        )}
                      </button>
                      <button
+                        type="button"
                         className={`${styles.accessCard} ${
                            accessType === "paid" ? styles.accessCardActive : ""
                         }`}
@@ -382,6 +619,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      >
                         <DollarSign size={16} />
                         <span>Paid access</span>
+                        {accessType === "paid" && (
+                           <span className={styles.radio}>●</span>
+                        )}
                      </button>
                   </div>
 
@@ -389,6 +629,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      <div className={styles.paidSection}>
                         <div className={styles.pricingTypes}>
                            <button
+                              type="button"
                               className={`${styles.pricingTypeBtn} ${
                                  pricingType === "one-time" ? styles.active : ""
                               }`}
@@ -397,6 +638,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                               One-time
                            </button>
                            <button
+                              type="button"
                               className={`${styles.pricingTypeBtn} ${
                                  pricingType === "recurring"
                                     ? styles.active
@@ -408,12 +650,16 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                            </button>
                         </div>
 
+                        <label className={styles.fieldLabel}>Price</label>
                         <div className={styles.priceInput}>
                            <span>$</span>
                            <input
                               type="number"
-                              value={price}
-                              onChange={(e) => setPrice(Number(e.target.value))}
+                              value={price || ""}
+                              onChange={(e) =>
+                                 setPrice(Number(e.target.value) || 0)
+                              }
+                              placeholder="0"
                               min={0}
                            />
                            <select
@@ -427,18 +673,23 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                         </div>
 
                         {pricingType === "recurring" && (
-                           <select
-                              className={styles.input}
-                              value={recurringInterval}
-                              onChange={(e) =>
-                                 setRecurringInterval(
-                                    e.target.value as "monthly" | "yearly",
-                                 )
-                              }
-                           >
-                              <option value="monthly">Monthly</option>
-                              <option value="yearly">Yearly</option>
-                           </select>
+                           <>
+                              <label className={styles.fieldLabel}>
+                                 Billing interval
+                              </label>
+                              <select
+                                 className={styles.input}
+                                 value={recurringInterval}
+                                 onChange={(e) =>
+                                    setRecurringInterval(
+                                       e.target.value as "monthly" | "yearly",
+                                    )
+                                 }
+                              >
+                                 <option value="monthly">Monthly</option>
+                                 <option value="yearly">Yearly</option>
+                              </select>
+                           </>
                         )}
                      </div>
                   )}
@@ -448,6 +699,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                         Launch as a waitlist
                      </div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            launchAsWaitlist ? styles.switchOn : ""
                         }`}
@@ -462,6 +714,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                         Ask questions before checkout
                      </div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            askQuestionsBeforeCheckout ? styles.switchOn : ""
                         }`}
@@ -474,48 +727,60 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                         <span className={styles.switchThumb} />
                      </button>
                   </div>
-
-                  <button className={styles.linkBtn}>
-                     <Settings2 size={14} /> Plan settings
-                  </button>
                </section>
 
-               {/* Apps */}
+               {/* APPS SECTION */}
                <section className={styles.section}>
-                  <h3 className={styles.sectionHeader}>Apps</h3>
+                  <h3 className={styles.sectionTitle}>Apps</h3>
                   <p className={styles.sectionSub}>
                      The content included with this product.
                   </p>
 
                   <div className={styles.appsGroupLabel}>ADD NEW</div>
                   <div className={styles.appsGrid}>
-                     {APP_OPTIONS.map((app) => (
-                        <button
-                           key={app.key}
-                           className={`${styles.appChip} ${
-                              includedApps.includes(app.key)
-                                 ? styles.appChipActive
-                                 : ""
-                           }`}
-                           onClick={() => toggleApp(app.key)}
-                        >
-                           <span
-                              className={styles.appDot}
-                              style={{ background: app.color }}
-                           />
-                           {app.label}
-                        </button>
-                     ))}
+                     {APP_OPTIONS.map((app) => {
+                        const active = includedApps.includes(app.key);
+                        return (
+                           <button
+                              type="button"
+                              key={app.key}
+                              className={`${styles.appChip} ${
+                                 active ? styles.appChipActive : ""
+                              }`}
+                              onClick={() => toggleApp(app.key)}
+                              style={
+                                 active
+                                    ? {
+                                         borderColor: app.color,
+                                         background: `${app.color}20`,
+                                      }
+                                    : {}
+                              }
+                           >
+                              <span
+                                 className={styles.appDot}
+                                 style={{ background: app.color }}
+                              />
+                              {app.label}
+                           </button>
+                        );
+                     })}
                   </div>
                </section>
 
-               {/* Appearance */}
+               {/* APPEARANCE */}
                <section className={styles.section}>
-                  <h3 className={styles.sectionHeader}>Appearance</h3>
+                  <h3 className={styles.sectionTitle}>Appearance</h3>
+                  <p className={styles.sectionSub}>Theme and accent color.</p>
 
                   <div className={styles.colorSectionLabel}>Default</div>
                   <button
-                     className={styles.colorSwatchLarge}
+                     type="button"
+                     className={`${styles.colorSwatchLarge} ${
+                        appearanceColor === "#3b82f6"
+                           ? styles.colorSwatchActive
+                           : ""
+                     }`}
                      style={{ background: "#3b82f6" }}
                      onClick={() => setAppearanceColor("#3b82f6")}
                   />
@@ -524,18 +789,24 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   <div className={styles.colorGrid}>
                      {COLOR_PALETTE.map((color) => (
                         <button
+                           type="button"
                            key={color}
-                           className={styles.colorSwatch}
+                           className={`${styles.colorSwatch} ${
+                              appearanceColor === color
+                                 ? styles.colorSwatchActive
+                                 : ""
+                           }`}
                            style={{ background: color }}
                            onClick={() => setAppearanceColor(color)}
+                           aria-label={`Color ${color}`}
                         />
                      ))}
                   </div>
                </section>
 
-               {/* Growth tools */}
+               {/* GROWTH TOOLS */}
                <section className={styles.section}>
-                  <h3 className={styles.sectionHeader}>Growth tools</h3>
+                  <h3 className={styles.sectionTitle}>Growth tools</h3>
 
                   <div className={styles.toggleRow}>
                      <div>
@@ -548,6 +819,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                         </div>
                      </div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            showMemberCount ? styles.switchOn : ""
                         }`}
@@ -558,9 +830,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   </div>
                </section>
 
-               {/* Product settings */}
+               {/* PRODUCT SETTINGS */}
                <section className={styles.section}>
-                  <h3 className={styles.sectionHeader}>Product settings</h3>
+                  <h3 className={styles.sectionTitle}>Product settings</h3>
                   <p className={styles.sectionSub}>
                      URL, taxes, affiliates, and more.
                   </p>
@@ -595,7 +867,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      className={styles.input}
                      value={productUrl}
                      onChange={(e) => setProductUrl(e.target.value)}
-                     placeholder="yourbusiness.com/product"
+                     placeholder={`space-ex.com/${activeBusiness.id.slice(-6)}/product`}
                   />
 
                   <div className={styles.toggleRow}>
@@ -603,6 +875,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                         Add affiliate rate
                      </div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            addAffiliateRate ? styles.switchOn : ""
                         }`}
@@ -630,6 +903,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   <div className={styles.toggleRow}>
                      <div className={styles.toggleLabel}>Checkout redirect</div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            checkoutRedirect ? styles.switchOn : ""
                         }`}
@@ -639,11 +913,21 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      </button>
                   </div>
 
+                  {checkoutRedirect && (
+                     <input
+                        className={styles.input}
+                        value={checkoutRedirectUrl}
+                        onChange={(e) => setCheckoutRedirectUrl(e.target.value)}
+                        placeholder="https://yourdomain.com/thank-you"
+                     />
+                  )}
+
                   <div className={styles.toggleRow}>
                      <div className={styles.toggleLabel}>
                         Visible on your store page
                      </div>
                      <button
+                        type="button"
                         className={`${styles.switch} ${
                            visibleOnStorePage ? styles.switchOn : ""
                         }`}
@@ -656,9 +940,13 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   </div>
                </section>
 
+               {/* ERROR / SUCCESS */}
                {error && <div className={styles.error}>{error}</div>}
+               {success && <div className={styles.success}>{success}</div>}
 
+               {/* SAVE BUTTON */}
                <button
+                  type="button"
                   className={styles.saveBtn}
                   onClick={handleSave}
                   disabled={saving || !name.trim()}
@@ -671,11 +959,12 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                </button>
             </aside>
 
-            {/* Preview */}
+            {/* RIGHT PANEL — LIVE PREVIEW */}
             <main
                className={`${styles.preview} ${styles[`preview-${viewMode}`]}`}
             >
                <div className={styles.previewInner}>
+                  {/* Brand Header */}
                   <div className={styles.previewBrand}>
                      <div
                         className={styles.previewBrandIcon}
@@ -688,32 +977,80 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      </span>
                   </div>
 
+                  {/* Product Preview */}
                   <div className={styles.productPreview}>
                      <div className={styles.previewMain}>
+                        {/* Media Area */}
                         <div className={styles.previewMedia}>
-                           <div className={styles.previewMediaEmpty}>
-                              <ImageIcon
-                                 size={24}
-                                 className={styles.previewMediaIcon}
-                              />
-                              <div className={styles.previewMediaTitle}>
-                                 Add your first product video or photo
-                              </div>
-                              <div className={styles.previewMediaSub}>
-                                 This should illustrate something about the
-                                 product.
-                              </div>
-                              <div className={styles.previewMediaActions}>
-                                 <button className={styles.previewSmallBtn}>
-                                    <Upload size={14} /> Upload
-                                 </button>
-                                 <button className={styles.previewSmallBtn}>
-                                    <ImageIcon size={14} /> Free stock photos
+                           {bannerImage ? (
+                              <div className={styles.previewMediaWithImage}>
+                                 <img
+                                    src={bannerImage}
+                                    alt="Product banner"
+                                    className={styles.previewImage}
+                                 />
+                                 <button
+                                    type="button"
+                                    className={styles.removeImageBtn}
+                                    onClick={() => setBannerImage("")}
+                                    aria-label="Remove image"
+                                 >
+                                    <Trash2 size={14} />
                                  </button>
                               </div>
-                           </div>
+                           ) : (
+                              <div className={styles.previewMediaEmpty}>
+                                 <ImageIcon
+                                    size={24}
+                                    className={styles.previewMediaIcon}
+                                 />
+                                 <div className={styles.previewMediaTitle}>
+                                    Add your first product video or photo
+                                 </div>
+                                 <div className={styles.previewMediaSub}>
+                                    This should illustrate something about the
+                                    product.
+                                 </div>
+                                 <div className={styles.previewMediaActions}>
+                                    <input
+                                       ref={fileInputRef}
+                                       type="file"
+                                       accept="image/*"
+                                       onChange={handleImageUpload}
+                                       style={{ display: "none" }}
+                                    />
+                                    <button
+                                       type="button"
+                                       className={styles.previewSmallBtn}
+                                       onClick={() =>
+                                          fileInputRef.current?.click()
+                                       }
+                                       disabled={uploading}
+                                    >
+                                       <Upload size={14} />
+                                       {uploading ? "Uploading..." : "Upload"}
+                                    </button>
+                                    <button
+                                       type="button"
+                                       className={styles.previewSmallBtn}
+                                       onClick={() => {
+                                          // Free stock photo — use picsum
+                                          const seed = Math.floor(
+                                             Math.random() * 1000,
+                                          );
+                                          setBannerImage(
+                                             `https://picsum.photos/seed/${seed}/1200/675`,
+                                          );
+                                       }}
+                                    >
+                                       <ImageIcon size={14} /> Free stock photos
+                                    </button>
+                                 </div>
+                              </div>
+                           )}
                         </div>
 
+                        {/* Headline */}
                         <div className={styles.previewHeadline}>
                            {headline || (
                               <span className={styles.previewPlaceholder}>
@@ -722,6 +1059,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                            )}
                         </div>
 
+                        {/* Description */}
                         <div className={styles.previewDescription}>
                            {description || (
                               <span className={styles.previewPlaceholderSmall}>
@@ -730,36 +1068,101 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                            )}
                         </div>
 
-                        <button className={styles.previewAiBtn}>
+                        {/* Generate with AI */}
+                        <button type="button" className={styles.previewAiBtn}>
                            <Sparkles size={12} /> Generate with AI
                         </button>
 
+                        {/* FAQs */}
                         <div className={styles.previewFaq}>
                            <div className={styles.previewFaqTitle}>
                               Frequently asked questions
                            </div>
-                           <button
-                              className={styles.previewAddFaq}
-                              onClick={() =>
-                                 setFaqs([
-                                    ...faqs,
-                                    { question: "", answer: "" },
-                                 ])
-                              }
-                           >
-                              Add FAQ <Plus size={14} />
-                           </button>
+
+                           {faqs.length === 0 ? (
+                              <button
+                                 type="button"
+                                 className={styles.previewAddFaq}
+                                 onClick={addFaq}
+                              >
+                                 Add FAQ <Plus size={14} />
+                              </button>
+                           ) : (
+                              <div className={styles.faqList}>
+                                 {faqs.map((faq, i) => (
+                                    <div key={i} className={styles.faqItem}>
+                                       <input
+                                          className={styles.faqInput}
+                                          placeholder="Question"
+                                          value={faq.question}
+                                          onChange={(e) =>
+                                             updateFaq(i, {
+                                                question: e.target.value,
+                                             })
+                                          }
+                                       />
+                                       <textarea
+                                          className={styles.faqTextarea}
+                                          placeholder="Answer"
+                                          value={faq.answer}
+                                          onChange={(e) =>
+                                             updateFaq(i, {
+                                                answer: e.target.value,
+                                             })
+                                          }
+                                          rows={2}
+                                       />
+                                       <button
+                                          type="button"
+                                          className={styles.faqRemove}
+                                          onClick={() => removeFaq(i)}
+                                          aria-label="Remove FAQ"
+                                       >
+                                          <X size={14} />
+                                       </button>
+                                    </div>
+                                 ))}
+                                 <button
+                                    type="button"
+                                    className={styles.previewAddFaq}
+                                    onClick={addFaq}
+                                 >
+                                    Add FAQ <Plus size={14} />
+                                 </button>
+                              </div>
+                           )}
                         </div>
                      </div>
 
+                     {/* Preview Sidebar */}
                      <div className={styles.previewSide}>
+                        {/* Banner upload placeholder */}
+                        {!bannerImage && (
+                           <div className={styles.previewBannerUpload}>
+                              <div className={styles.previewBannerIcon}>
+                                 <ImageIcon size={16} />
+                              </div>
+                              <div className={styles.previewBannerTitle}>
+                                 Add banner image
+                              </div>
+                              <div className={styles.previewBannerSub}>
+                                 Shown across the top of your product page.
+                              </div>
+                           </div>
+                        )}
+
+                        {/* Title block */}
                         <div className={styles.previewTitleBlock}>
                            <div className={styles.previewTitleLabel}>Title</div>
                            <div className={styles.previewTitleRow}>
                               <span className={styles.previewPriceLabel}>
                                  {accessType === "free"
                                     ? "$0 once"
-                                    : `$${price} ${currency}`}
+                                    : `$${price} ${currency}${
+                                         pricingType === "recurring"
+                                            ? ` / ${recurringInterval === "monthly" ? "mo" : "yr"}`
+                                            : ""
+                                      }`}
                               </span>
                               <ChevronDown
                                  size={14}
@@ -768,11 +1171,15 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                            </div>
                         </div>
 
-                        <button className={styles.previewNewPricing}>
+                        <button
+                           type="button"
+                           className={styles.previewNewPricing}
+                        >
                            <Plus size={14} /> New pricing option
                         </button>
 
                         <button
+                           type="button"
                            className={styles.previewCTA}
                            style={{ background: appearanceColor }}
                         >
