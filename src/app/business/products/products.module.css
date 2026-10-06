@@ -1,0 +1,476 @@
+.page {
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+   padding: 8px 0;
+   max-width: 1400px;
+}
+
+.header {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: 16px;
+}
+
+.title {
+   font-size: 26px;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin: 0;
+}
+
+.headerActions {
+   display: flex;
+   gap: 8px;
+   align-items: center;
+}
+
+.createBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 8px 14px;
+   background: var(--accent-blue);
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   font-size: 13.5px;
+   font-weight: 500;
+   cursor: pointer;
+   text-decoration: none;
+   transition: background 0.15s;
+}
+
+.createBtn:hover {
+   background: #2563eb;
+}
+
+.secondaryBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 8px 14px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   font-size: 13.5px;
+   cursor: pointer;
+}
+
+.secondaryBtn:hover {
+   background: var(--bg-hover);
+}
+
+.iconBtn {
+   padding: 8px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   cursor: pointer;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.iconBtn:hover {
+   background: var(--bg-hover);
+}
+
+/* Filters */
+.filtersRow {
+   display: flex;
+   gap: 8px;
+}
+
+.dropdownWrap {
+   position: relative;
+}
+
+.filterBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 8px 14px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   font-size: 13px;
+   cursor: pointer;
+}
+
+.filterBtn:hover {
+   background: var(--bg-hover);
+}
+
+.dropdown {
+   position: absolute;
+   top: calc(100% + 4px);
+   left: 0;
+   min-width: 180px;
+   background: var(--bg-elevated);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   box-shadow: var(--shadow-lg);
+   padding: 6px;
+   z-index: 100;
+}
+
+.checkboxRow {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 8px 10px;
+   border-radius: 6px;
+   cursor: pointer;
+   font-size: 13px;
+   color: var(--text-primary);
+}
+
+.checkboxRow:hover {
+   background: var(--bg-hover);
+}
+
+/* Table */
+.tableWrap {
+   border: 1px solid var(--border-color);
+   border-radius: 12px;
+   overflow: hidden;
+   background: var(--bg-secondary);
+}
+
+.table {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 13.5px;
+}
+
+.table thead {
+   background: var(--bg-tertiary);
+}
+
+.table th {
+   text-align: left;
+   padding: 12px 16px;
+   font-size: 12.5px;
+   font-weight: 600;
+   color: var(--text-secondary);
+   white-space: nowrap;
+   border-bottom: 1px solid var(--border-color);
+}
+
+.sortBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   font-size: 12.5px;
+   font-weight: 600;
+   cursor: pointer;
+   padding: 0;
+}
+
+.sortBtn:hover {
+   color: var(--text-primary);
+}
+
+.table td {
+   padding: 14px 16px;
+   color: var(--text-primary);
+   border-bottom: 1px solid var(--border-color);
+   vertical-align: middle;
+}
+
+.table tr:last-child td {
+   border-bottom: none;
+}
+
+.row {
+   cursor: pointer;
+   transition: background 0.1s;
+}
+
+.row:hover {
+   background: var(--bg-hover);
+}
+
+.nameCell {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+}
+
+.productAvatar {
+   width: 32px;
+   height: 32px;
+   border-radius: 8px;
+   background: var(--accent-blue);
+   color: #fff;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-weight: 700;
+   font-size: 13px;
+   flex-shrink: 0;
+}
+
+.appsCell {
+   display: flex;
+   gap: 4px;
+   flex-wrap: wrap;
+}
+
+.appPill {
+   display: inline-block;
+   padding: 2px 8px;
+   background: var(--bg-tertiary);
+   border-radius: 4px;
+   font-size: 11px;
+   text-transform: capitalize;
+   color: var(--text-secondary);
+}
+
+.muted {
+   color: var(--text-muted);
+}
+
+.badge {
+   display: inline-block;
+   padding: 3px 10px;
+   border-radius: 999px;
+   font-size: 11.5px;
+   font-weight: 600;
+   text-transform: capitalize;
+}
+
+.badge.visible {
+   background: rgba(16, 185, 129, 0.15);
+   color: #10b981;
+}
+
+.badge.hidden {
+   background: rgba(245, 158, 11, 0.15);
+   color: #f59e0b;
+}
+
+.badge.archived {
+   background: var(--bg-tertiary);
+   color: var(--text-secondary);
+}
+
+.loading {
+   padding: 60px;
+   text-align: center;
+   color: var(--text-secondary);
+}
+
+/* Empty State */
+.emptyState {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   text-align: center;
+   padding: 100px 20px;
+   gap: 12px;
+}
+
+.emptyIcon {
+   width: 80px;
+   height: 80px;
+   border-radius: 20px;
+   background: var(--bg-tertiary);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: var(--text-muted);
+   margin-bottom: 8px;
+}
+
+.emptyTitle {
+   font-size: 16px;
+   font-weight: 600;
+   color: var(--text-primary);
+}
+
+.emptySub {
+   font-size: 13.5px;
+   color: var(--text-secondary);
+   max-width: 340px;
+   line-height: 1.5;
+   margin-bottom: 12px;
+}
+
+/* Footer */
+.tableFooter {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding: 4px;
+   font-size: 12.5px;
+   color: var(--text-secondary);
+}
+
+.pagination {
+   display: flex;
+   align-items: center;
+   gap: 4px;
+}
+
+.pageBtn {
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   cursor: pointer;
+   width: 28px;
+   height: 28px;
+   border-radius: 6px;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.pageBtn:hover:not(:disabled) {
+   background: var(--bg-tertiary);
+   color: var(--text-primary);
+}
+
+.pageBtn:disabled {
+   opacity: 0.3;
+   cursor: not-allowed;
+}
+
+.pageInfo {
+   margin: 0 8px;
+}
+
+.rowsPerPage {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+}
+
+.rowsSelect {
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 6px;
+   padding: 4px 8px;
+   color: var(--text-primary);
+   font-size: 12.5px;
+   cursor: pointer;
+   outline: none;
+}
+
+/* Column Picker */
+.columnPicker {
+   position: fixed;
+   top: 80px;
+   right: 40px;
+   width: 280px;
+   background: var(--bg-elevated);
+   border: 1px solid var(--border-subtle);
+   border-radius: 12px;
+   box-shadow: var(--shadow-lg);
+   z-index: 100;
+   padding: 12px;
+   animation: slideIn 0.15s ease;
+}
+
+@keyframes slideIn {
+   from {
+      opacity: 0;
+      transform: translateY(-8px);
+   }
+   to {
+      opacity: 1;
+      transform: translateY(0);
+   }
+}
+
+.colSearch {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   padding: 8px 12px;
+   background: var(--bg-tertiary);
+   border-radius: 8px;
+   color: var(--text-muted);
+   margin-bottom: 12px;
+}
+
+.colSearch input {
+   flex: 1;
+   background: transparent;
+   border: none;
+   outline: none;
+   color: var(--text-primary);
+   font-size: 13px;
+}
+
+.colGroupLabel {
+   font-size: 11px;
+   font-weight: 600;
+   color: var(--text-muted);
+   text-transform: uppercase;
+   letter-spacing: 0.05em;
+   padding: 4px 8px;
+}
+
+.colList {
+   display: flex;
+   flex-direction: column;
+   gap: 2px;
+   max-height: 280px;
+   overflow-y: auto;
+}
+
+.colRow {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   padding: 8px 10px;
+   border-radius: 6px;
+   cursor: pointer;
+   font-size: 13px;
+   color: var(--text-primary);
+}
+
+.colRow:hover {
+   background: var(--bg-hover);
+}
+
+.dragHandle {
+   margin-left: auto;
+   color: var(--text-muted);
+   font-size: 12px;
+   cursor: grab;
+}
+
+.colFooter {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   padding-top: 12px;
+   border-top: 1px solid var(--border-color);
+   margin-top: 12px;
+}
+
+.colFooterBtn {
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   font-size: 12.5px;
+   cursor: pointer;
+   padding: 6px 8px;
+   border-radius: 6px;
+}
+
+.colFooterBtn:hover {
+   background: var(--bg-hover);
+   color: var(--text-primary);
+}

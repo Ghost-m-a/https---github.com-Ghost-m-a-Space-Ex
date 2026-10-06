@@ -13,6 +13,7 @@ import ResolutionCase from "../src/app/lib/models/ResolutionCase";
 import Transaction from "../src/app/lib/models/Transaction";
 import Website from "../src/app/lib/models/Website";
 import LiveEvent from "../src/app/lib/models/LiveEvent";
+import Product from "../src/app/lib/models/Product";
 
 function hashPassword(password: string): string {
    const salt = crypto.randomBytes(16).toString("hex");
@@ -51,6 +52,7 @@ async function seed() {
       Transaction.deleteMany({}),
       Website.deleteMany({}),
       LiveEvent.deleteMany({}),
+      Product.deleteMany({}),
    ]);
    console.log("✅ Data cleared");
 
@@ -170,7 +172,6 @@ async function seed() {
       website: "space-ex.com",
       logoUrl: "",
 
-      // ✅ Added balance + settings fields
       balance: 0,
       economicIntelligence: false,
       weeklyCardSpend: [0, 0, 0, 0, 0, 0, 0],
@@ -289,6 +290,148 @@ async function seed() {
    console.log("✅ Businesses created");
 
    // =========================================
+   // CREATE PRODUCTS
+   // =========================================
+   console.log("📦 Creating products...");
+
+   await Product.create([
+      {
+         businessId: spaceExBiz._id,
+         name: "Pro Membership",
+         slug: "pro-membership",
+         headline: "Unlock all premium features and exclusive content.",
+         description:
+            "Get full access to our course library, weekly live Q&A sessions, and a private community of like-minded entrepreneurs.",
+         accessType: "paid",
+         pricingType: "recurring",
+         price: 49,
+         currency: "USD",
+         recurringInterval: "monthly",
+         includedApps: ["forums", "chat", "courses", "content"],
+         appearanceColor: "#3b82f6",
+         visibility: "visible",
+         discoverStatus: "listed",
+         productSettings: {
+            purchaseButtonText: "Join",
+            productTaxCode: "digital",
+            productUrl: "space-ex.com/space-ex/pro-membership",
+            addAffiliateRate: true,
+            affiliateRate: 30,
+            checkoutRedirect: false,
+            checkoutRedirectUrl: "",
+            visibleOnStorePage: true,
+         },
+         stats: {
+            allTimeRevenue: 41258,
+            activeUsers: 842,
+            checkoutConversion: 4.2,
+            totalSales: 842,
+         },
+      },
+      {
+         businessId: spaceExBiz._id,
+         name: "Starter Course",
+         slug: "starter-course",
+         headline: "Everything you need to launch your first digital product.",
+         description:
+            "A 6-week step-by-step program. Includes video lessons, templates, and a community of founders.",
+         accessType: "paid",
+         pricingType: "one-time",
+         price: 99,
+         currency: "USD",
+         recurringInterval: "",
+         includedApps: ["courses", "content"],
+         appearanceColor: "#8b5cf6",
+         visibility: "visible",
+         discoverStatus: "listed",
+         productSettings: {
+            purchaseButtonText: "Buy now",
+            productTaxCode: "digital",
+            productUrl: "space-ex.com/space-ex/starter-course",
+            addAffiliateRate: true,
+            affiliateRate: 25,
+            checkoutRedirect: false,
+            checkoutRedirectUrl: "",
+            visibleOnStorePage: true,
+         },
+         stats: {
+            allTimeRevenue: 22869,
+            activeUsers: 231,
+            checkoutConversion: 6.8,
+            totalSales: 231,
+         },
+      },
+      {
+         businessId: spaceExBiz._id,
+         name: "Free Community",
+         slug: "free-community",
+         headline: "Join 5,000+ entrepreneurs in our free public forum.",
+         description:
+            "Ask questions, share wins, and connect with other founders.",
+         accessType: "free",
+         pricingType: "one-time",
+         price: 0,
+         currency: "USD",
+         recurringInterval: "",
+         includedApps: ["forums", "chat"],
+         appearanceColor: "#10b981",
+         visibility: "visible",
+         discoverStatus: "listed",
+         productSettings: {
+            purchaseButtonText: "Join",
+            productTaxCode: "",
+            productUrl: "space-ex.com/space-ex/free-community",
+            addAffiliateRate: false,
+            affiliateRate: 0,
+            checkoutRedirect: false,
+            checkoutRedirectUrl: "",
+            visibleOnStorePage: true,
+         },
+         stats: {
+            allTimeRevenue: 0,
+            activeUsers: 5124,
+            checkoutConversion: 12.4,
+            totalSales: 5124,
+         },
+      },
+      {
+         businessId: spaceExBiz._id,
+         name: "VIP Coaching",
+         slug: "vip-coaching",
+         headline: "1-on-1 coaching with Dr. Zakarinović.",
+         description:
+            "12 weeks of personalized coaching. Limited to 5 spots per quarter.",
+         accessType: "paid",
+         pricingType: "one-time",
+         price: 4999,
+         currency: "USD",
+         recurringInterval: "",
+         includedApps: ["content", "events"],
+         appearanceColor: "#f59e0b",
+         visibility: "hidden",
+         discoverStatus: "unlisted",
+         productSettings: {
+            purchaseButtonText: "Get access",
+            productTaxCode: "services",
+            productUrl: "space-ex.com/space-ex/vip-coaching",
+            addAffiliateRate: false,
+            affiliateRate: 0,
+            checkoutRedirect: false,
+            checkoutRedirectUrl: "",
+            visibleOnStorePage: false,
+         },
+         stats: {
+            allTimeRevenue: 49990,
+            activeUsers: 10,
+            checkoutConversion: 42.1,
+            totalSales: 10,
+         },
+      },
+   ]);
+
+   console.log("✅ Products created");
+
+   // =========================================
    // CREATE TRANSACTIONS
    // =========================================
    console.log("💸 Creating transactions...");
@@ -297,7 +440,6 @@ async function seed() {
    const day = 24 * 60 * 60 * 1000;
 
    await Transaction.create([
-      // 10 days ago: Initial deposit
       {
          businessId: spaceExBiz._id,
          kind: "deposit",
@@ -307,8 +449,6 @@ async function seed() {
          metadata: { method: "bank_transfer" },
          createdAt: new Date(now - 10 * day),
       },
-
-      // 8 days ago: Customer payment
       {
          businessId: spaceExBiz._id,
          kind: "payment",
@@ -322,8 +462,6 @@ async function seed() {
          },
          createdAt: new Date(now - 8 * day),
       },
-
-      // 5 days ago: Another customer payment
       {
          businessId: spaceExBiz._id,
          kind: "payment",
@@ -337,8 +475,6 @@ async function seed() {
          },
          createdAt: new Date(now - 5 * day),
       },
-
-      // 3 days ago: Card spend (Figma)
       {
          businessId: spaceExBiz._id,
          kind: "card_spend",
@@ -347,8 +483,6 @@ async function seed() {
          description: "Figma subscription",
          createdAt: new Date(now - 3 * day),
       },
-
-      // 2 days ago: Ad spend
       {
          businessId: spaceExBiz._id,
          kind: "ad_spend",
@@ -357,8 +491,6 @@ async function seed() {
          description: "Meta Ads campaign",
          createdAt: new Date(now - 2 * day),
       },
-
-      // 1 day ago: Refund
       {
          businessId: spaceExBiz._id,
          kind: "refund",
@@ -372,8 +504,6 @@ async function seed() {
          },
          createdAt: new Date(now - 1 * day),
       },
-
-      // Today: recent payments
       {
          businessId: spaceExBiz._id,
          kind: "payment",
@@ -402,7 +532,6 @@ async function seed() {
       },
    ]);
 
-   // Calculate balance from transactions
    const allTx = await Transaction.find({ businessId: spaceExBiz._id });
    let balance = 0;
    allTx.forEach((t) => {
@@ -416,10 +545,9 @@ async function seed() {
       }
    });
 
-   // Update business balance
    spaceExBiz.balance = balance;
    spaceExBiz.economicIntelligence = true;
-   spaceExBiz.weeklyCardSpend = [12.4, 0, 0, 0, 85, 0, 0]; // Mon-Sun
+   spaceExBiz.weeklyCardSpend = [12.4, 0, 0, 0, 85, 0, 0];
    await spaceExBiz.save();
 
    console.log("✅ Transactions created");
@@ -530,7 +658,6 @@ async function seed() {
    console.log("📨 Creating messages...");
 
    await Message.create([
-      // Conversation with Space-Ex Team (bot)
       {
          conversationId: conv1._id,
          senderId: spaceExTeam._id,
@@ -546,8 +673,6 @@ async function seed() {
          senderId: spaceExTeam._id,
          text: "We're excited to see what you build! ✨",
       },
-
-      // Conversation with Sarah
       {
          conversationId: conv2._id,
          senderId: sarah._id,
@@ -764,6 +889,7 @@ async function seed() {
    console.log("📊 Data summary:\n");
    console.log("   • 4 users");
    console.log("   • 1 business (Space/Ex)");
+   console.log("   • 4 products (Pro, Starter, Free, VIP)");
    console.log(`   • 8 transactions (Balance: $${balance.toFixed(2)})`);
    console.log("   • 1 website (space-ex.com, 1240 visits)");
    console.log("   • 5 live events");
@@ -780,7 +906,7 @@ async function seed() {
    console.log("   1. Start the dev server:  npm run dev");
    console.log("   2. Visit:  http://localhost:3000/login");
    console.log("   3. Log in with:  dr@spaceex.com / password123\n");
-   console.log("   💡 Try Business mode (S avatar) → Home & Analytics\n");
+   console.log("   💡 Try Business mode (S avatar) → Products / Analytics\n");
 
    await mongoose.disconnect();
    console.log("🔌 Disconnected");
