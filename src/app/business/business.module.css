@@ -526,3 +526,337 @@
       display: none;
    }
 }
+/* =========================================
+   BUSINESS HOME LAYOUT
+   ========================================= */
+.bizHomeLayout {
+   display: grid;
+   grid-template-columns: 1fr 340px;
+   gap: 24px;
+   max-width: 1400px;
+}
+
+.bizMain {
+   display: flex;
+   flex-direction: column;
+   gap: 20px;
+}
+
+.balanceHeader {
+   margin-top: 8px;
+}
+.balanceLabel {
+   font-size: 13px;
+   color: var(--text-secondary);
+}
+.balanceValue {
+   font-size: 40px;
+   font-weight: 700;
+   margin-top: 4px;
+   color: var(--text-primary);
+}
+
+.chartWrapper {
+   position: relative;
+   height: 220px;
+   padding: 0 12px;
+}
+
+.chart {
+   width: 100%;
+   height: 100%;
+}
+
+.actionRow {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 12px;
+}
+
+.actionBtn {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   gap: 8px;
+   padding: 12px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 10px;
+   color: var(--text-primary);
+   font-size: 13.5px;
+   font-weight: 500;
+   cursor: pointer;
+   transition: background 0.15s;
+}
+
+.actionBtn:hover {
+   background: var(--bg-hover);
+}
+
+.econCard {
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 12px;
+   padding: 16px;
+}
+
+.econTitle {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   font-size: 14px;
+   color: var(--text-primary);
+   margin-bottom: 12px;
+   line-height: 1.4;
+}
+
+.econIcon {
+   width: 24px;
+   height: 24px;
+   border-radius: 6px;
+   background: rgba(59, 130, 246, 0.15);
+   color: var(--accent-blue);
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   flex-shrink: 0;
+}
+
+.econToggleRow {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   background: var(--bg-tertiary);
+   border-radius: 8px;
+   padding: 10px 14px;
+}
+
+.econToggleLeft {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 13px;
+   color: var(--text-primary);
+}
+
+.zapIcon {
+   color: var(--accent-blue);
+}
+
+.switch {
+   width: 40px;
+   height: 22px;
+   background: var(--border-subtle);
+   border-radius: 11px;
+   border: none;
+   cursor: pointer;
+   position: relative;
+   transition: background 0.2s;
+}
+.switchOn {
+   background: var(--accent-blue);
+}
+.switchThumb {
+   position: absolute;
+   top: 2px;
+   left: 2px;
+   width: 18px;
+   height: 18px;
+   background: #fff;
+   border-radius: 50%;
+   transition: transform 0.2s;
+}
+.switchOn .switchThumb {
+   transform: translateX(18px);
+}
+
+/* Sidebar */
+.bizSidebar {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+}
+
+.sideCard {
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 12px;
+   padding: 16px;
+}
+
+.sideCardHeader {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   font-size: 13.5px;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin-bottom: 12px;
+}
+
+.sideEmpty {
+   padding: 8px 0;
+}
+.sideEmptyTitle {
+   font-size: 13px;
+   font-weight: 500;
+   color: var(--text-primary);
+   margin-bottom: 4px;
+}
+.sideEmptySub {
+   font-size: 12px;
+   color: var(--text-secondary);
+   line-height: 1.4;
+   margin-bottom: 10px;
+}
+
+.sideLink {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   background: transparent;
+   border: none;
+   color: var(--accent-blue);
+   font-size: 12.5px;
+   cursor: pointer;
+   padding: 0;
+}
+
+.websiteList {
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+}
+
+.websiteItem {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   padding: 8px 0;
+   font-size: 12.5px;
+   color: var(--text-primary);
+}
+
+.websiteName {
+   font-weight: 500;
+}
+.websiteDomain {
+   font-size: 11px;
+   color: var(--text-muted);
+}
+.websiteVisits {
+   margin-left: auto;
+   color: var(--text-muted);
+   font-size: 11.5px;
+}
+
+/* Card Visual */
+.cardVisual {
+   width: 100%;
+   aspect-ratio: 1.6;
+   background: linear-gradient(135deg, #f5f5f5, #e5e5e5);
+   border-radius: 10px;
+   padding: 12px;
+   margin-bottom: 12px;
+   position: relative;
+   display: flex;
+   flex-direction: column;
+   justify-content: space-between;
+}
+
+.cardBrand {
+   text-align: right;
+   font-weight: 900;
+   color: #1a1f71;
+   font-size: 16px;
+   letter-spacing: 1px;
+   font-style: italic;
+}
+
+.cardChip {
+   width: 28px;
+   height: 20px;
+   background: linear-gradient(135deg, #d4af37, #b8941f);
+   border-radius: 4px;
+   position: relative;
+}
+
+.cardSpendLabel {
+   font-size: 12px;
+   color: var(--text-secondary);
+}
+.cardSpendValue {
+   font-size: 20px;
+   font-weight: 700;
+   color: var(--text-primary);
+   margin-top: 2px;
+   margin-bottom: 12px;
+}
+
+.spendBars {
+   display: flex;
+   justify-content: space-between;
+   gap: 4px;
+   height: 60px;
+   align-items: flex-end;
+}
+
+.spendBarCol {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 4px;
+   flex: 1;
+   height: 100%;
+}
+
+.spendBar {
+   width: 100%;
+   background: #d4af37;
+   border-radius: 3px 3px 0 0;
+   min-height: 4px;
+   transition: height 0.3s;
+   margin-top: auto;
+}
+
+.spendBarLabel {
+   font-size: 10px;
+   color: var(--text-muted);
+   flex-shrink: 0;
+}
+
+/* Balance row */
+.balanceRow {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   width: 100%;
+   padding: 12px 0;
+   background: transparent;
+   border: none;
+   cursor: pointer;
+   color: var(--text-primary);
+}
+
+.balanceRowLeft {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   font-size: 13.5px;
+}
+.balanceRowRight {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   color: var(--text-primary);
+   font-weight: 500;
+}
+.flagIcon {
+   font-size: 16px;
+}
+
+@media (max-width: 900px) {
+   .bizHomeLayout {
+      grid-template-columns: 1fr;
+   }
+}

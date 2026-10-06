@@ -15,7 +15,9 @@ export interface IBusiness extends Document {
       industryGroup: string;
       industryType: string;
    };
-
+   balance: number;
+   economicIntelligence: boolean;
+   weeklyCardSpend: number[]; // 7 days Mon-Sun
    analyticsPixels: {
       spaceExPixel: boolean;
       googleAnalytics: boolean;
@@ -297,6 +299,12 @@ const BusinessSchema = new Schema<IBusiness>(
       homePreferences: {
          hideMemberCount: { type: Boolean, default: false },
          hideMembersCard: { type: Boolean, default: false },
+      },
+      balance: { type: Number, default: 0 },
+      economicIntelligence: { type: Boolean, default: false },
+      weeklyCardSpend: {
+         type: [Number],
+         default: [0, 0, 0, 0, 0, 0, 0],
       },
    },
    { timestamps: true },
