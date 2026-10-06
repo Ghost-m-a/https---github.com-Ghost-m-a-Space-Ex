@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Business from "@/app/lib/models/Business";
-import SupportChat from "@/app/lib/models/SupportChat";
+import SubAccount from "@/app/lib/models/SubAccount";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
 
 async function requireUser(req: NextRequest) {
@@ -13,11 +13,10 @@ async function requireUser(req: NextRequest) {
 export async function GET(req: NextRequest) {
    try {
       const session = await requireUser(req);
-      if (!session) return NextResponse.json({ chats: [] });
+      if (!session) return NextResponse.json({ subAccounts: [] });
 
       const url = new URL(req.url);
       const businessId = url.searchParams.get("businessId");
-      const q = url.searchParams.get("q") || "";
 
       await connectDB();
       let business;
@@ -30,30 +29,25 @@ export async function GET(req: NextRequest) {
          business = await Business.findOne({ userId: session.userId })
             .sort({ createdAt: 1 })
             .lean();
-      if (!business) return NextResponse.json({ chats: [] });
+      if (!business) return NextResponse.json({ subAccounts: [] });
 
-      const query: Record<string, unknown> = { businessId: business._id };
-      if (q) query.memberName = { $regex: q, $options: "i" };
-
-      const chats = await SupportChat.find(query)
-         .sort({ lastMessageAt: -1 })
-         .limit(50)
+      const list = await SubAccount.find({ parentBusinessId: business._id })
+         .sort({ createdAt: -1 })
          .lean();
 
       return NextResponse.json({
-         chats: chats.map((c) => ({
-            id: c._id.toString(),
-            memberName: c.memberName,
-            memberEmail: c.memberEmail,
-            memberAvatar: c.memberAvatar,
-            lastMessage: c.lastMessage,
-            lastMessageAt: c.lastMessageAt,
-            unread: c.unreadForAdmin,
-            status: c.status,
+         subAccounts: list.map((s) => ({
+            id: s._id.toString(),
+            accountName: s.accountName,
+            email: s.email,
+            kind: s.kind,
+            status: s.status,
+            kycStatus: s.kycStatus,
+            createdAt: s.createdAt,
          })),
       });
    } catch {
-      return NextResponse.json({ chats: [] });
+      return NextResponse.json({ subAccounts: [] });
    }
 }
 
@@ -63,8 +57,8 @@ export async function POST(req: NextRequest) {
       if (!session)
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-      const { businessId, memberEmail, initialMessage } = await req.json();
-      if (!businessId || !memberEmail)
+      const { businessId, email, accountName, kind } = await req.json();
+      if (!businessId || !email)
          return NextResponse.json({ error: "Missing fields" }, { status: 400 });
 
       await connectDB();
@@ -78,26 +72,17 @@ export async function POST(req: NextRequest) {
             { status: 404 },
          );
 
-      const chat = await SupportChat.create({
-         businessId: business._id,
-         memberId: session.userId,
-         memberName: memberEmail.split("@")[0],
-         memberEmail,
-         memberAvatar: memberEmail.charAt(0).toUpperCase(),
-         lastMessage: initialMessage || "",
-         messages: initialMessage
-            ? [
-                 {
-                    senderId: session.userId,
-                    senderName: "Admin",
-                    senderRole: "admin",
-                    text: initialMessage,
-                 },
-              ]
-            : [],
+      const sub = await SubAccount.create({
+         parentBusinessId: business._id,
+         createdBy: session.userId,
+         accountName: accountName || email.split("@")[0],
+         email: email.toLowerCase(),
+         kind: kind || "pay_workers",
+         status: "pending",
+         kycStatus: "not_started",
       });
 
-      return NextResponse.json({ chat: { id: chat._id.toString() } });
+      return NextResponse.json({ subAccount: { id: sub._id.toString() } });
    } catch {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }

@@ -1,7 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Business from "@/app/lib/models/Business";
-import SupportChat from "@/app/lib/models/SupportChat";
+import RevenueSharePartner from "@/app/lib/models/RevenueSharePartner";
+import User from "@/app/lib/models/User";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
 
 async function requireUser(req: NextRequest) {
@@ -13,11 +14,10 @@ async function requireUser(req: NextRequest) {
 export async function GET(req: NextRequest) {
    try {
       const session = await requireUser(req);
-      if (!session) return NextResponse.json({ chats: [] });
+      if (!session) return NextResponse.json({ partners: [] });
 
       const url = new URL(req.url);
       const businessId = url.searchParams.get("businessId");
-      const q = url.searchParams.get("q") || "";
 
       await connectDB();
       let business;
@@ -30,30 +30,29 @@ export async function GET(req: NextRequest) {
          business = await Business.findOne({ userId: session.userId })
             .sort({ createdAt: 1 })
             .lean();
-      if (!business) return NextResponse.json({ chats: [] });
+      if (!business) return NextResponse.json({ partners: [] });
 
-      const query: Record<string, unknown> = { businessId: business._id };
-      if (q) query.memberName = { $regex: q, $options: "i" };
-
-      const chats = await SupportChat.find(query)
-         .sort({ lastMessageAt: -1 })
-         .limit(50)
+      const partners = await RevenueSharePartner.find({
+         businessId: business._id,
+      })
+         .sort({ createdAt: -1 })
          .lean();
 
       return NextResponse.json({
-         chats: chats.map((c) => ({
-            id: c._id.toString(),
-            memberName: c.memberName,
-            memberEmail: c.memberEmail,
-            memberAvatar: c.memberAvatar,
-            lastMessage: c.lastMessage,
-            lastMessageAt: c.lastMessageAt,
-            unread: c.unreadForAdmin,
-            status: c.status,
+         partners: partners.map((p) => ({
+            id: p._id.toString(),
+            name: p.name,
+            email: p.email,
+            avatar: p.avatar,
+            product: p.product,
+            earned: p.earned,
+            share: p.share,
+            payoutType: p.payoutType,
+            status: p.status,
          })),
       });
    } catch {
-      return NextResponse.json({ chats: [] });
+      return NextResponse.json({ partners: [] });
    }
 }
 
@@ -63,9 +62,10 @@ export async function POST(req: NextRequest) {
       if (!session)
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-      const { businessId, memberEmail, initialMessage } = await req.json();
-      if (!businessId || !memberEmail)
+      const { businessId, email, product, share } = await req.json();
+      if (!businessId || !email || !product) {
          return NextResponse.json({ error: "Missing fields" }, { status: 400 });
+      }
 
       await connectDB();
       const business = await Business.findOne({
@@ -78,26 +78,26 @@ export async function POST(req: NextRequest) {
             { status: 404 },
          );
 
-      const chat = await SupportChat.create({
+      const user = await User.findOne({ email: email.toLowerCase() }).lean();
+      if (!user)
+         return NextResponse.json(
+            { error: "No user with that email" },
+            { status: 404 },
+         );
+
+      const partner = await RevenueSharePartner.create({
          businessId: business._id,
-         memberId: session.userId,
-         memberName: memberEmail.split("@")[0],
-         memberEmail,
-         memberAvatar: memberEmail.charAt(0).toUpperCase(),
-         lastMessage: initialMessage || "",
-         messages: initialMessage
-            ? [
-                 {
-                    senderId: session.userId,
-                    senderName: "Admin",
-                    senderRole: "admin",
-                    text: initialMessage,
-                 },
-              ]
-            : [],
+         userId: user._id,
+         name: user.name,
+         email: user.email,
+         avatar: user.name.charAt(0).toUpperCase(),
+         product,
+         share: Number(share) || 20,
+         payoutType: "automatic",
+         status: "active",
       });
 
-      return NextResponse.json({ chat: { id: chat._id.toString() } });
+      return NextResponse.json({ partner: { id: partner._id.toString() } });
    } catch {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }

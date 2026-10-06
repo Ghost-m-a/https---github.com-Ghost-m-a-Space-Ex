@@ -1,0 +1,133 @@
+.page {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+   padding: 8px 0;
+   max-width: 900px;
+}
+
+.backLink {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   font-size: 13px;
+   color: var(--text-secondary);
+   text-decoration: none;
+   align-self: flex-start;
+}
+.backLink:hover {
+   color: var(--text-primary);
+}
+
+.header {
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+}
+.headerLabel {
+   font-size: 13px;
+   font-weight: 600;
+   color: var(--text-secondary);
+}
+.balanceValue {
+   font-size: 32px;
+   font-weight: 700;
+   color: var(--text-primary);
+}
+
+.chartCard {
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 12px;
+   padding: 20px;
+}
+.chart {
+   width: 100%;
+   height: 240px;
+}
+.chartMonths {
+   display: flex;
+   justify-content: space-between;
+   padding: 12px 8px 0;
+   font-size: 11.5px;
+   color: var(--text-muted);
+}
+
+.controls {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   gap: 12px;
+   flex-wrap: wrap;
+}
+.rangeTabs {
+   display: flex;
+   gap: 4px;
+   background: var(--bg-tertiary);
+   border-radius: 8px;
+   padding: 3px;
+}
+.rangeBtn {
+   padding: 6px 14px;
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   font-size: 12.5px;
+   cursor: pointer;
+   border-radius: 6px;
+}
+.rangeActive {
+   background: var(--bg-primary);
+   color: var(--text-primary);
+   font-weight: 600;
+}
+
+.downloadBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 8px 14px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   font-size: 12.5px;
+   cursor: pointer;
+}
+.downloadBtn:hover {
+   background: var(--bg-hover);
+}
+
+.statCardFull,
+.statCard {
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 10px;
+   padding: 16px 20px;
+}
+.statGrid2 {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 12px;
+}
+.statLabel {
+   font-size: 12px;
+   color: var(--text-secondary);
+   margin-bottom: 4px;
+}
+.statValue {
+   font-size: 18px;
+   font-weight: 700;
+   color: var(--text-primary);
+}
+.statSub {
+   font-size: 11.5px;
+   color: var(--text-muted);
+   margin-top: 4px;
+}
+
+@media (max-width: 700px) {
+   .statGrid2 {
+      grid-template-columns: 1fr;
+   }
+}

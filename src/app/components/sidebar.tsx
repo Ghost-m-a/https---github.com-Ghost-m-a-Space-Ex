@@ -35,6 +35,7 @@ import BusinessSettingsModal, {
    BusinessTabId,
 } from "./business-settings-modal";
 import styles from "../styles/sidebar.module.css";
+import { Receipt, Tag } from "lucide-react";
 
 interface MenuItem {
    icon: React.ReactNode;
@@ -252,11 +253,40 @@ const Sidebar = () => {
                label: "Support",
                href: "/business/support",
             },
+         ],
+      },
+      {
+         title: "More",
+         items: [
             {
-               icon: <MoreHorizontal size={20} />,
-               label: "More",
-               href: "/business/more",
-               hasSubmenu: true,
+               icon: <FileText size={20} />,
+               label: "Reports",
+               href: "/business/reports/balance",
+            },
+            {
+               icon: <Receipt size={20} />,
+               label: "Checkout links",
+               href: "/business/checkout-links",
+            },
+            {
+               icon: <FileText size={20} />,
+               label: "Invoices",
+               href: "/business/invoices",
+            },
+            {
+               icon: <Tag size={20} />,
+               label: "Promo codes",
+               href: "/business/promo",
+            },
+            {
+               icon: <Users size={20} />,
+               label: "Team",
+               href: "/business/team",
+            },
+            {
+               icon: <Building2 size={20} />,
+               label: "Sub accounts",
+               href: "/business/connected-companies",
             },
          ],
       },
@@ -266,7 +296,7 @@ const Sidebar = () => {
             {
                icon: <Plus size={20} />,
                label: "Add",
-               href: "/business/apps/add",
+               href: "/business/app-store",
             },
          ],
       },

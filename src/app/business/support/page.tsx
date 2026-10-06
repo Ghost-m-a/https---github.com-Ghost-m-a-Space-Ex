@@ -1,88 +1,110 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { MessageCircle } from "lucide-react";
-import { SupportTicket } from "../../lib/types";
-import styles from "../business.module.css";
+import React, { useEffect, useState, useCallback } from "react";
+import { Search, Settings, Plus, ChevronDown } from "lucide-react";
+import { useWorkspace } from "../../context/workspace-context";
+import styles from "./support.module.css";
 
 export default function SupportPage() {
-   const [tickets, setTickets] = useState<SupportTicket[]>([]);
+   const { activeBusiness } = useWorkspace();
+   const [chats, setChats] = useState<any[]>([]);
+   const [loading, setLoading] = useState(true);
+   const [search, setSearch] = useState("");
 
-   const load = () =>
-      fetch("/api/business/support")
-         .then((r) => r.json())
-         .then((d) => setTickets(d.tickets));
+   const load = useCallback(async () => {
+      if (!activeBusiness?.id) return;
+      setLoading(true);
+      try {
+         const params = new URLSearchParams({ businessId: activeBusiness.id });
+         if (search) params.set("q", search);
+         const res = await fetch(`/api/business/support?${params}`);
+         const d = await res.json();
+         setChats(d.chats || []);
+      } finally {
+         setLoading(false);
+      }
+   }, [activeBusiness?.id, search]);
+
    useEffect(() => {
       load();
-   }, []);
-
-   const update = async (id: string, status: string) => {
-      await fetch("/api/business/support", {
-         method: "POST",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ id, status }),
-      });
-      load();
-   };
+   }, [load]);
 
    return (
-      <div className={styles.page}>
-         <div className={styles.header}>
-            <h1 className={styles.title}>Support</h1>
-         </div>
-
-         <div className={styles.kpiGrid}>
-            <div className={styles.kpiCard}>
-               <div className={styles.kpiLabel}>Open</div>
-               <div className={styles.kpiValue}>
-                  {tickets.filter((t) => t.status === "open").length}
-               </div>
-            </div>
-            <div className={styles.kpiCard}>
-               <div className={styles.kpiLabel}>Pending</div>
-               <div className={styles.kpiValue}>
-                  {tickets.filter((t) => t.status === "pending").length}
-               </div>
-            </div>
-            <div className={styles.kpiCard}>
-               <div className={styles.kpiLabel}>Resolved</div>
-               <div className={styles.kpiValue}>
-                  {tickets.filter((t) => t.status === "resolved").length}
-               </div>
-            </div>
-         </div>
-
-         <div className={styles.tableCard}>
-            <div className={styles.tableHead}>
-               <div>Ticket</div>
-               <div>Customer</div>
-               <div>Priority</div>
-               <div>Status</div>
-               <div>Created</div>
-               <div></div>
-            </div>
-            {tickets.map((t) => (
-               <div key={t.id} className={styles.tableRow}>
-                  <div className={styles.cell}>{t.subject}</div>
-                  <div className={styles.cell}>{t.customer}</div>
-                  <div className={styles.cell}>
-                     <span
-                        className={`${styles.status} ${t.priority === "high" ? styles.failed : t.priority === "medium" ? styles.pending : styles.draft}`}
-                     >
-                        {t.priority}
-                     </span>
-                  </div>
-                  <div className={styles.cell}>{t.status}</div>
-                  <div className={styles.cell}>{t.createdAt}</div>
-                  <button
-                     className={styles.iconBtn}
-                     onClick={() => update(t.id, "resolved")}
-                  >
-                     <MessageCircle size={14} />
+      <div className={styles.layout}>
+         <aside className={styles.sidebar}>
+            <div className={styles.sideHeader}>
+               <div className={styles.sideTitle}>Support chats</div>
+               <div className={styles.sideIcons}>
+                  <button className={styles.iconBtn}>
+                     <Settings size={16} />
+                  </button>
+                  <button className={styles.iconBtn}>
+                     <Plus size={16} />
                   </button>
                </div>
-            ))}
-         </div>
+            </div>
+
+            <div className={styles.searchWrap}>
+               <Search size={14} />
+               <input
+                  className={styles.searchInput}
+                  placeholder="Search..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+               />
+            </div>
+
+            <button className={styles.sortBtn}>
+               Last activity <ChevronDown size={12} />
+            </button>
+
+            <div className={styles.listArea}>
+               {loading ? (
+                  <div className={styles.center}>Loading...</div>
+               ) : chats.length === 0 ? (
+                  <div className={styles.center}>No support chats yet</div>
+               ) : (
+                  chats.map((c) => (
+                     <div key={c.id} className={styles.chatItem}>
+                        <div className={styles.chatAvatar}>
+                           {c.memberAvatar}
+                        </div>
+                        <div className={styles.chatInfo}>
+                           <div className={styles.chatName}>{c.memberName}</div>
+                           <div className={styles.chatLast}>
+                              {c.lastMessage || "No messages"}
+                           </div>
+                        </div>
+                        {c.unread > 0 && (
+                           <span className={styles.badge}>{c.unread}</span>
+                        )}
+                     </div>
+                  ))
+               )}
+            </div>
+         </aside>
+
+         <main className={styles.main}>
+            {chats.length === 0 ? (
+               <div className={styles.emptyState}>
+                  <div className={styles.emptyIcon}>💬</div>
+                  <div className={styles.emptyTitle}>No support chats yet</div>
+                  <div className={styles.emptySub}>
+                     When a new user joins, we&apos;ll add them to a<br />
+                     private chat with your team so you can build
+                     <br />
+                     closer relationships and boost retention.
+                  </div>
+                  <button className={styles.emptyCta}>
+                     Set up support chats
+                  </button>
+               </div>
+            ) : (
+               <div className={styles.center}>
+                  Select a chat to start replying
+               </div>
+            )}
+         </main>
       </div>
    );
 }

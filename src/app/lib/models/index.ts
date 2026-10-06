@@ -106,3 +106,43 @@ export type {
 
 export { default as AdSettings } from "./AdSettings";
 export type { IAdSettings } from "./AdSettings";
+
+// ============ AFFILIATES ============
+export { default as Affiliate } from "./Affiliate";
+export type { IAffiliate } from "./Affiliate";
+
+export { default as AffiliateSignup } from "./AffiliateSignup";
+export type { IAffiliateSignup } from "./AffiliateSignup";
+
+export { default as RevenueSharePartner } from "./RevenueSharePartner";
+export type { IRevenueSharePartner } from "./RevenueSharePartner";
+
+export { default as AffiliateSettings } from "./AffiliateSettings";
+export type { IAffiliateSettings } from "./AffiliateSettings";
+
+// ============ SUPPORT ============
+export { default as SupportChat } from "./SupportChat";
+export type { ISupportChat, ISupportMessage } from "./SupportChat";
+
+// ============ INVOICES ============
+export { default as Invoice } from "./Invoice";
+export type { IInvoice, IInvoiceLineItem } from "./Invoice";
+
+// ============ PROMO CODES ============
+export { default as PromoCode } from "./PromoCode";
+export type { IPromoCode } from "./PromoCode";
+
+// ============ TEAM ============
+export { default as TeamMember } from "./TeamMember";
+export type { ITeamMember } from "./TeamMember";
+
+// ============ SUB ACCOUNTS ============
+export { default as SubAccount } from "./SubAccount";
+export type { ISubAccount } from "./SubAccount";
+
+// ============ APP STORE ============
+export { default as AppListing } from "./AppListing";
+export type { IAppListing } from "./AppListing";
+
+export { default as InstalledApp } from "./InstalledApp";
+export type { IInstalledApp } from "./InstalledApp";

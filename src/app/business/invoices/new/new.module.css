@@ -1,0 +1,593 @@
+.page {
+   position: fixed;
+   inset: 0;
+   z-index: 1100;
+   background: var(--bg-primary);
+   display: flex;
+   flex-direction: column;
+   overflow: hidden;
+}
+
+.topBar {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding: 12px 24px;
+   border-bottom: 1px solid var(--border-color);
+   background: var(--bg-primary);
+   flex-shrink: 0;
+   gap: 16px;
+}
+.backBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 8px;
+   background: transparent;
+   border: none;
+   color: var(--text-primary);
+   font-size: 14px;
+   font-weight: 600;
+   cursor: pointer;
+   padding: 6px 10px;
+   border-radius: 6px;
+}
+.backBtn:hover {
+   background: var(--bg-tertiary);
+}
+.previewTabs {
+   display: flex;
+   gap: 3px;
+   background: var(--bg-tertiary);
+   border-radius: 8px;
+   padding: 3px;
+}
+.previewTab {
+   padding: 6px 14px;
+   border: none;
+   background: transparent;
+   color: var(--text-secondary);
+   font-size: 12.5px;
+   cursor: pointer;
+   border-radius: 6px;
+}
+.previewTabActive {
+   background: var(--bg-primary);
+   color: var(--text-primary);
+   font-weight: 500;
+}
+
+.body {
+   display: grid;
+   grid-template-columns: 400px 1fr;
+   flex: 1;
+   overflow: hidden;
+   min-height: 0;
+}
+
+.leftPanel {
+   overflow-y: auto;
+   padding: 20px;
+   background: var(--bg-primary);
+   border-right: 1px solid var(--border-color);
+   display: flex;
+   flex-direction: column;
+   gap: 14px;
+}
+
+.warningBox {
+   padding: 12px 14px;
+   background: rgba(245, 158, 11, 0.1);
+   border: 1px solid rgba(245, 158, 11, 0.3);
+   border-radius: 8px;
+}
+.warningTitle {
+   font-size: 12.5px;
+   font-weight: 600;
+   color: #f59e0b;
+   margin-bottom: 4px;
+}
+.warningSub {
+   font-size: 11.5px;
+   color: var(--text-secondary);
+   line-height: 1.5;
+}
+
+.field {
+   display: flex;
+   flex-direction: column;
+   gap: 6px;
+}
+.label {
+   font-size: 12.5px;
+   font-weight: 500;
+   color: var(--text-secondary);
+}
+.input {
+   width: 100%;
+   padding: 10px 14px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   font-size: 13px;
+   font-family: inherit;
+   outline: none;
+}
+.input:focus {
+   border-color: var(--accent-blue);
+}
+.textarea {
+   width: 100%;
+   padding: 10px 14px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   font-size: 13px;
+   font-family: inherit;
+   outline: none;
+   resize: vertical;
+   min-height: 70px;
+}
+
+.radioRow,
+.checkboxRow {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 13px;
+   color: var(--text-primary);
+   cursor: pointer;
+   padding: 4px 0;
+}
+
+.pricingTabs {
+   display: flex;
+   background: var(--bg-tertiary);
+   border-radius: 8px;
+   padding: 3px;
+   gap: 2px;
+}
+.pricingTab {
+   flex: 1;
+   padding: 8px;
+   border: none;
+   background: transparent;
+   color: var(--text-secondary);
+   font-size: 12.5px;
+   cursor: pointer;
+   border-radius: 6px;
+}
+.pricingTabActive {
+   background: var(--bg-secondary);
+   color: var(--text-primary);
+   font-weight: 500;
+}
+
+.priceRow {
+   display: flex;
+   align-items: center;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   padding: 0 12px;
+   gap: 6px;
+}
+.currency {
+   color: var(--text-muted);
+   font-size: 14px;
+}
+.priceInput {
+   flex: 1;
+   background: transparent;
+   border: none;
+   outline: none;
+   color: var(--text-primary);
+   font-size: 14px;
+   padding: 10px 0;
+}
+.currencySelect {
+   background: transparent;
+   border: none;
+   color: var(--text-secondary);
+   font-size: 12px;
+   cursor: pointer;
+   outline: none;
+   padding: 4px;
+}
+
+.presetsRow {
+   display: flex;
+   gap: 6px;
+}
+.presetBtn {
+   padding: 6px 12px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 6px;
+   color: var(--text-primary);
+   font-size: 12px;
+   cursor: pointer;
+}
+.presetBtn:hover {
+   background: var(--bg-hover);
+}
+
+.error {
+   padding: 10px 14px;
+   background: rgba(239, 68, 68, 0.1);
+   border: 1px solid rgba(239, 68, 68, 0.3);
+   color: #fca5a5;
+   font-size: 12.5px;
+   border-radius: 8px;
+}
+
+.submitBtn {
+   padding: 12px;
+   background: var(--accent-blue);
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   font-size: 14px;
+   font-weight: 500;
+   cursor: pointer;
+   margin-top: 12px;
+}
+.submitBtn:hover:not(:disabled) {
+   background: #2563eb;
+}
+.submitBtn:disabled {
+   opacity: 0.5;
+   cursor: not-allowed;
+}
+
+.rightPanel {
+   overflow-y: auto;
+   padding: 32px;
+   background: var(--bg-primary);
+   display: flex;
+   justify-content: center;
+   align-items: flex-start;
+}
+
+.emailPreview {
+   width: 100%;
+   max-width: 520px;
+   background: var(--bg-secondary);
+   border: 1px solid var(--border-color);
+   border-radius: 12px;
+   overflow: hidden;
+}
+.emailHeader {
+   padding: 20px 24px;
+   background: var(--bg-tertiary);
+   border-bottom: 1px solid var(--border-color);
+}
+.emailBrand {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 13px;
+   color: var(--text-secondary);
+   margin-bottom: 8px;
+}
+.emailLogo {
+   width: 24px;
+   height: 24px;
+   border-radius: 6px;
+   background: var(--accent-blue);
+   color: #fff;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 11px;
+   font-weight: 700;
+}
+.viaWhop {
+   font-size: 11px;
+   color: var(--text-muted);
+}
+.emailSubject {
+   font-size: 15px;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin-bottom: 4px;
+}
+.emailTo {
+   font-size: 12px;
+   color: var(--text-muted);
+}
+.emailBody {
+   padding: 24px;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+}
+.invoiceBrand {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   font-size: 14px;
+   font-weight: 500;
+   color: var(--text-primary);
+}
+.invoiceLogo {
+   width: 28px;
+   height: 28px;
+   border-radius: 8px;
+   background: var(--accent-blue);
+   color: #fff;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 12px;
+   font-weight: 700;
+}
+.invoiceAmount {
+   font-size: 32px;
+   font-weight: 700;
+   color: var(--text-primary);
+}
+.invoiceDue {
+   font-size: 12px;
+   color: var(--text-secondary);
+   margin-bottom: 12px;
+}
+.downloadBtn {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 8px 14px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-primary);
+   font-size: 12.5px;
+   cursor: pointer;
+   align-self: flex-start;
+}
+.invoiceNumberLabel {
+   font-size: 11.5px;
+   color: var(--text-muted);
+   margin-top: 12px;
+}
+.invoiceNumber {
+   font-size: 13px;
+   font-weight: 600;
+   color: var(--text-primary);
+   margin-bottom: 12px;
+}
+.payNowBtn {
+   padding: 12px;
+   background: var(--bg-tertiary);
+   border: 1px solid var(--border-subtle);
+   border-radius: 8px;
+   color: var(--text-muted);
+   font-size: 13px;
+   cursor: not-allowed;
+}
+.emailFooter {
+   padding: 20px 24px;
+   background: var(--bg-tertiary);
+   border-top: 1px solid var(--border-color);
+   font-size: 12px;
+   color: var(--text-secondary);
+}
+.lineItem,
+.lineItemTotal {
+   display: flex;
+   justify-content: space-between;
+   padding: 8px 0;
+}
+.lineItemTotal {
+   border-top: 1px solid var(--border-color);
+   margin-top: 4px;
+   font-weight: 600;
+   color: var(--text-primary);
+}
+.helpText {
+   margin-top: 12px;
+   font-size: 11.5px;
+   color: var(--text-muted);
+}
+
+.phoneFrame {
+   width: 380px;
+   max-width: 100%;
+   background: #1a1a1a;
+   border-radius: 40px;
+   padding: 12px;
+   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7);
+   position: relative;
+   border: 8px solid #000;
+}
+.phoneNotch {
+   position: absolute;
+   top: 14px;
+   left: 50%;
+   transform: translateX(-50%);
+   width: 100px;
+   height: 24px;
+   background: #000;
+   border-radius: 12px;
+   z-index: 10;
+}
+.phoneContent {
+   background: #0a0a0a;
+   border-radius: 32px;
+   padding: 30px 16px 16px;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   color: #fff;
+   font-size: 12px;
+}
+
+.checkoutHeader {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+   padding-bottom: 8px;
+   border-bottom: 1px solid #1f1f1f;
+}
+.checkoutBrand {
+   display: flex;
+   align-items: center;
+   gap: 8px;
+   font-size: 12px;
+   font-weight: 500;
+}
+.checkoutLogo {
+   width: 24px;
+   height: 24px;
+   border-radius: 6px;
+   background: #3b82f6;
+   color: #fff;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 11px;
+   font-weight: 700;
+}
+.checkoutPromo {
+   font-size: 10.5px;
+   color: #3b82f6;
+   text-decoration: underline;
+}
+.checkoutSeller {
+   text-align: center;
+   font-size: 11px;
+   color: #9ca3af;
+   margin-top: 4px;
+}
+.checkoutPrice {
+   text-align: center;
+   font-size: 24px;
+   font-weight: 700;
+   margin-bottom: 8px;
+}
+.checkoutLabel {
+   font-size: 10.5px;
+   color: #9ca3af;
+   margin-top: 4px;
+}
+.checkoutInput {
+   width: 100%;
+   padding: 8px 10px;
+   background: #1a1a1a;
+   border: 1px solid #2a2a2a;
+   border-radius: 6px;
+   color: #fff;
+   font-size: 11.5px;
+   outline: none;
+}
+.checkoutMethodTitle {
+   font-size: 11px;
+   color: #9ca3af;
+   margin-top: 8px;
+}
+.checkoutMethodBtn {
+   display: flex;
+   align-items: center;
+   gap: 6px;
+   padding: 8px 10px;
+   background: #1a1a1a;
+   border: 1px solid #2a2a2a;
+   border-radius: 6px;
+   color: #fff;
+   font-size: 11.5px;
+   cursor: pointer;
+   text-align: left;
+}
+.cardRow {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 6px;
+}
+
+.pdfPreview {
+   width: 100%;
+   max-width: 700px;
+   background: #fff;
+   color: #000;
+   border-radius: 8px;
+   padding: 40px;
+   font-family: system-ui;
+}
+.pdfHeader {
+   display: flex;
+   justify-content: space-between;
+   align-items: flex-start;
+   margin-bottom: 32px;
+}
+.pdfTitle {
+   font-size: 26px;
+   font-weight: 700;
+}
+.pdfBrand {
+   font-size: 14px;
+   font-weight: 500;
+}
+.pdfMeta {
+   display: grid;
+   grid-template-columns: 1fr 1fr 1fr;
+   gap: 12px;
+   font-size: 12px;
+   margin-bottom: 32px;
+   color: #333;
+}
+.pdfMeta strong {
+   display: block;
+   font-size: 13px;
+   margin-top: 2px;
+}
+.pdfBillRow {
+   display: flex;
+   justify-content: space-between;
+   font-size: 13px;
+   font-weight: 500;
+   margin-bottom: 24px;
+}
+.pdfTable {
+   width: 100%;
+   border-collapse: collapse;
+   font-size: 13px;
+}
+.pdfTable th {
+   text-align: left;
+   padding: 8px 0;
+   border-bottom: 1px solid #eee;
+   font-size: 11px;
+   color: #666;
+}
+.pdfTable td {
+   padding: 12px 0;
+   border-bottom: 1px solid #eee;
+}
+.pdfTotal td {
+   border-bottom: none;
+   padding-top: 16px;
+   font-size: 12px;
+   color: #666;
+}
+.pdfTotalBold td {
+   border-bottom: none;
+   font-weight: 700;
+   font-size: 14px;
+   padding-top: 6px;
+}
+.pdfFooter {
+   margin-top: 60px;
+   font-size: 10px;
+   color: #999;
+   line-height: 1.6;
+}
+
+@media (max-width: 1100px) {
+   .body {
+      grid-template-columns: 1fr;
+   }
+   .rightPanel {
+      display: none;
+   }
+}
