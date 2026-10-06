@@ -12,9 +12,9 @@ import {
    Globe,
    DollarSign,
    ChevronDown,
-   Settings2,
    Trash2,
    HelpCircle,
+   AlertTriangle,
 } from "lucide-react";
 import { useWorkspace } from "../context/workspace-context";
 import styles from "../styles/productEditor.module.css";
@@ -77,6 +77,8 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    const [uploading, setUploading] = useState(false);
    const [error, setError] = useState("");
    const [success, setSuccess] = useState("");
+   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+   const [deleting, setDeleting] = useState(false);
 
    // Form state
    const [name, setName] = useState("");
@@ -111,25 +113,62 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    const [checkoutRedirectUrl, setCheckoutRedirectUrl] = useState("");
    const [visibleOnStorePage, setVisibleOnStorePage] = useState(true);
 
-   // Get the correct business from workspace
+   // Business info
    const businessName = activeBusiness?.name || "";
    const businessInitial = businessName
       ? businessName.charAt(0).toUpperCase()
       : "?";
 
-   // Load product for edit mode
+   // =========================================
+   // LOAD PRODUCT (edit mode)
+   // =========================================
    useEffect(() => {
       if (mode !== "edit" || !productId) return;
 
-      setLoading(true);
-      fetch(`/api/business/products/${productId}`)
-         .then((r) => r.json())
-         .then((d) => {
-            const p = d.product;
-            if (!p) {
-               setError("Product not found");
+      let cancelled = false;
+
+      const loadProduct = async () => {
+         setLoading(true);
+         setError("");
+
+         try {
+            const res = await fetch(`/api/business/products/${productId}`, {
+               headers: { Accept: "application/json" },
+            });
+
+            // ✅ Check response is JSON before parsing
+            const contentType = res.headers.get("content-type") || "";
+            if (!contentType.includes("application/json")) {
+               console.error(
+                  `Non-JSON response (${res.status}):`,
+                  (await res.text()).slice(0, 200),
+               );
+               if (!cancelled) {
+                  setError(
+                     res.status === 404
+                        ? "Product not found"
+                        : `Server error (${res.status})`,
+                  );
+               }
                return;
             }
+
+            const data = await res.json();
+
+            if (!res.ok) {
+               if (!cancelled) setError(data.error || "Failed to load product");
+               return;
+            }
+
+            const p = data.product;
+            if (!p) {
+               if (!cancelled) setError("Product not found");
+               return;
+            }
+
+            if (cancelled) return;
+
+            // Populate all fields
             setName(p.name || "");
             setHeadline(p.headline || "");
             setDescription(p.description || "");
@@ -164,16 +203,23 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
             setVisibleOnStorePage(
                p.productSettings?.visibleOnStorePage !== false,
             );
-         })
-         .catch((err) => {
-            console.error(err);
-            setError("Failed to load product");
-         })
-         .finally(() => setLoading(false));
+         } catch (err) {
+            console.error("[ProductEditor] Load error:", err);
+            if (!cancelled) setError("Failed to load product");
+         } finally {
+            if (!cancelled) setLoading(false);
+         }
+      };
+
+      loadProduct();
+
+      return () => {
+         cancelled = true;
+      };
    }, [mode, productId]);
 
    // =========================================
-   // IMAGE UPLOAD (base64 for now — swap for S3/Cloudinary later)
+   // IMAGE UPLOAD
    // =========================================
    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -203,7 +249,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    };
 
    // =========================================
-   // AI GENERATION (local — swap for OpenAI later)
+   // AI GENERATION
    // =========================================
    const generateAI = () => {
       if (!aiPrompt.trim()) return;
@@ -212,7 +258,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
       const firstSentence = text.split(/[.!?\n]/)[0].trim();
       const words = firstSentence.split(/\s+/);
 
-      // Generate name from first 2-3 meaningful words
       let generatedName = "";
       if (words.length >= 3) {
          generatedName = words.slice(0, 3).join(" ");
@@ -225,13 +270,10 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
       generatedName =
          generatedName.charAt(0).toUpperCase() + generatedName.slice(1);
 
-      // Generate headline
-      const headline = text.length > 120 ? text.slice(0, 117) + "..." : text;
+      const headlineText =
+         text.length > 120 ? text.slice(0, 117) + "..." : text;
+      const descriptionText = `This product includes:\n\n${text}\n\nGet instant access after checkout. Lifetime updates and support included.`;
 
-      // Generate description
-      const description = `This product includes:\n\n${text}\n\nGet instant access after checkout. Lifetime updates and support included.`;
-
-      // Suggest apps based on keywords
       const apps: string[] = [];
       const lower = text.toLowerCase();
       if (
@@ -263,13 +305,11 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
       }
       if (apps.length === 0) apps.push("content", "chat");
 
-      // Apply
       setName(generatedName);
-      setHeadline(headline);
-      setDescription(description);
+      setHeadline(headlineText);
+      setDescription(descriptionText);
       setIncludedApps(apps);
 
-      // Suggest price if mentioned
       const priceMatch = text.match(/\$(\d+)/);
       if (priceMatch) {
          setAccessType("paid");
@@ -397,7 +437,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
 
          setSuccess(mode === "edit" ? "Product updated!" : "Product created!");
 
-         // Redirect after short delay
          setTimeout(() => {
             router.push("/business/products");
             router.refresh();
@@ -411,7 +450,35 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
    };
 
    // =========================================
-   // LOADING / ERROR STATES
+   // DELETE
+   // =========================================
+   const handleDelete = async () => {
+      if (!productId) return;
+
+      setDeleting(true);
+      try {
+         const res = await fetch(`/api/business/products/${productId}`, {
+            method: "DELETE",
+         });
+
+         if (!res.ok) {
+            const data = await res.json();
+            setError(data.error || "Failed to delete product");
+            setDeleting(false);
+            return;
+         }
+
+         router.push("/business/products");
+         router.refresh();
+      } catch (err) {
+         console.error(err);
+         setError("Network error. Please try again.");
+         setDeleting(false);
+      }
+   };
+
+   // =========================================
+   // LOADING / NO BUSINESS
    // =========================================
    if (loading || workspaceLoading) {
       return (
@@ -446,7 +513,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
 
    return (
       <div className={styles.editor}>
-         {/* Top Bar */}
+         {/* =========================================
+          TOP BAR
+          ========================================= */}
          <header className={styles.topBar}>
             <button
                className={styles.backBtn}
@@ -471,11 +540,28 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   </button>
                ))}
             </div>
+
+            <div className={styles.topBarRight}>
+               {mode === "edit" && (
+                  <button
+                     type="button"
+                     className={styles.deleteBtn}
+                     onClick={() => setShowDeleteConfirm(true)}
+                  >
+                     <Trash2 size={14} />
+                     Delete product
+                  </button>
+               )}
+            </div>
          </header>
 
-         {/* Two Column Layout */}
+         {/* =========================================
+          TWO COLUMN LAYOUT
+          ========================================= */}
          <div className={styles.body}>
-            {/* LEFT PANEL */}
+            {/* =========================================
+            LEFT PANEL
+            ========================================= */}
             <aside className={styles.leftPanel}>
                {/* AI SECTION */}
                <div className={styles.aiSection}>
@@ -512,7 +598,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   <span>OR FILL IT IN YOURSELF</span>
                </div>
 
-               {/* DETAILS SECTION */}
+               {/* DETAILS */}
                <section className={styles.section}>
                   <h3 className={styles.sectionTitle}>Details</h3>
                   <p className={styles.sectionSub}>
@@ -589,7 +675,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   </div>
                </section>
 
-               {/* PRICING SECTION */}
+               {/* PRICING */}
                <section className={styles.section}>
                   <h3 className={styles.sectionTitle}>Pricing</h3>
                   <p className={styles.sectionSub}>
@@ -729,7 +815,7 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                   </div>
                </section>
 
-               {/* APPS SECTION */}
+               {/* APPS */}
                <section className={styles.section}>
                   <h3 className={styles.sectionTitle}>Apps</h3>
                   <p className={styles.sectionSub}>
@@ -867,7 +953,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                      className={styles.input}
                      value={productUrl}
                      onChange={(e) => setProductUrl(e.target.value)}
-                     placeholder={`space-ex.com/${activeBusiness.id.slice(-6)}/product`}
+                     placeholder={`space-ex.com/${activeBusiness.id.slice(
+                        -6,
+                     )}/product`}
                   />
 
                   <div className={styles.toggleRow}>
@@ -959,7 +1047,9 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                </button>
             </aside>
 
-            {/* RIGHT PANEL — LIVE PREVIEW */}
+            {/* =========================================
+            RIGHT PANEL — LIVE PREVIEW
+            ========================================= */}
             <main
                className={`${styles.preview} ${styles[`preview-${viewMode}`]}`}
             >
@@ -1034,7 +1124,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                                        type="button"
                                        className={styles.previewSmallBtn}
                                        onClick={() => {
-                                          // Free stock photo — use picsum
                                           const seed = Math.floor(
                                              Math.random() * 1000,
                                           );
@@ -1136,7 +1225,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
 
                      {/* Preview Sidebar */}
                      <div className={styles.previewSide}>
-                        {/* Banner upload placeholder */}
                         {!bannerImage && (
                            <div className={styles.previewBannerUpload}>
                               <div className={styles.previewBannerIcon}>
@@ -1151,7 +1239,6 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                            </div>
                         )}
 
-                        {/* Title block */}
                         <div className={styles.previewTitleBlock}>
                            <div className={styles.previewTitleLabel}>Title</div>
                            <div className={styles.previewTitleRow}>
@@ -1160,7 +1247,11 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                                     ? "$0 once"
                                     : `$${price} ${currency}${
                                          pricingType === "recurring"
-                                            ? ` / ${recurringInterval === "monthly" ? "mo" : "yr"}`
+                                            ? ` / ${
+                                                 recurringInterval === "monthly"
+                                                    ? "mo"
+                                                    : "yr"
+                                              }`
                                             : ""
                                       }`}
                               </span>
@@ -1196,6 +1287,53 @@ const ProductEditor: React.FC<ProductEditorProps> = ({ mode, productId }) => {
                </div>
             </main>
          </div>
+
+         {/* =========================================
+          DELETE CONFIRMATION MODAL
+          ========================================= */}
+         {showDeleteConfirm && (
+            <div
+               className={styles.confirmOverlay}
+               onClick={() => !deleting && setShowDeleteConfirm(false)}
+            >
+               <div
+                  className={styles.confirmModal}
+                  onClick={(e) => e.stopPropagation()}
+               >
+                  <div className={styles.confirmIcon}>
+                     <AlertTriangle size={24} />
+                  </div>
+
+                  <h3 className={styles.confirmTitle}>Delete product?</h3>
+
+                  <p className={styles.confirmText}>
+                     Are you sure you want to delete{" "}
+                     <strong>{name || "this product"}</strong>? This action
+                     cannot be undone. All associated data, sales history, and
+                     content will be permanently removed.
+                  </p>
+
+                  <div className={styles.confirmActions}>
+                     <button
+                        type="button"
+                        className={styles.confirmCancelBtn}
+                        onClick={() => setShowDeleteConfirm(false)}
+                        disabled={deleting}
+                     >
+                        Cancel
+                     </button>
+                     <button
+                        type="button"
+                        className={styles.confirmDeleteBtn}
+                        onClick={handleDelete}
+                        disabled={deleting}
+                     >
+                        {deleting ? "Deleting..." : "Delete product"}
+                     </button>
+                  </div>
+               </div>
+            </div>
+         )}
       </div>
    );
 };
