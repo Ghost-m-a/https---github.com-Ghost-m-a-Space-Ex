@@ -23,8 +23,8 @@ export default function BalanceReportPage() {
          // Aggregate
          const payments = d.payments || [];
          const moneyIn = payments
-            .filter((p) => p.status === "succeeded")
-            .reduce((s: number, p: any) => s + p.amount, 0);
+            .filter((p: { status: string }) => p.status === "succeeded")
+            .reduce((s: number, p: { amount: number }) => s + p.amount, 0);
          setData({
             moneyIn,
             moneyOut: 0,

@@ -27,7 +27,11 @@ import {
    MoreHorizontal,
    Code2,
    ChevronDown,
+   FileText, // ✅ ADD
+   Receipt, // ✅ ADD (for "Checkout links")
+   Tag, // ✅ ADD (for "Promo codes")
 } from "lucide-react";
+
 import { useWorkspace } from "../context/workspace-context";
 import BusinessModal from "./business-modal";
 import SettingsModal, { TabId } from "./settings-modal";
@@ -35,7 +39,6 @@ import BusinessSettingsModal, {
    BusinessTabId,
 } from "./business-settings-modal";
 import styles from "../styles/sidebar.module.css";
-import { Receipt, Tag } from "lucide-react";
 
 interface MenuItem {
    icon: React.ReactNode;
