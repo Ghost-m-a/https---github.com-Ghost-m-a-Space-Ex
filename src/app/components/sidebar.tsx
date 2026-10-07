@@ -9,8 +9,7 @@ import {
    Home,
    MessageSquare,
    Building2,
-   Handshake,
-   Network,
+   Network, // ✅ Keep — used in business Affiliates
    Compass,
    Settings,
    ChevronsLeft,
@@ -27,9 +26,10 @@ import {
    MoreHorizontal,
    Code2,
    ChevronDown,
-   FileText, // ✅ ADD
-   Receipt, // ✅ ADD (for "Checkout links")
-   Tag, // ✅ ADD (for "Promo codes")
+   FileText,
+   Receipt,
+   Tag,
+   // ❌ Removed: Handshake
 } from "lucide-react";
 
 import { useWorkspace } from "../context/workspace-context";
@@ -168,16 +168,7 @@ const Sidebar = () => {
                label: "Townhall",
                href: "/townhall",
             },
-            {
-               icon: <Handshake size={20} />,
-               label: "Partners",
-               href: "/partners",
-            },
-            {
-               icon: <Network size={20} />,
-               label: "Affiliates",
-               href: "/affiliates",
-            },
+
             {
                icon: <Compass size={20} />,
                label: "Discover",
