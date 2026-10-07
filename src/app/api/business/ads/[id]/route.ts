@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Business from "@/app/lib/models/Business";
-import Campaign from "@/app/lib/models/Campaign";
+import AdCampaign from "@/app/lib/models/AdCampaign";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
 
 async function requireUser(req: NextRequest) {
@@ -21,7 +21,7 @@ export async function GET(
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       await connectDB();
-      const campaign = await Campaign.findById(id).lean();
+      const campaign = await AdCampaign.findById(id).lean();
       if (!campaign)
          return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -33,7 +33,7 @@ export async function GET(
          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
       return NextResponse.json({ campaign });
-   } catch (err) {
+   } catch {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }
 }
@@ -51,7 +51,7 @@ export async function PATCH(
       const body = await req.json();
       await connectDB();
 
-      const campaign = await Campaign.findById(id);
+      const campaign = await AdCampaign.findById(id);
       if (!campaign)
          return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -97,7 +97,7 @@ export async function PATCH(
 
       await campaign.save();
       return NextResponse.json({ campaign: campaign.toObject() });
-   } catch (err) {
+   } catch {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }
 }
@@ -113,7 +113,7 @@ export async function DELETE(
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
       await connectDB();
-      const campaign = await Campaign.findById(id);
+      const campaign = await AdCampaign.findById(id);
       if (!campaign)
          return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -126,7 +126,7 @@ export async function DELETE(
 
       await campaign.deleteOne();
       return NextResponse.json({ success: true });
-   } catch (err) {
+   } catch {
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }
 }

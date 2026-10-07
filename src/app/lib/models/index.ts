@@ -91,13 +91,25 @@ export { default as LiveEvent } from "./LiveEvent";
 export type { ILiveEvent } from "./LiveEvent";
 
 // ============ ADS ============
-export { default as Campaign } from "./Campaign";
-export type { ICampaign, IPlatformRate, CampaignPlatform } from "./Campaign";
+export { default as AdCampaign } from "./AdCampaign";
+export type {
+   IAdCampaign,
+   Platform as AdPlatform,
+   Objective as AdObjective,
+   CampaignStatus as AdCampaignStatus,
+   BudgetControl as AdBudgetControl,
+   BidStrategy as AdBidStrategy,
+   SpecialCategory as AdSpecialCategory,
+   ConversionLocation as AdConversionLocation,
+} from "./AdCampaign";
 
 export { default as AdSettings } from "./AdSettings";
 export type { IAdSettings } from "./AdSettings";
 
-// ============ CAMPAIGN CONTRIBUTIONS & SUBMISSIONS ============
+// ============ CAMPAIGNS (Content Rewards) ============
+export { default as Campaign } from "./Campaign";
+export type { ICampaign, IPlatformRate, CampaignPlatform } from "./Campaign";
+
 export { default as CampaignContribution } from "./CampaignContribution";
 export type { ICampaignContribution } from "./CampaignContribution";
 
@@ -144,6 +156,6 @@ export type { IAppListing } from "./AppListing";
 export { default as InstalledApp } from "./InstalledApp";
 export type { IInstalledApp } from "./InstalledApp";
 
-// ============ DISCOVER (legacy — keep for backwards compat) ============
+// ============ DISCOVER (legacy — kept for backwards compat) ============
 export { default as DiscoverCampaign } from "./DiscoverCampaign";
 export type { IDiscoverCampaign, SocialPlatform } from "./DiscoverCampaign";

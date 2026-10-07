@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Business from "@/app/lib/models/Business";
-import Campaign from "@/app/lib/models/Campaign";
+import AdCampaign from "@/app/lib/models/AdCampaign";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
 
 async function requireUser(req: NextRequest) {
@@ -21,7 +21,6 @@ async function getBusiness(session: any, businessId: string | null) {
       .lean();
 }
 
-// GET - list campaigns with dashboard stats
 export async function GET(req: NextRequest) {
    try {
       const session = await requireUser(req);
@@ -30,7 +29,6 @@ export async function GET(req: NextRequest) {
       const url = new URL(req.url);
       const businessId = url.searchParams.get("businessId");
       const q = url.searchParams.get("q") || "";
-      const tab = url.searchParams.get("tab") || "campaigns";
 
       await connectDB();
       const business = await getBusiness(session, businessId);
@@ -39,13 +37,12 @@ export async function GET(req: NextRequest) {
       const query: Record<string, unknown> = { businessId: business._id };
       if (q) query.title = { $regex: q, $options: "i" };
 
-      const campaigns = await Campaign.find(query)
+      const campaigns = await AdCampaign.find(query)
          .sort({ createdAt: -1 })
          .lean();
 
-      // Aggregate summary
       const summary = campaigns.reduce(
-         (acc, c) => ({
+         (acc: any, c) => ({
             totalSpend: acc.totalSpend + (c.stats?.spent || 0),
             totalImpressions:
                acc.totalImpressions + (c.stats?.impressions || 0),
@@ -84,7 +81,6 @@ export async function GET(req: NextRequest) {
    }
 }
 
-// POST - create campaign
 export async function POST(req: NextRequest) {
    try {
       const session = await requireUser(req);
@@ -116,7 +112,7 @@ export async function POST(req: NextRequest) {
             { status: 404 },
          );
 
-      const campaign = await Campaign.create({
+      const campaign = await AdCampaign.create({
          businessId: business._id,
          createdBy: session.userId,
          title: title.trim(),
