@@ -9,7 +9,7 @@ import {
    Home,
    MessageSquare,
    Building2,
-   Network, // ✅ Keep — used in business Affiliates
+   Network,
    Compass,
    Settings,
    ChevronsLeft,
@@ -29,9 +29,7 @@ import {
    FileText,
    Receipt,
    Tag,
-   // ❌ Removed: Handshake
 } from "lucide-react";
-
 import { useWorkspace } from "../context/workspace-context";
 import BusinessModal from "./business-modal";
 import SettingsModal, { TabId } from "./settings-modal";
@@ -56,9 +54,6 @@ interface Section {
 }
 
 const Sidebar = () => {
-   // =========================================
-   // ALL HOOKS INSIDE THE COMPONENT
-   // =========================================
    const [isCollapsed, setIsCollapsed] = useState(false);
    const [isMounted, setIsMounted] = useState(false);
    const [isModalOpen, setIsModalOpen] = useState(false);
@@ -149,7 +144,7 @@ const Sidebar = () => {
    };
 
    // =========================================
-   // MENU DATA
+   // PERSONAL MENU
    // =========================================
    const personalSections: Section[] = [
       {
@@ -168,7 +163,6 @@ const Sidebar = () => {
                label: "Townhall",
                href: "/townhall",
             },
-
             {
                icon: <Compass size={20} />,
                label: "Discover",
@@ -178,6 +172,9 @@ const Sidebar = () => {
       },
    ];
 
+   // =========================================
+   // BUSINESS MENU
+   // =========================================
    const businessSections: Section[] = [
       {
          title: activeBusiness?.name || "Business",
@@ -215,6 +212,11 @@ const Sidebar = () => {
       {
          title: "Grow",
          items: [
+            {
+               icon: <Megaphone size={20} />,
+               label: "Campaigns",
+               href: "/business/campaigns",
+            },
             {
                icon: <Megaphone size={20} />,
                label: "Ads",
@@ -462,7 +464,6 @@ const Sidebar = () => {
                   )}
                </Link>
 
-               {/* ✅ SETTINGS — opens Personal OR Business settings based on mode */}
                <button
                   type="button"
                   className={styles.navItem}
@@ -529,7 +530,7 @@ const Sidebar = () => {
             initialTab={businessSettingsTab}
             onCreateBusiness={() => {
                setBusinessSettingsOpen(false);
-               setIsModalOpen(true); // opens the BusinessModal
+               setIsModalOpen(true);
             }}
          />
       </>

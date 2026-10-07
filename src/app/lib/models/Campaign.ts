@@ -1,65 +1,71 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
-export type Platform = "facebook" | "tiktok" | "google" | "x" | "reddit";
-export type Objective =
-   | "sales"
-   | "leads"
-   | "engagement"
-   | "traffic"
-   | "awareness";
-export type CampaignStatus = "draft" | "active" | "paused" | "completed";
-export type BudgetControl = "campaign" | "ad_group";
-export type BidStrategy = "highest_volume" | "cost_cap" | "bid_cap";
-export type SpecialCategory = "none" | "financial" | "employment" | "housing";
-export type ConversionLocation = "website" | "message_destinations";
+export type CampaignPlatform =
+   | "youtube"
+   | "tiktok"
+   | "instagram"
+   | "x"
+   | "facebook";
+
+export interface IPlatformRate {
+   platform: CampaignPlatform;
+   minViews: number;
+   maxViews: number;
+   cpm: number; // credits per 1000 views
+}
 
 export interface ICampaign extends Document {
    businessId: Types.ObjectId;
    createdBy: Types.ObjectId;
-   platform: Platform;
-   objective: Objective;
+   slug: string;
    title: string;
-   budgetType: "daily" | "lifetime";
-   budgetAmount: number;
-   budgetControl: BudgetControl;
-   bidStrategy: BidStrategy;
-   specialAdCategory: SpecialCategory;
-   status: CampaignStatus;
-   onOff: boolean;
+   subtitle: string;
+   category: string;
+   coverImage: string;
+   previewImage: string;
+   brandName: string;
+   brandAvatar: string;
+   brandVerified: boolean;
 
-   // Build step
-   conversionLocation: ConversionLocation;
-   conversionEvent: string;
-   advantagePlacements: boolean;
-   advantageAudience: boolean;
-   minAge: number;
-   countries: string[];
-   facebookPage: string;
-   instagramAccount: string;
-   messageDestinations: { messenger: boolean; instagram: boolean };
-   performanceGoal: string;
+   budget: number;
+   budgetSpent: number;
+   cpm: number; // default credit per 1000 views
+   duration: string;
 
-   // Schedule
-   startDate: Date | null;
+   socials: CampaignPlatform[];
+   platformRates: IPlatformRate[];
+
+   requirements: string[];
+   instructions: string[];
+   assets: { name: string; url: string }[];
+   summary: string;
+
+   joinedUsers: number;
+   totalViews: number;
+
+   status: "active" | "paused" | "ended" | "draft";
+   featured: boolean;
+
+   startDate: Date;
    endDate: Date | null;
-   setEndDate: boolean;
-   deliveryHours: string;
-   minDailySpend: number;
-   languages: string[];
-
-   // Stats
-   stats: {
-      spent: number;
-      impressions: number;
-      clicks: number;
-      results: number;
-      roas: number;
-      revenue: number;
-   };
 
    createdAt: Date;
    updatedAt: Date;
 }
+
+const PlatformRateSchema = new Schema<IPlatformRate>(
+   {
+      platform: {
+         type: String,
+         enum: ["youtube", "tiktok", "instagram", "x", "facebook"],
+         required: true,
+      },
+      minViews: { type: Number, default: 1000 },
+      maxViews: { type: Number, default: 1000000 },
+      cpm: { type: Number, default: 1 },
+   },
+   { _id: false },
+);
 
 const CampaignSchema = new Schema<ICampaign>(
    {
@@ -70,84 +76,53 @@ const CampaignSchema = new Schema<ICampaign>(
          index: true,
       },
       createdBy: { type: Schema.Types.ObjectId, ref: "User", required: true },
-      platform: {
-         type: String,
-         enum: ["facebook", "tiktok", "google", "x", "reddit"],
-         default: "facebook",
-      },
-      objective: {
-         type: String,
-         enum: ["sales", "leads", "engagement", "traffic", "awareness"],
-         default: "sales",
-      },
-      title: { type: String, required: true, trim: true, maxlength: 200 },
-      budgetType: {
-         type: String,
-         enum: ["daily", "lifetime"],
-         default: "daily",
-      },
-      budgetAmount: { type: Number, default: 0, min: 0 },
-      budgetControl: {
-         type: String,
-         enum: ["campaign", "ad_group"],
-         default: "campaign",
-      },
-      bidStrategy: {
-         type: String,
-         enum: ["highest_volume", "cost_cap", "bid_cap"],
-         default: "highest_volume",
-      },
-      specialAdCategory: {
-         type: String,
-         enum: ["none", "financial", "employment", "housing"],
-         default: "none",
-      },
+      slug: { type: String, required: true, unique: true, index: true },
+      title: { type: String, required: true, maxlength: 200 },
+      subtitle: { type: String, default: "" },
+      category: { type: String, default: "Entertainment", index: true },
+      coverImage: { type: String, default: "" },
+      previewImage: { type: String, default: "" },
+      brandName: { type: String, default: "" },
+      brandAvatar: { type: String, default: "" },
+      brandVerified: { type: Boolean, default: false },
+
+      budget: { type: Number, required: true, min: 0 },
+      budgetSpent: { type: Number, default: 0, min: 0 },
+      cpm: { type: Number, default: 1, min: 0 },
+      duration: { type: String, default: "" },
+
+      socials: [
+         {
+            type: String,
+            enum: ["youtube", "tiktok", "instagram", "x", "facebook"],
+         },
+      ],
+      platformRates: { type: [PlatformRateSchema], default: [] },
+
+      requirements: { type: [String], default: [] },
+      instructions: { type: [String], default: [] },
+      assets: [{ name: String, url: String }],
+      summary: { type: String, default: "" },
+
+      joinedUsers: { type: Number, default: 0 },
+      totalViews: { type: Number, default: 0 },
+
       status: {
          type: String,
-         enum: ["draft", "active", "paused", "completed"],
-         default: "draft",
+         enum: ["active", "paused", "ended", "draft"],
+         default: "active",
          index: true,
       },
-      onOff: { type: Boolean, default: false },
+      featured: { type: Boolean, default: false, index: true },
 
-      conversionLocation: {
-         type: String,
-         enum: ["website", "message_destinations"],
-         default: "website",
-      },
-      conversionEvent: { type: String, default: "" },
-      advantagePlacements: { type: Boolean, default: true },
-      advantageAudience: { type: Boolean, default: true },
-      minAge: { type: Number, default: 18 },
-      countries: { type: [String], default: ["United States"] },
-      facebookPage: { type: String, default: "" },
-      instagramAccount: { type: String, default: "" },
-      messageDestinations: {
-         messenger: { type: Boolean, default: true },
-         instagram: { type: Boolean, default: false },
-      },
-      performanceGoal: { type: String, default: "maximize_conversions" },
-
-      startDate: { type: Date, default: null },
+      startDate: { type: Date, default: Date.now },
       endDate: { type: Date, default: null },
-      setEndDate: { type: Boolean, default: false },
-      deliveryHours: { type: String, default: "all_day" },
-      minDailySpend: { type: Number, default: 0, min: 0 },
-      languages: { type: [String], default: [] },
-
-      stats: {
-         spent: { type: Number, default: 0 },
-         impressions: { type: Number, default: 0 },
-         clicks: { type: Number, default: 0 },
-         results: { type: Number, default: 0 },
-         roas: { type: Number, default: 0 },
-         revenue: { type: Number, default: 0 },
-      },
    },
    { timestamps: true },
 );
 
-CampaignSchema.index({ businessId: 1, createdAt: -1 });
+CampaignSchema.index({ budget: -1 });
+CampaignSchema.index({ createdAt: -1 });
 
 const Campaign: Model<ICampaign> =
    mongoose.models.Campaign ||

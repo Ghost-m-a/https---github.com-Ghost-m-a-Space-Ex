@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
-import DiscoverCampaign from "@/app/lib/models/DiscoverCampaign";
+import Campaign from "@/app/lib/models/Campaign";
+import CampaignContribution from "@/app/lib/models/CampaignContribution";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
 
-// GET — list campaigns with filters
 export async function GET(req: NextRequest) {
    try {
       const url = new URL(req.url);
@@ -12,6 +12,9 @@ export async function GET(req: NextRequest) {
       const category = url.searchParams.get("category") || "";
       const sort = url.searchParams.get("sort") || "top";
 
+      const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+      const session = token ? await verifySessionToken(token) : null;
+
       await connectDB();
 
       const query: Record<string, unknown> = { status: "active" };
@@ -19,15 +22,24 @@ export async function GET(req: NextRequest) {
       if (social) query.socials = { $in: [social] };
       if (category && category !== "all") query.category = category;
 
-      let sortQuery: Record<string, 1 | -1> = { budget: -1 };
+      let sortQuery: Record<string, 1 | -1> = { featured: -1, budget: -1 };
       if (sort === "newest") sortQuery = { createdAt: -1 };
       if (sort === "cpm") sortQuery = { cpm: -1 };
-      if (sort === "top") sortQuery = { featured: -1, budget: -1 };
+      if (sort === "budget") sortQuery = { budget: -1 };
 
-      const campaigns = await DiscoverCampaign.find(query)
+      const campaigns = await Campaign.find(query)
          .sort(sortQuery)
          .limit(60)
          .lean();
+
+      // Which campaigns has the current user joined?
+      let joinedIds = new Set<string>();
+      if (session) {
+         const myContribs = await CampaignContribution.find({
+            userId: session.userId,
+         }).lean();
+         joinedIds = new Set(myContribs.map((c) => c.campaignId.toString()));
+      }
 
       return NextResponse.json({
          campaigns: campaigns.map((c) => ({
@@ -36,77 +48,25 @@ export async function GET(req: NextRequest) {
             title: c.title,
             subtitle: c.subtitle,
             category: c.category,
+            coverImage: c.coverImage,
             previewImage: c.previewImage,
             brandName: c.brandName,
             brandAvatar: c.brandAvatar,
             brandVerified: c.brandVerified,
             socials: c.socials,
             budget: c.budget,
-            raised: c.raised,
+            budgetSpent: c.budgetSpent,
+            budgetRemaining: Math.max(0, c.budget - c.budgetSpent),
             cpm: c.cpm,
-            totalEarned: c.totalEarned,
+            joinedUsers: c.joinedUsers,
+            totalViews: c.totalViews,
             duration: c.duration,
-            ageRestricted: c.ageRestricted,
             featured: c.featured,
+            joined: joinedIds.has(c._id.toString()),
          })),
       });
    } catch (err) {
       console.error("[Discover campaigns GET]", err);
       return NextResponse.json({ campaigns: [] });
-   }
-}
-
-// POST — create a campaign (for creators/brands)
-export async function POST(req: NextRequest) {
-   try {
-      const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-      if (!token)
-         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      const session = await verifySessionToken(token);
-      if (!session)
-         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-      const body = await req.json();
-      const { title, budget, cpm, category, socials, previewImage, brandName } =
-         body;
-
-      if (!title)
-         return NextResponse.json({ error: "Title required" }, { status: 400 });
-
-      await connectDB();
-
-      const slug =
-         title
-            .toLowerCase()
-            .replace(/[^\w\s-]/g, "")
-            .replace(/\s+/g, "-")
-            .slice(0, 50) +
-         "-" +
-         Date.now().toString(36);
-
-      const campaign = await DiscoverCampaign.create({
-         slug,
-         title,
-         subtitle: body.subtitle || "",
-         category: category || "Entertainment",
-         previewImage: previewImage || "",
-         brandName: brandName || "Space/Ex",
-         brandVerified: true,
-         socials: Array.isArray(socials) ? socials : ["youtube", "tiktok"],
-         budget: Number(budget) || 0,
-         raised: 0,
-         cpm: Number(cpm) || 0,
-         totalEarned: 0,
-         status: "active",
-         duration: body.duration || "5d",
-         createdBy: session.userId as any,
-      });
-
-      return NextResponse.json({
-         campaign: { id: campaign._id.toString(), slug: campaign.slug },
-      });
-   } catch (err) {
-      console.error("[Discover campaigns POST]", err);
-      return NextResponse.json({ error: "Server error" }, { status: 500 });
    }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
    Search,
@@ -9,9 +9,10 @@ import {
    ChevronRight,
    X,
    Check,
-   ArrowUp,
-   Filter,
    Eraser,
+   Users,
+   TrendingUp,
+   Wallet,
 } from "lucide-react";
 import styles from "./discover.module.css";
 
@@ -23,152 +24,83 @@ interface Campaign {
    title: string;
    subtitle: string;
    category: string;
+   coverImage: string;
    previewImage: string;
    brandName: string;
    brandAvatar: string;
    brandVerified: boolean;
    socials: SocialPlatform[];
    budget: number;
-   raised: number;
+   budgetSpent: number;
+   budgetRemaining: number;
    cpm: number;
-   totalEarned: number;
+   joinedUsers: number;
+   totalViews: number;
    duration: string;
-   ageRestricted: boolean;
    featured: boolean;
+   joined: boolean;
 }
 
-const SOCIAL_ICONS: Record<SocialPlatform, { label: string; color: string }> = {
+const SOCIALS: Record<SocialPlatform, { label: string; color: string }> = {
    facebook: { label: "f", color: "#1877F2" },
    youtube: { label: "▶", color: "#ff0000" },
-   tiktok: { label: "♪", color: "#000" },
+   tiktok: { label: "♪", color: "#fff" },
    instagram: { label: "◉", color: "#E1306C" },
-   x: { label: "𝕏", color: "#000" },
+   x: { label: "𝕏", color: "#fff" },
 };
 
-const CATEGORIES = [
-   "Entertainment",
-   "Movies & TV",
-   "Film Trailers",
-   "Movie Clips",
-   "TV Series",
-   "Reality TV",
-   "Documentary",
-   "Anime",
-   "Sports",
-   "Gaming",
-   "Music",
-   "Comedy",
-   "Beauty",
-   "Fitness",
-];
-
-const BUDGET_RANGES = [
-   { key: "any", label: "أي ميزانية" },
-   { key: "under1k", label: "أقل من $1k" },
-   { key: "1k-10k", label: "$1k - $10k" },
-   { key: "10k-50k", label: "$10k - $50k" },
-   { key: "50k+", label: "$50k+" },
-];
-
-const FORMATS = [
-   { key: "any", label: "أي نموذج" },
-   { key: "video", label: "فيديو" },
-   { key: "image", label: "صورة" },
-   { key: "audio", label: "صوت فقط" },
-   { key: "slideshow", label: "عرض شرائح" },
-];
-
 const SORTS = [
-   { key: "top", label: "الأعلى" },
-   { key: "newest", label: "الأحدث" },
-   { key: "cpm", label: "أعلى CPM" },
-   { key: "budget", label: "أعلى ميزانية" },
-];
-
-const TYPE_TABS = [
-   { key: "all", label: "الكل" },
-   { key: "clipping", label: "Clipping" },
-   { key: "ugc", label: "UGC" },
+   { key: "top", label: "Top" },
+   { key: "newest", label: "Newest" },
+   { key: "cpm", label: "Highest CPM" },
+   { key: "budget", label: "Highest Budget" },
 ];
 
 export default function DiscoverPage() {
    const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-   const [featured, setFeatured] = useState<Campaign | null>(null);
    const [loading, setLoading] = useState(true);
    const [search, setSearch] = useState("");
    const [social, setSocial] = useState<SocialPlatform | "">("");
-   const [category, setCategory] = useState("all");
-   const [budget, setBudget] = useState("any");
-   const [format, setFormat] = useState("any");
    const [sort, setSort] = useState("top");
-   const [typeTab, setTypeTab] = useState("all");
    const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-   const scrollRef = useRef<HTMLDivElement>(null);
 
-   const hasFilters =
-      search ||
-      social ||
-      category !== "all" ||
-      budget !== "any" ||
-      format !== "any" ||
-      sort !== "top" ||
-      typeTab !== "all";
-
-   // Load campaigns
    const load = useCallback(async () => {
       setLoading(true);
       try {
-         const params = new URLSearchParams();
-         if (search) params.set("q", search);
-         if (social) params.set("social", social);
-         if (category && category !== "all") params.set("category", category);
-         if (sort) params.set("sort", sort);
-
-         const res = await fetch(`/api/discover/campaigns?${params}`);
-         const data = await res.json();
-         const list: Campaign[] = data.campaigns || [];
-         setCampaigns(list);
-         setFeatured(list.find((c) => c.featured) || list[0] || null);
+         const p = new URLSearchParams();
+         if (search) p.set("q", search);
+         if (social) p.set("social", social);
+         if (sort) p.set("sort", sort);
+         const res = await fetch(`/api/discover/campaigns?${p}`);
+         const d = await res.json();
+         setCampaigns(d.campaigns || []);
       } finally {
          setLoading(false);
       }
-   }, [search, social, category, sort]);
+   }, [search, social, sort]);
 
    useEffect(() => {
       load();
    }, [load]);
 
-   // Click outside to close dropdowns
    useEffect(() => {
-      const handler = (e: MouseEvent) => {
-         if (!(e.target as HTMLElement).closest("[data-dropdown]")) {
+      const h = (e: MouseEvent) => {
+         if (!(e.target as HTMLElement).closest("[data-dropdown]"))
             setOpenDropdown(null);
-         }
       };
-      document.addEventListener("mousedown", handler);
-      return () => document.removeEventListener("mousedown", handler);
+      document.addEventListener("mousedown", h);
+      return () => document.removeEventListener("mousedown", h);
    }, []);
 
-   const clearFilters = () => {
-      setSearch("");
-      setSocial("");
-      setCategory("all");
-      setBudget("any");
-      setFormat("any");
-      setSort("top");
-      setTypeTab("all");
-   };
-
-   const scrollLeft = () => {
-      scrollRef.current?.scrollBy({ left: -400, behavior: "smooth" });
-   };
-   const scrollRight = () => {
-      scrollRef.current?.scrollBy({ left: 400, behavior: "smooth" });
+   const fmtMoney = (n: number) => {
+      if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
+      if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
+      return `$${n.toFixed(0)}`;
    };
 
    return (
       <div className={styles.page}>
-         {/* Top Bar */}
+         {/* Header */}
          <div className={styles.topBar}>
             <Link href="/discover" className={styles.backLink}>
                <ChevronLeft size={16} />
@@ -179,371 +111,118 @@ export default function DiscoverPage() {
             </button>
          </div>
 
-         {/* Hero Section */}
-         {featured && (
-            <div className={styles.hero}>
-               <div className={styles.heroContent}>
-                  <div className={styles.heroLeft}>
-                     <div className={styles.heroVisual}>
-                        {featured.previewImage && (
-                           <img
-                              src={featured.previewImage}
-                              alt={featured.title}
-                              className={styles.heroImage}
-                           />
-                        )}
-                        <button className={styles.heroPlay}>▶</button>
-                     </div>
-                  </div>
-                  <div className={styles.heroRight}>
-                     <div className={styles.heroBrand}>
-                        <div className={styles.heroBrandAvatar}>🅷</div>
-                        <span className={styles.heroBrandName}>Clip Farm</span>
-                        <span className={styles.heroVerified}>✓</span>
-                     </div>
-                     <h1 className={styles.heroTitle}>{featured.title}</h1>
-                     <div className={styles.heroStats}>
-                        <span className={styles.heroStat}>
-                           ${featured.cpm}/1k
-                        </span>
-                        <span className={styles.heroDot}>·</span>
-                        <span className={styles.heroStat}>
-                           ${(featured.budget / 1000).toFixed(1)}k مباحات
-                        </span>
-                        <span className={styles.heroDot}>·</span>
-                        <span className={styles.heroStat}>
-                           {featured.category}
-                        </span>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         )}
-
-         {/* Horizontal Scroll Controls */}
-         <div className={styles.filtersBar}>
-            <div className={styles.filtersLeft}>
-               <button
-                  className={styles.filterBtn}
-                  onClick={scrollLeft}
-                  aria-label="Scroll left"
-               >
-                  <ChevronLeft size={14} />
-               </button>
-               <button
-                  className={styles.filterBtn}
-                  onClick={scrollRight}
-                  aria-label="Scroll right"
-               >
-                  <ChevronRight size={14} />
-               </button>
-               <div className={styles.resultsCount}>
-                  {campaigns.length}+50 حملات
-               </div>
-            </div>
-         </div>
-
-         {/* Horizontal Campaign Strip */}
-         <div className={styles.stripWrap} ref={scrollRef}>
-            <div className={styles.strip}>
-               {campaigns.slice(0, 10).map((c) => (
-                  <CampaignCard key={c.id} campaign={c} compact />
-               ))}
-            </div>
-         </div>
-
-         {/* Divider */}
-         <div className={styles.divider} />
-
-         {/* Main Grid Header */}
-         <div className={styles.gridHeader}>
-            <h2 className={styles.gridTitle}>أفضل الحملات</h2>
+         {/* Filter Row */}
+         <div className={styles.filterRowOuter}>
+            <h2 className={styles.title}>Top Campaigns</h2>
             <div className={styles.searchWrap}>
                <Search size={14} />
                <input
                   className={styles.searchInput}
-                  placeholder="ابحث عن حملة"
+                  placeholder="Search campaigns"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                />
             </div>
          </div>
 
-         {/* =========================================
-          FLOATING BOTTOM FILTER BAR
-          ========================================= */}
-         <div className={styles.floatingBar}>
-            {/* Row 1: Clear + Filter icon + Socials + Dropdowns + Type tabs */}
-            <div className={styles.fbRow}>
-               {/* Clear */}
-               {hasFilters && (
-                  <button className={styles.fbClearBtn} onClick={clearFilters}>
-                     <Eraser size={12} />
-                     مسح
-                  </button>
-               )}
-
-               {/* Filter icon with kbd */}
-               <button className={styles.fbFilterIcon}>
-                  <Filter size={14} />
-                  <kbd className={styles.fbKbd}>⌘ K</kbd>
-               </button>
-
-               <div className={styles.fbDivider} />
-
-               {/* Social toggles */}
-               <div className={styles.fbSocials}>
-                  {(
-                     [
-                        "facebook",
-                        "x",
-                        "youtube",
-                        "instagram",
-                        "tiktok",
-                     ] as SocialPlatform[]
-                  ).map((s) => {
-                     const active = social === s;
-                     return (
-                        <button
-                           key={s}
-                           className={`${styles.fbSocialBtn} ${active ? styles.fbSocialBtnActive : ""}`}
-                           onClick={() => setSocial(active ? "" : s)}
-                           style={
-                              active
-                                 ? {
-                                      background: SOCIAL_ICONS[s].color,
-                                      color: "#fff",
-                                   }
-                                 : {}
-                           }
-                        >
-                           {SOCIAL_ICONS[s].label}
-                        </button>
-                     );
-                  })}
-               </div>
-
-               <div className={styles.fbDivider} />
-
-               {/* Budget */}
-               <div className={styles.fbDropdownWrap} data-dropdown>
-                  <button
-                     className={styles.fbDropdown}
-                     onClick={() =>
-                        setOpenDropdown(
-                           openDropdown === "budget" ? null : "budget",
-                        )
-                     }
-                  >
-                     <span className={styles.fbIconText}>💰</span>
-                     {budget === "any"
-                        ? "الميزانية"
-                        : BUDGET_RANGES.find((b) => b.key === budget)?.label}
-                     <ChevronDown size={12} />
-                  </button>
-                  {openDropdown === "budget" && (
-                     <div className={styles.fbMenu} data-dropdown>
-                        {BUDGET_RANGES.map((b) => (
-                           <button
-                              key={b.key}
-                              className={styles.fbMenuItem}
-                              onClick={() => {
-                                 setBudget(b.key);
-                                 setOpenDropdown(null);
-                              }}
-                           >
-                              <span className={styles.checkBox}>
-                                 {budget === b.key && <Check size={12} />}
-                              </span>
-                              {b.label}
-                           </button>
-                        ))}
-                     </div>
-                  )}
-               </div>
-
-               {/* Category */}
-               <div className={styles.fbDropdownWrap} data-dropdown>
-                  <button
-                     className={styles.fbDropdown}
-                     onClick={() =>
-                        setOpenDropdown(
-                           openDropdown === "category" ? null : "category",
-                        )
-                     }
-                  >
-                     <span className={styles.fbIconText}>📂</span>
-                     {category === "all" ? "الفئة" : category}
-                     <ChevronDown size={12} />
-                  </button>
-                  {openDropdown === "category" && (
-                     <div
-                        className={`${styles.fbMenu} ${styles.fbMenuTall}`}
-                        data-dropdown
+         {/* Filters Bar */}
+         <div className={styles.filterBar}>
+            <div className={styles.socialsRow}>
+               {(
+                  [
+                     "youtube",
+                     "tiktok",
+                     "instagram",
+                     "x",
+                     "facebook",
+                  ] as SocialPlatform[]
+               ).map((s) => {
+                  const active = social === s;
+                  return (
+                     <button
+                        key={s}
+                        className={`${styles.socialBtn} ${active ? styles.socialBtnActive : ""}`}
+                        onClick={() => setSocial(active ? "" : s)}
+                        style={
+                           active
+                              ? {
+                                   background: SOCIALS[s].color,
+                                   color:
+                                      s === "youtube"
+                                         ? "#fff"
+                                         : s === "facebook"
+                                           ? "#fff"
+                                           : s === "instagram"
+                                             ? "#fff"
+                                             : "#000",
+                                }
+                              : {}
+                        }
                      >
+                        {SOCIALS[s].label}
+                     </button>
+                  );
+               })}
+            </div>
+
+            <div className={styles.sortWrap} data-dropdown>
+               <button
+                  className={styles.sortBtn}
+                  onClick={() =>
+                     setOpenDropdown(openDropdown === "sort" ? null : "sort")
+                  }
+               >
+                  {SORTS.find((s) => s.key === sort)?.label}
+                  <ChevronDown size={12} />
+               </button>
+               {openDropdown === "sort" && (
+                  <div className={styles.menu} data-dropdown>
+                     {SORTS.map((s) => (
                         <button
-                           className={styles.fbMenuItem}
+                           key={s.key}
+                           className={styles.menuItem}
                            onClick={() => {
-                              setCategory("all");
+                              setSort(s.key);
                               setOpenDropdown(null);
                            }}
                         >
                            <span className={styles.checkBox}>
-                              {category === "all" && <Check size={12} />}
+                              {sort === s.key && <Check size={12} />}
                            </span>
-                           كل الفئات
+                           {s.label}
                         </button>
-                        {CATEGORIES.map((c) => (
-                           <button
-                              key={c}
-                              className={styles.fbMenuItem}
-                              onClick={() => {
-                                 setCategory(c);
-                                 setOpenDropdown(null);
-                              }}
-                           >
-                              <span className={styles.checkBox}>
-                                 {category === c && <Check size={12} />}
-                              </span>
-                              {c}
-                           </button>
-                        ))}
-                     </div>
-                  )}
-               </div>
-
-               {/* Format */}
-               <div className={styles.fbDropdownWrap} data-dropdown>
-                  <button
-                     className={styles.fbDropdown}
-                     onClick={() =>
-                        setOpenDropdown(
-                           openDropdown === "format" ? null : "format",
-                        )
-                     }
-                  >
-                     <span className={styles.fbIconText}>{"{ }"}</span>
-                     {format === "any"
-                        ? "النموذج"
-                        : FORMATS.find((f) => f.key === format)?.label}
-                     <ChevronDown size={12} />
-                  </button>
-                  {openDropdown === "format" && (
-                     <div className={styles.fbMenu} data-dropdown>
-                        {FORMATS.map((f) => (
-                           <button
-                              key={f.key}
-                              className={styles.fbMenuItem}
-                              onClick={() => {
-                                 setFormat(f.key);
-                                 setOpenDropdown(null);
-                              }}
-                           >
-                              <span className={styles.checkBox}>
-                                 {format === f.key && <Check size={12} />}
-                              </span>
-                              {f.label}
-                           </button>
-                        ))}
-                     </div>
-                  )}
-               </div>
-
-               {/* Sort */}
-               <div className={styles.fbDropdownWrap} data-dropdown>
-                  <button
-                     className={styles.fbDropdown}
-                     onClick={() =>
-                        setOpenDropdown(openDropdown === "sort" ? null : "sort")
-                     }
-                  >
-                     <span className={styles.fbIconText}>≡</span>
-                     {sort === "top"
-                        ? "ترتيب"
-                        : SORTS.find((s) => s.key === sort)?.label}
-                     <ChevronDown size={12} />
-                  </button>
-                  {openDropdown === "sort" && (
-                     <div className={styles.fbMenu} data-dropdown>
-                        {SORTS.map((s) => (
-                           <button
-                              key={s.key}
-                              className={styles.fbMenuItem}
-                              onClick={() => {
-                                 setSort(s.key);
-                                 setOpenDropdown(null);
-                              }}
-                           >
-                              <span className={styles.checkBox}>
-                                 {sort === s.key && <Check size={12} />}
-                              </span>
-                              {s.label}
-                           </button>
-                        ))}
-                     </div>
-                  )}
-               </div>
-
-               <div className={styles.fbDivider} />
-
-               {/* Type tabs */}
-               <div className={styles.fbTypeTabs}>
-                  {TYPE_TABS.map((t) => (
-                     <button
-                        key={t.key}
-                        className={`${styles.fbTypeTab} ${typeTab === t.key ? styles.fbTypeTabActive : ""}`}
-                        onClick={() => setTypeTab(t.key)}
-                     >
-                        {t.label}
-                     </button>
-                  ))}
-               </div>
+                     ))}
+                  </div>
+               )}
             </div>
 
-            {/* Row 2: Search + scroll top */}
-            <div className={styles.fbRow2}>
+            {(search || social || sort !== "top") && (
                <button
-                  className={styles.fbScrollTop}
-                  onClick={() =>
-                     window.scrollTo({ top: 0, behavior: "smooth" })
-                  }
-                  aria-label="Scroll to top"
+                  className={styles.clearBtn}
+                  onClick={() => {
+                     setSearch("");
+                     setSocial("");
+                     setSort("top");
+                  }}
                >
-                  <ArrowUp size={14} />
+                  <Eraser size={12} /> Clear
                </button>
-
-               <div className={styles.fbSearch}>
-                  <Search size={14} />
-                  <input
-                     className={styles.fbSearchInput}
-                     placeholder="حملات CPM الأعلى أجرأ"
-                     value={search}
-                     onChange={(e) => setSearch(e.target.value)}
-                  />
-               </div>
-            </div>
+            )}
          </div>
 
-         {/* Campaign Grid */}
+         {/* Grid */}
          {loading ? (
             <div className={styles.loading}>Loading campaigns...</div>
          ) : campaigns.length === 0 ? (
             <div className={styles.empty}>
                <div className={styles.emptyIcon}>🎬</div>
-               <div className={styles.emptyTitle}>No campaigns yet</div>
-               <div className={styles.emptySub}>
-                  Try adjusting your filters.
-               </div>
-               {hasFilters && (
-                  <button className={styles.emptyCta} onClick={clearFilters}>
-                     مسح الفلاتر
-                  </button>
-               )}
+               <div className={styles.emptyTitle}>No campaigns found</div>
+               <div className={styles.emptySub}>Try a different filter</div>
             </div>
          ) : (
             <div className={styles.grid}>
                {campaigns.map((c) => (
-                  <CampaignCard key={c.id} campaign={c} />
+                  <CampaignCard key={c.id} c={c} fmtMoney={fmtMoney} />
                ))}
             </div>
          )}
@@ -551,93 +230,92 @@ export default function DiscoverPage() {
    );
 }
 
-// =========================================
-// Campaign Card
-// =========================================
 function CampaignCard({
-   campaign,
-   compact,
+   c,
+   fmtMoney,
 }: {
-   campaign: Campaign;
-   compact?: boolean;
+   c: Campaign;
+   fmtMoney: (n: number) => string;
 }) {
-   const formatMoney = (n: number) => {
-      if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
-      if (n >= 1000) return `$${(n / 1000).toFixed(0)}k`;
-      return `$${n.toFixed(0)}`;
-   };
-
-   const percentRaised =
-      campaign.budget > 0
-         ? Math.min(100, (campaign.raised / campaign.budget) * 100)
-         : 0;
-
+   const pct =
+      c.budget > 0 ? Math.min(100, (c.budgetSpent / c.budget) * 100) : 0;
    return (
-      <div className={`${styles.card} ${compact ? styles.cardCompact : ""}`}>
-         <div className={styles.cardPreview}>
-            {campaign.previewImage ? (
+      <Link href={`/discover/${c.slug}`} className={styles.card}>
+         {/* Cover */}
+         <div className={styles.cover}>
+            {c.coverImage ? (
                <img
-                  src={campaign.previewImage}
-                  alt={campaign.title}
-                  className={styles.cardImage}
+                  src={c.coverImage}
+                  alt={c.title}
+                  className={styles.coverImg}
                />
             ) : (
-               <div className={styles.cardPlaceholder}>
-                  <span className={styles.cardPlaceholderIcon}>🎬</span>
-               </div>
+               <div className={styles.coverFallback}>🎬</div>
             )}
-            {campaign.ageRestricted && (
-               <span className={styles.ageBadge}>18+</span>
-            )}
-            {campaign.brandVerified && (
-               <div className={styles.cardBadge}>
-                  <span>✓</span> Clip Farm
+            {c.brandVerified && (
+               <div className={styles.brandPill}>
+                  <span className={styles.brandCheck}>✓</span>
+                  <span>{c.brandName}</span>
                </div>
             )}
          </div>
 
-         <div className={styles.cardSocials}>
-            <div className={styles.socialsIcons}>
-               {campaign.socials.map((s) => (
-                  <span
-                     key={s}
-                     className={styles.socialIcon}
-                     style={{ color: SOCIAL_ICONS[s]?.color || "#888" }}
-                  >
-                     {SOCIAL_ICONS[s]?.label || "•"}
+         {/* Info */}
+         <div className={styles.info}>
+            {/* Socials + duration + brand */}
+            <div className={styles.metaRow}>
+               <div className={styles.socialsIcons}>
+                  {c.socials.map((s) => (
+                     <span key={s} style={{ color: SOCIALS[s].color }}>
+                        {SOCIALS[s].label}
+                     </span>
+                  ))}
+               </div>
+               <div className={styles.metaRight}>
+                  <span className={styles.duration}>{c.duration}</span>
+                  <span className={styles.dot}>·</span>
+                  <span className={styles.brandName}>{c.brandName}</span>
+                  {c.brandVerified && (
+                     <span className={styles.brandVerifiedIcon}>✓</span>
+                  )}
+               </div>
+            </div>
+
+            {/* Title */}
+            <div className={styles.cardTitle}>{c.title}</div>
+
+            {/* Stats */}
+            <div className={styles.statsRow}>
+               <div className={styles.statLeft}>
+                  <div className={styles.cpmValue}>${c.cpm}/1k</div>
+                  <div className={styles.joinedCount}>
+                     <Users size={11} /> {c.joinedUsers}
+                  </div>
+               </div>
+               <div className={styles.statRight}>
+                  <span className={styles.raised}>
+                     {fmtMoney(c.budgetSpent)}
                   </span>
-               ))}
-            </div>
-            <div className={styles.cardMeta}>
-               <span>{campaign.duration}</span>
-               <span className={styles.metaDot}>·</span>
-               <span className={styles.brandName}>{campaign.brandName}</span>
-               {campaign.brandVerified && (
-                  <span className={styles.brandVerifiedIcon}>✓</span>
-               )}
-            </div>
-         </div>
-
-         <div className={styles.cardTitle}>{campaign.title}</div>
-
-         <div className={styles.cardStats}>
-            <div className={styles.statGroup}>
-               <div className={styles.statValue}>${campaign.cpm}/1k</div>
-               <div className={styles.statLabel}>{campaign.raised} 👤</div>
-            </div>
-            <div className={styles.statGroup}>
-               <div className={styles.statValueRight}>
-                  {formatMoney(campaign.raised)}/{formatMoney(campaign.budget)}
+                  <span className={styles.separator}>/</span>
+                  <span className={styles.budget}>{fmtMoney(c.budget)}</span>
                </div>
             </div>
-         </div>
 
-         <div className={styles.progressBar}>
-            <div
-               className={styles.progressFill}
-               style={{ width: `${percentRaised}%` }}
-            />
+            {/* Progress */}
+            <div className={styles.progressTrack}>
+               <div
+                  className={styles.progressFill}
+                  style={{ width: `${pct}%` }}
+               />
+            </div>
+
+            {/* Joined pill */}
+            {c.joined && (
+               <div className={styles.joinedPill}>
+                  <Check size={12} /> Joined
+               </div>
+            )}
          </div>
-      </div>
+      </Link>
    );
 }

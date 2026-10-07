@@ -40,7 +40,6 @@ export type { IFollow } from "./Follow";
 
 // ============ PAYMENTS & TRANSACTIONS ============
 export { default as Payment } from "./Payment";
-// ✅ Alias the payment-method TYPE so it doesn't clash with the MODEL below
 export type {
    IPayment,
    PaymentStatus,
@@ -93,19 +92,17 @@ export type { ILiveEvent } from "./LiveEvent";
 
 // ============ ADS ============
 export { default as Campaign } from "./Campaign";
-export type {
-   ICampaign,
-   Platform,
-   Objective,
-   CampaignStatus,
-   BudgetControl,
-   BidStrategy,
-   SpecialCategory,
-   ConversionLocation,
-} from "./Campaign";
+export type { ICampaign, IPlatformRate, CampaignPlatform } from "./Campaign";
 
 export { default as AdSettings } from "./AdSettings";
 export type { IAdSettings } from "./AdSettings";
+
+// ============ CAMPAIGN CONTRIBUTIONS & SUBMISSIONS ============
+export { default as CampaignContribution } from "./CampaignContribution";
+export type { ICampaignContribution } from "./CampaignContribution";
+
+export { default as CampaignSubmission } from "./CampaignSubmission";
+export type { ICampaignSubmission } from "./CampaignSubmission";
 
 // ============ AFFILIATES ============
 export { default as Affiliate } from "./Affiliate";
@@ -146,3 +143,7 @@ export type { IAppListing } from "./AppListing";
 
 export { default as InstalledApp } from "./InstalledApp";
 export type { IInstalledApp } from "./InstalledApp";
+
+// ============ DISCOVER (legacy — keep for backwards compat) ============
+export { default as DiscoverCampaign } from "./DiscoverCampaign";
+export type { IDiscoverCampaign, SocialPlatform } from "./DiscoverCampaign";

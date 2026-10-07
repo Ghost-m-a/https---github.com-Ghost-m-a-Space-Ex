@@ -19,6 +19,8 @@ import Follow from "../src/app/lib/models/Follow";
 import Payment from "../src/app/lib/models/Payment";
 import CheckoutLink from "../src/app/lib/models/CheckoutLink";
 import Campaign from "../src/app/lib/models/Campaign";
+import CampaignContribution from "../src/app/lib/models/CampaignContribution";
+import CampaignSubmission from "../src/app/lib/models/CampaignSubmission";
 import AdSettings from "../src/app/lib/models/AdSettings";
 import Affiliate from "../src/app/lib/models/Affiliate";
 import AffiliateSignup from "../src/app/lib/models/AffiliateSignup";
@@ -31,7 +33,6 @@ import TeamMember from "../src/app/lib/models/TeamMember";
 import SubAccount from "../src/app/lib/models/SubAccount";
 import AppListing from "../src/app/lib/models/AppListing";
 import InstalledApp from "../src/app/lib/models/InstalledApp";
-import DiscoverCampaign from "../src/app/lib/models/DiscoverCampaign";
 import Customer from "../src/app/lib/models/Customer";
 import Membership from "../src/app/lib/models/Membership";
 import Visitor from "../src/app/lib/models/Visitor";
@@ -79,6 +80,8 @@ async function seed() {
       Payment.deleteMany({}),
       CheckoutLink.deleteMany({}),
       Campaign.deleteMany({}),
+      CampaignContribution.deleteMany({}),
+      CampaignSubmission.deleteMany({}),
       AdSettings.deleteMany({}),
       Affiliate.deleteMany({}),
       AffiliateSignup.deleteMany({}),
@@ -91,7 +94,6 @@ async function seed() {
       SubAccount.deleteMany({}),
       AppListing.deleteMany({}),
       InstalledApp.deleteMany({}),
-      DiscoverCampaign.deleteMany({}),
       Customer.deleteMany({}),
       Membership.deleteMany({}),
       Visitor.deleteMany({}),
@@ -197,7 +199,7 @@ async function seed() {
       migrateFrom: "Not migrating",
       website: "space-ex.com",
       logoUrl: "",
-      balance: 0,
+      balance: 100000,
       economicIntelligence: false,
       weeklyCardSpend: [0, 0, 0, 0, 0, 0, 0],
       industry: {
@@ -286,15 +288,8 @@ async function seed() {
          taxType: "exclusive",
          collectVatFromUsers: false,
       },
-      openGraph: {
-         imageUrl: "",
-         useLogoAsFallback: false,
-         mediaUrl: "",
-      },
-      homePreferences: {
-         hideMemberCount: false,
-         hideMembersCard: false,
-      },
+      openGraph: { imageUrl: "", useLogoAsFallback: false, mediaUrl: "" },
+      homePreferences: { hideMemberCount: false, hideMembersCard: false },
    });
 
    console.log("✅ Businesses created");
@@ -311,7 +306,7 @@ async function seed() {
          slug: "pro-membership",
          headline: "Unlock all premium features and exclusive content.",
          description:
-            "Get full access to our course library, weekly live Q&A sessions, and a private community of like-minded entrepreneurs.",
+            "Get full access to our course library, weekly live Q&A sessions, and a private community.",
          accessType: "paid",
          pricingType: "recurring",
          price: 49,
@@ -439,6 +434,245 @@ async function seed() {
    ]);
 
    console.log("✅ Products created");
+
+   // =========================================
+   // CREATE CAMPAIGNS (Content Rewards)
+   // =========================================
+   console.log("🎬 Creating content reward campaigns...");
+
+   const COVERS = [
+      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=800&h=500&fit=crop",
+      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&h=500&fit=crop",
+   ];
+
+   const CAMPAIGNS = [
+      {
+         title: "HardScope x ClipFarm",
+         subtitle: "Clip HardScope's latest content and earn",
+         category: "Entertainment",
+         budget: 2500,
+         cpm: 1,
+         joined: 183,
+         spent: 13100,
+         duration: "1w",
+         socials: ["youtube", "x", "tiktok"],
+      },
+      {
+         title: "... All I Got | Multi Edit Type Campaign",
+         subtitle: "Edit multi-type content for this campaign",
+         category: "Music",
+         budget: 70,
+         cpm: 1,
+         joined: 10,
+         spent: 1000,
+         duration: "3w",
+         socials: ["tiktok"],
+      },
+      {
+         title: "Shuffle Streamers - Clipping",
+         subtitle: "Clip Shuffle's top streamers",
+         category: "Gaming",
+         budget: 12100,
+         cpm: 1.5,
+         joined: 9,
+         spent: 25000,
+         duration: "2w",
+         socials: ["youtube", "x", "tiktok"],
+      },
+      {
+         title: "ForgeGUI Clipping [Roblox]",
+         subtitle: "Powered by BLOXCLIPS — clip Roblox content",
+         category: "Gaming",
+         budget: 167590,
+         cpm: 1,
+         joined: 3392,
+         spent: 22063,
+         duration: "5mo",
+         socials: ["youtube", "tiktok"],
+         featured: true,
+      },
+      {
+         title: "Backyard Breaks [Clipping Campaign]",
+         subtitle: "Clip Backyard Breaks content",
+         category: "Entertainment",
+         budget: 49500,
+         cpm: 21,
+         joined: 225,
+         spent: 60200,
+         duration: "3mo",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "FR Yomi Denzel Campagne Principale",
+         subtitle: "French content — Yomi Denzel campaign",
+         category: "Business",
+         budget: 272700,
+         cpm: 1,
+         joined: 316,
+         spent: 277400,
+         duration: "10mo",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Alpha Futures Clipping Campaign",
+         subtitle: "Clip Alpha Futures content",
+         category: "Business",
+         budget: 9100,
+         cpm: 2,
+         joined: 298,
+         spent: 2000,
+         duration: "3mo",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "ARZ Urus Clipping Campaign",
+         subtitle: "Clip ARZ Urus content for the supercar brand",
+         category: "Entertainment",
+         budget: 1100,
+         cpm: 1.5,
+         joined: 28,
+         spent: 1500,
+         duration: "1mo",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "WatchMeWin Clipping",
+         subtitle: "Weekly winner clips",
+         category: "Gaming",
+         budget: 21600,
+         cpm: 0.5,
+         joined: 98,
+         spent: 20000,
+         duration: "7mo",
+         socials: ["youtube"],
+      },
+      {
+         title: "TJR $23,100 Weekly Clipping Campaign",
+         subtitle: "Weekly $23k clipping challenge",
+         category: "Music",
+         budget: 6200,
+         cpm: 0.75,
+         joined: 891,
+         spent: 23100,
+         duration: "5d",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Magic Sort | $1 CPM",
+         subtitle: "Clip puzzle game content",
+         category: "Gaming",
+         budget: 468,
+         cpm: 1,
+         joined: 23,
+         spent: 1000,
+         duration: "5d",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Kaa2ty Streamer Clipping",
+         subtitle: "Funnel Clips Community x Kaa2ty",
+         category: "Gaming",
+         budget: 982,
+         cpm: 1,
+         joined: 47,
+         spent: 2000,
+         duration: "1mo",
+         socials: ["youtube", "tiktok"],
+      },
+   ];
+
+   const createdCampaigns = await Campaign.create(
+      CAMPAIGNS.map((c, i) => ({
+         businessId: spaceExBiz._id,
+         createdBy: dr._id,
+         slug:
+            c.title
+               .toLowerCase()
+               .replace(/[^\w\s-]/g, "")
+               .replace(/\s+/g, "-")
+               .slice(0, 50) +
+            "-" +
+            i,
+         title: c.title,
+         subtitle: c.subtitle,
+         category: c.category,
+         coverImage: COVERS[i % COVERS.length],
+         previewImage: COVERS[i % COVERS.length],
+         brandName: c.socials.includes("youtube") ? "BloxClips" : "ClipFarm",
+         brandAvatar: "B",
+         brandVerified: true,
+         budget: c.budget,
+         budgetSpent: c.spent,
+         cpm: c.cpm,
+         duration: c.duration,
+         socials: c.socials as any,
+         platformRates: c.socials.map((s) => ({
+            platform: s as any,
+            minViews: 1000,
+            maxViews: 1000000,
+            cpm: c.cpm,
+         })),
+         requirements: [
+            "Use the provided footage with simple, clean edits",
+            "Makes content feel natural and organic, not overly promotional",
+            "Has a strong Tier 1 audience",
+            "Maintains solid engagement and consistent posting",
+         ],
+         instructions: [
+            "Share demographic metrics with your audience",
+            "Use Dedicated account or create new one for this campaign",
+         ],
+         summary: `Use the provided ${c.title} footage to create short-form content and get paid for the views you generate.`,
+         joinedUsers: c.joined,
+         totalViews: Math.floor((c.spent * 1000) / Math.max(0.1, c.cpm)),
+         status: "active",
+         featured: c.featured || false,
+         startDate: new Date(),
+      })),
+   );
+
+   console.log(`✅ ${CAMPAIGNS.length} campaigns created`);
+
+   // =========================================
+   // CREATE CAMPAIGN CONTRIBUTIONS (sample)
+   // =========================================
+   console.log("👥 Creating sample campaign contributions...");
+
+   const featuredCampaign =
+      createdCampaigns.find((c) => c.featured) || createdCampaigns[0];
+
+   await CampaignContribution.create([
+      {
+         campaignId: featuredCampaign._id,
+         userId: sarah._id,
+         userName: "Sarah Jenkins",
+         userAvatar: "S",
+         totalViews: 15_400,
+         totalEarned: 15.4,
+         status: "active",
+      },
+      {
+         campaignId: featuredCampaign._id,
+         userId: alex._id,
+         userName: "Alex Ventures",
+         userAvatar: "A",
+         totalViews: 8_000,
+         totalEarned: 8.0,
+         status: "active",
+      },
+   ]);
+
+   console.log("✅ Campaign contributions created");
 
    // =========================================
    // CREATE CUSTOMERS, MEMBERSHIPS, PEOPLE
@@ -660,26 +894,7 @@ async function seed() {
       },
    ]);
 
-   const allTx = await Transaction.find({ businessId: spaceExBiz._id });
-   let balance = 0;
-   allTx.forEach((t) => {
-      if (["deposit", "payment"].includes(t.kind)) balance += t.amount;
-      if (
-         ["send", "refund", "withdrawal", "card_spend", "ad_spend"].includes(
-            t.kind,
-         )
-      ) {
-         balance -= t.amount;
-      }
-   });
-
-   spaceExBiz.balance = balance;
-   spaceExBiz.economicIntelligence = true;
-   spaceExBiz.weeklyCardSpend = [12.4, 0, 0, 0, 85, 0, 0];
-   await spaceExBiz.save();
-
    console.log("✅ Transactions created");
-   console.log(`   💰 Business balance: $${balance.toFixed(2)}`);
 
    // =========================================
    // CREATE PAYMENTS
@@ -904,9 +1119,9 @@ async function seed() {
    console.log("✅ Live events created");
 
    // =========================================
-   // CREATE AD SETTINGS + CAMPAIGNS
+   // CREATE AD SETTINGS
    // =========================================
-   console.log("📢 Creating ad settings + campaigns...");
+   console.log("📢 Creating ad settings...");
 
    await AdSettings.create({
       businessId: spaceExBiz._id,
@@ -914,100 +1129,7 @@ async function seed() {
       accountTimezone: "America/New_York",
    });
 
-   await Campaign.create([
-      {
-         businessId: spaceExBiz._id,
-         createdBy: dr._id,
-         platform: "facebook",
-         objective: "sales",
-         title: "space-ex",
-         budgetType: "daily",
-         budgetAmount: 200,
-         budgetControl: "campaign",
-         bidStrategy: "highest_volume",
-         specialAdCategory: "none",
-         status: "active",
-         onOff: true,
-         conversionLocation: "website",
-         conversionEvent: "Purchase",
-         advantagePlacements: true,
-         advantageAudience: true,
-         minAge: 18,
-         countries: ["United States"],
-         performanceGoal: "maximize_conversions",
-         startDate: new Date(),
-         stats: {
-            spent: 420.5,
-            impressions: 128400,
-            clicks: 2140,
-            results: 42,
-            roas: 3.2,
-            revenue: 1345.6,
-         },
-      },
-      {
-         businessId: spaceExBiz._id,
-         createdBy: dr._id,
-         platform: "tiktok",
-         objective: "engagement",
-         title: "Spring promo · TikTok",
-         budgetType: "daily",
-         budgetAmount: 100,
-         budgetControl: "campaign",
-         bidStrategy: "highest_volume",
-         specialAdCategory: "none",
-         status: "paused",
-         onOff: false,
-         conversionLocation: "website",
-         conversionEvent: "Add to cart",
-         advantagePlacements: true,
-         advantageAudience: false,
-         minAge: 21,
-         countries: ["United Kingdom", "United States"],
-         performanceGoal: "maximize_conversions",
-         startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-         stats: {
-            spent: 215.3,
-            impressions: 45200,
-            clicks: 890,
-            results: 12,
-            roas: 1.8,
-            revenue: 387.5,
-         },
-      },
-      {
-         businessId: spaceExBiz._id,
-         createdBy: dr._id,
-         platform: "google",
-         objective: "traffic",
-         title: "Brand awareness Q4",
-         budgetType: "lifetime",
-         budgetAmount: 5000,
-         budgetControl: "campaign",
-         bidStrategy: "cost_cap",
-         specialAdCategory: "none",
-         status: "draft",
-         onOff: false,
-         conversionLocation: "website",
-         conversionEvent: "View content",
-         advantagePlacements: false,
-         advantageAudience: true,
-         minAge: 25,
-         countries: ["United States"],
-         performanceGoal: "maximize_conversions",
-         startDate: null,
-         stats: {
-            spent: 0,
-            impressions: 0,
-            clicks: 0,
-            results: 0,
-            roas: 0,
-            revenue: 0,
-         },
-      },
-   ]);
-
-   console.log("✅ Ad settings + campaigns created");
+   console.log("✅ Ad settings created");
 
    // =========================================
    // CREATE AFFILIATES + SETTINGS
@@ -1560,7 +1682,6 @@ async function seed() {
          category: "ecommerce",
          iconColor: "#f97316",
          iconEmoji: "🧠",
-         price: 0,
          rating: 5,
          reviewCount: 35,
          installs: 3200,
@@ -1574,7 +1695,6 @@ async function seed() {
          category: "ai",
          iconColor: "#ef4444",
          iconEmoji: "🤖",
-         price: 0,
          rating: 5,
          reviewCount: 18,
          installs: 1800,
@@ -1589,7 +1709,6 @@ async function seed() {
          category: "marketing",
          iconColor: "#3b82f6",
          iconEmoji: "📧",
-         price: 0,
          rating: 5,
          reviewCount: 9,
          installs: 41200,
@@ -1603,7 +1722,6 @@ async function seed() {
          category: "sales-crm",
          iconColor: "#f43f5e",
          iconEmoji: "🛒",
-         price: 0,
          rating: 5,
          reviewCount: 1,
          installs: 890,
@@ -1617,7 +1735,6 @@ async function seed() {
          category: "business",
          iconColor: "#6366f1",
          iconEmoji: "⚙️",
-         price: 0,
          rating: 5,
          reviewCount: 14,
          installs: 2400,
@@ -1631,7 +1748,6 @@ async function seed() {
          category: "marketing",
          iconColor: "#eab308",
          iconEmoji: "⚡",
-         price: 0,
          rating: 5,
          reviewCount: 7,
          installs: 1400,
@@ -1645,7 +1761,6 @@ async function seed() {
          category: "support",
          iconColor: "#14b8a6",
          iconEmoji: "💬",
-         price: 0,
          rating: 5,
          reviewCount: 4,
          installs: 620,
@@ -1660,7 +1775,6 @@ async function seed() {
          category: "marketing",
          iconColor: "#f59e0b",
          iconEmoji: "📢",
-         price: 0,
          rating: 5,
          reviewCount: 3,
          installs: 410,
@@ -1675,7 +1789,6 @@ async function seed() {
          category: "business",
          iconColor: "#8b5cf6",
          iconEmoji: "📦",
-         price: 0,
          rating: 5,
          reviewCount: 6,
          installs: 780,
@@ -1690,7 +1803,6 @@ async function seed() {
          category: "business",
          iconColor: "#0ea5e9",
          iconEmoji: "📝",
-         price: 0,
          rating: 5,
          reviewCount: 11,
          installs: 1200,
@@ -1705,7 +1817,6 @@ async function seed() {
          category: "sales-crm",
          iconColor: "#3b82f6",
          iconEmoji: "🎯",
-         price: 0,
          rating: 5,
          reviewCount: 1,
          installs: 340,
@@ -1720,7 +1831,6 @@ async function seed() {
          category: "business",
          iconColor: "#a855f7",
          iconEmoji: "🔗",
-         price: 0,
          rating: 5,
          reviewCount: 4,
          installs: 290,
@@ -1735,7 +1845,6 @@ async function seed() {
          category: "business",
          iconColor: "#f97316",
          iconEmoji: "📊",
-         price: 0,
          rating: 5,
          reviewCount: 0,
          installs: 220,
@@ -1749,7 +1858,6 @@ async function seed() {
          category: "business",
          iconColor: "#eab308",
          iconEmoji: "💼",
-         price: 0,
          rating: 5,
          reviewCount: 8,
          installs: 890,
@@ -1763,7 +1871,6 @@ async function seed() {
          category: "marketing",
          iconColor: "#10b981",
          iconEmoji: "♻️",
-         price: 0,
          rating: 5,
          reviewCount: 5,
          installs: 560,
@@ -1777,7 +1884,6 @@ async function seed() {
          category: "finance",
          iconColor: "#22c55e",
          iconEmoji: "📗",
-         price: 0,
          rating: 5,
          reviewCount: 2,
          installs: 320,
@@ -1791,7 +1897,6 @@ async function seed() {
          category: "finance",
          iconColor: "#3b82f6",
          iconEmoji: "🛒",
-         price: 0,
          rating: 5,
          reviewCount: 1,
          installs: 460,
@@ -1805,7 +1910,6 @@ async function seed() {
          category: "finance",
          iconColor: "#06b6d4",
          iconEmoji: "✍️",
-         price: 0,
          rating: 5,
          reviewCount: 2,
          installs: 280,
@@ -1820,7 +1924,6 @@ async function seed() {
          category: "finance",
          iconColor: "#6366f1",
          iconEmoji: "📄",
-         price: 0,
          rating: 5,
          reviewCount: 2,
          installs: 210,
@@ -1834,7 +1937,6 @@ async function seed() {
          category: "support",
          iconColor: "#a855f7",
          iconEmoji: "💬",
-         price: 0,
          rating: 5,
          reviewCount: 12,
          installs: 640,
@@ -1848,7 +1950,6 @@ async function seed() {
          category: "support",
          iconColor: "#ef4444",
          iconEmoji: "🎫",
-         price: 0,
          rating: 5,
          reviewCount: 3,
          installs: 380,
@@ -1857,314 +1958,6 @@ async function seed() {
    ]);
 
    console.log("✅ App store listings created");
-
-   // =========================================
-   // DISCOVER CONTENT REWARDS CAMPAIGNS
-   // =========================================
-   console.log("🎬 Creating discover campaigns...");
-
-   const PREVIEW_IMAGES = [
-      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1560155016-bd4879ae8f21?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=250&fit=crop",
-      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=250&fit=crop",
-   ];
-
-   const CAMPAIGN_DATA = [
-      {
-         title: "Backyard Breaks [Clipping Campaign]",
-         category: "Entertainment",
-         budget: 49500,
-         raised: 60200,
-         cpm: 21,
-         duration: "3mo",
-         brand: "ClipHouse",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "ForgeGUI Clipping [Roblox]",
-         category: "Gaming",
-         budget: 167600,
-         raised: 189700,
-         cpm: 1,
-         duration: "5mo",
-         brand: "BloxClips",
-         socials: ["youtube", "tiktok"],
-         featured: true,
-      },
-      {
-         title: "FR Yomi Denzel Campagne Principale",
-         category: "Business",
-         budget: 272700,
-         raised: 277400,
-         cpm: 1,
-         duration: "10mo",
-         brand: "ml Denzel Clipping",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "HardScope x ClipFarm",
-         category: "Entertainment",
-         budget: 2500,
-         raised: 13100,
-         cpm: 1,
-         duration: "1w",
-         brand: "Clip Farm",
-         socials: ["youtube", "x", "tiktok"],
-      },
-      {
-         title: "... All I Got | Multi Edit Type Campaign",
-         category: "Music",
-         budget: 70,
-         raised: 1000,
-         cpm: 1,
-         duration: "3w",
-         brand: "Artist Influence",
-         socials: ["tiktok"],
-      },
-      {
-         title: "Shuffle Streamers - Clipping",
-         category: "Gaming",
-         budget: 12100,
-         raised: 25000,
-         cpm: 1,
-         duration: "2w",
-         brand: "Shuffle Clipping",
-         socials: ["youtube", "x", "tiktok"],
-      },
-      {
-         title: "Michael Sartain's Clipping Army",
-         category: "Business",
-         budget: 6700,
-         raised: 10000,
-         cpm: 2,
-         duration: "2mo",
-         brand: "S Clipper Army",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "Jacques Amoako x EAT",
-         category: "Entertainment",
-         budget: 926,
-         raised: 1070,
-         cpm: 1,
-         duration: "2mo",
-         brand: "Maison D'elite",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "Alpha Futures Clipping Campaign",
-         category: "Business",
-         budget: 9100,
-         raised: 2000,
-         cpm: 2,
-         duration: "3mo",
-         brand: "Click Culture",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "ARZ Urus Clipping Campaign",
-         category: "Entertainment",
-         budget: 1100,
-         raised: 1500,
-         cpm: 1,
-         duration: "1mo",
-         brand: "Arz Urus Clipping",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "... Mini Mixed Capsule Clipping [VIRAL]",
-         category: "Entertainment",
-         budget: 10700,
-         raised: 9090,
-         cpm: 0,
-         duration: "2w",
-         brand: "Clip Influence",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "WatchMeWin Clipping",
-         category: "Gaming",
-         budget: 21600,
-         raised: 20000,
-         cpm: 0,
-         duration: "7mo",
-         brand: "WMW CLIPPING",
-         socials: ["youtube"],
-      },
-      {
-         title: "TJR $23,100 Weekly Clipping Campaign",
-         category: "Music",
-         budget: 6200,
-         raised: 23100,
-         cpm: 1,
-         duration: "5d",
-         brand: "Reach",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "...AGON MMA | $7,500 Budget | $1 CPM",
-         category: "Sports",
-         budget: 4700,
-         raised: 7500,
-         cpm: 1,
-         duration: "1w",
-         brand: "Clipping Outlaws",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "Elo Cooking Slideshows Campaign",
-         category: "Entertainment",
-         budget: 5700,
-         raised: 8800,
-         cpm: 1,
-         duration: "2mo",
-         brand: "Clip Track",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "Santa Cruz Medicinals Clipping",
-         category: "Entertainment",
-         budget: 4200,
-         raised: 9900,
-         cpm: 1,
-         duration: "2w",
-         brand: "VitaClip",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "...ble Clipping | $9K Budget | $1.25 CPM",
-         category: "Gaming",
-         budget: 7500,
-         raised: 12500,
-         cpm: 1,
-         duration: "1mo",
-         brand: "Clipix",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "COINBASE x VALORANT",
-         category: "Gaming",
-         budget: 5300,
-         raised: 10000,
-         cpm: 1,
-         duration: "2w",
-         brand: "ClipHaus",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "...s Hablando - 1$ por cada 1000 vistas",
-         category: "Entertainment",
-         budget: 5400,
-         raised: 10000,
-         cpm: 1,
-         duration: "1w",
-         brand: "Carlos Esparraga Clipping",
-         socials: ["tiktok"],
-      },
-      {
-         title: "Magic Sort | $1 CPM",
-         category: "Gaming",
-         budget: 468,
-         raised: 1000,
-         cpm: 1,
-         duration: "5d",
-         brand: "VOLUM",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "POST THIRST TRAP VIDEOS [$5 EASY]",
-         category: "Entertainment",
-         budget: 972,
-         raised: 25000,
-         cpm: 1,
-         duration: "2w",
-         brand: "Duetti",
-         socials: ["tiktok"],
-      },
-      {
-         title: "...Like a Remedy | Audio Only Campaign",
-         category: "Music",
-         budget: 130,
-         raised: 50000,
-         cpm: 1,
-         duration: "1w",
-         brand: "Music Promo Clippers",
-         socials: ["youtube", "x", "tiktok"],
-      },
-      {
-         title: "Kaa2ty Streamer Clipping",
-         category: "Gaming",
-         budget: 982,
-         raised: 2000,
-         cpm: 1,
-         duration: "1mo",
-         brand: "Funnel Clips Community",
-         socials: ["youtube", "tiktok"],
-      },
-      {
-         title: "Clipback: $CLIP",
-         category: "Gaming",
-         budget: 1800,
-         raised: 3500,
-         cpm: 1,
-         duration: "2w",
-         brand: "Clipback Limited",
-         socials: ["youtube", "x", "tiktok"],
-      },
-   ];
-
-   await DiscoverCampaign.create(
-      CAMPAIGN_DATA.map((c, i) => ({
-         slug:
-            c.title
-               .toLowerCase()
-               .replace(/[^\w\s-]/g, "")
-               .replace(/\s+/g, "-")
-               .slice(0, 50) +
-            "-" +
-            i,
-         title: c.title,
-         subtitle: "",
-         category: c.category,
-         previewImage: PREVIEW_IMAGES[i % PREVIEW_IMAGES.length],
-         heroImage: "",
-         brandName: c.brand,
-         brandAvatar: c.brand.charAt(0).toUpperCase(),
-         brandVerified: true,
-         socials: c.socials as any,
-         budget: c.budget,
-         raised: c.raised,
-         cpm: c.cpm,
-         totalEarned: c.raised,
-         status: "active",
-         duration: c.duration,
-         ageRestricted: false,
-         featured: c.featured || false,
-         createdBy: dr._id,
-         businessId: spaceExBiz._id,
-      })),
-   );
-
-   console.log(`✅ ${CAMPAIGN_DATA.length} discover campaigns created`);
 
    // =========================================
    // SUMMARY
@@ -2178,8 +1971,7 @@ async function seed() {
    console.log("      📧 dr@spaceex.com     🔑 password123");
    console.log("      Username: @wwwlord\n");
    console.log("   🤖 Space-Ex Team (bot)");
-   console.log("      📧 team@space-ex.com  🔑 randompassword");
-   console.log("      Username: @spaceex\n");
+   console.log("      📧 team@space-ex.com  🔑 randompassword\n");
    console.log("   👥 Other accounts");
    console.log("      📧 sarah@test.com     🔑 randompassword");
    console.log("      📧 alex@ventures.com  🔑 randompassword\n");
@@ -2188,40 +1980,30 @@ async function seed() {
    console.log("   • 4 users");
    console.log("   • 1 business (Space/Ex)");
    console.log("   • 4 products");
-   console.log("   • 3 customers");
-   console.log("   • 2 memberships");
-   console.log("   • 2 people/visitors");
-   console.log(`   • 8 transactions (Balance: $${balance.toFixed(2)})`);
+   console.log(`   • ${CAMPAIGNS.length} campaigns (content rewards)`);
+   console.log("   • 2 campaign contributions");
+   console.log("   • 3 customers + 2 memberships + 2 visitors");
+   console.log("   • 8 transactions");
    console.log("   • 6 payments");
    console.log("   • 1 checkout link");
-   console.log("   • 1 website");
-   console.log("   • 5 live events");
-   console.log("   • 3 ad campaigns + settings");
+   console.log("   • 1 website + 5 live events");
+   console.log("   • Ad settings");
    console.log("   • 2 affiliates + settings");
-   console.log("   • 4 follows");
-   console.log("   • 4 posts in Townhall");
+   console.log("   • 4 follows + 4 posts");
    console.log("   • 2 conversations + 6 messages");
    console.log("   • 2 support chats");
    console.log("   • 3 notifications");
-   console.log("   • 2 orders");
-   console.log("   • 2 partner requests");
-   console.log("   • 2 team invites");
-   console.log("   • 1 team member (owner)");
-   console.log("   • 2 payment methods");
-   console.log("   • 2 resolution cases");
-   console.log("   • 1 invoice");
-   console.log("   • 2 promo codes");
-   console.log("   • 1 sub account");
-   console.log("   • 21 app store listings");
-   console.log(`   • ${CAMPAIGN_DATA.length} discover campaigns\n`);
+   console.log(
+      "   • 2 orders + 2 partner requests + 2 team invites + 1 team member",
+   );
+   console.log("   • 2 payment methods + 2 resolution cases");
+   console.log("   • 1 invoice + 2 promo codes + 1 sub account");
+   console.log("   • 21 app store listings\n");
 
    console.log("🎯 Next steps:\n");
-   console.log("   1. Start the dev server:  npm run dev");
-   console.log("   2. Visit:  http://localhost:3000/login");
-   console.log("   3. Log in with:  dr@spaceex.com / password123\n");
-   console.log(
-      "   💡 Try: /business (dashboard) · /discover (content rewards)\n",
-   );
+   console.log("   1. Start:  npm run dev");
+   console.log("   2. Login:  dr@spaceex.com / password123\n");
+   console.log("   💡 Try /discover to see campaigns and join one!\n");
 
    await mongoose.disconnect();
    console.log("🔌 Disconnected");
