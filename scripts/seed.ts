@@ -16,6 +16,25 @@ import LiveEvent from "../src/app/lib/models/LiveEvent";
 import Product from "../src/app/lib/models/Product";
 import Post from "../src/app/lib/models/Post";
 import Follow from "../src/app/lib/models/Follow";
+import Payment from "../src/app/lib/models/Payment";
+import CheckoutLink from "../src/app/lib/models/CheckoutLink";
+import Campaign from "../src/app/lib/models/Campaign";
+import AdSettings from "../src/app/lib/models/AdSettings";
+import Affiliate from "../src/app/lib/models/Affiliate";
+import AffiliateSignup from "../src/app/lib/models/AffiliateSignup";
+import RevenueSharePartner from "../src/app/lib/models/RevenueSharePartner";
+import AffiliateSettings from "../src/app/lib/models/AffiliateSettings";
+import SupportChat from "../src/app/lib/models/SupportChat";
+import Invoice from "../src/app/lib/models/Invoice";
+import PromoCode from "../src/app/lib/models/PromoCode";
+import TeamMember from "../src/app/lib/models/TeamMember";
+import SubAccount from "../src/app/lib/models/SubAccount";
+import AppListing from "../src/app/lib/models/AppListing";
+import InstalledApp from "../src/app/lib/models/InstalledApp";
+import DiscoverCampaign from "../src/app/lib/models/DiscoverCampaign";
+import Customer from "../src/app/lib/models/Customer";
+import Membership from "../src/app/lib/models/Membership";
+import Visitor from "../src/app/lib/models/Visitor";
 
 function hashPassword(password: string): string {
    const salt = crypto.randomBytes(16).toString("hex");
@@ -57,6 +76,25 @@ async function seed() {
       Product.deleteMany({}),
       Post.deleteMany({}),
       Follow.deleteMany({}),
+      Payment.deleteMany({}),
+      CheckoutLink.deleteMany({}),
+      Campaign.deleteMany({}),
+      AdSettings.deleteMany({}),
+      Affiliate.deleteMany({}),
+      AffiliateSignup.deleteMany({}),
+      RevenueSharePartner.deleteMany({}),
+      AffiliateSettings.deleteMany({}),
+      SupportChat.deleteMany({}),
+      Invoice.deleteMany({}),
+      PromoCode.deleteMany({}),
+      TeamMember.deleteMany({}),
+      SubAccount.deleteMany({}),
+      AppListing.deleteMany({}),
+      InstalledApp.deleteMany({}),
+      DiscoverCampaign.deleteMany({}),
+      Customer.deleteMany({}),
+      Membership.deleteMany({}),
+      Visitor.deleteMany({}),
    ]);
    console.log("✅ Data cleared");
 
@@ -74,14 +112,12 @@ async function seed() {
       dateOfBirth: "1990-05-15",
       location: "Dubai, UAE",
       avatarColor: "#3b82f6",
-
       privacy: {
          totalEarned: true,
          location: true,
          ownedWhops: true,
          joinedWhops: true,
       },
-
       socialAccounts: {
          x: { connected: false },
          instagram: { connected: false },
@@ -92,7 +128,6 @@ async function seed() {
          tiktok: { connected: false },
          linkedin: { connected: false },
       },
-
       notificationPrefs: {
          popup: true,
          sound: true,
@@ -107,18 +142,8 @@ async function seed() {
             transferReceived: true,
          },
       },
-
-      twoFactor: {
-         enabled: false,
-         method: null,
-      },
-
-      wallet: {
-         address: "",
-         balance: 0,
-         exported: false,
-      },
-
+      twoFactor: { enabled: false, method: null },
+      wallet: { address: "", balance: 0, exported: false },
       verification: {
          individual: "none",
          business: "none",
@@ -127,7 +152,6 @@ async function seed() {
       },
    });
 
-   // Space-Ex Team (bot account)
    const spaceExTeam = await User.create({
       name: "Space-Ex Team",
       email: "team@space-ex.com",
@@ -137,7 +161,6 @@ async function seed() {
       avatarColor: "#3b82f6",
    });
 
-   // Sarah Jenkins
    const sarah = await User.create({
       name: "Sarah Jenkins",
       email: "sarah@test.com",
@@ -148,7 +171,6 @@ async function seed() {
       avatarColor: "#ec4899",
    });
 
-   // Alex Ventures
    const alex = await User.create({
       name: "Alex Ventures",
       email: "alex@ventures.com",
@@ -175,17 +197,14 @@ async function seed() {
       migrateFrom: "Not migrating",
       website: "space-ex.com",
       logoUrl: "",
-
       balance: 0,
       economicIntelligence: false,
       weeklyCardSpend: [0, 0, 0, 0, 0, 0, 0],
-
       industry: {
          businessType: "Software",
          industryGroup: "Technology",
          industryType: "SaaS",
       },
-
       analyticsPixels: {
          spaceExPixel: true,
          googleAnalytics: false,
@@ -197,7 +216,6 @@ async function seed() {
          pinterest: false,
          hubspot: false,
       },
-
       notificationPrefs: {
          cardEmails: true,
          disputes: true,
@@ -211,7 +229,6 @@ async function seed() {
          waitlists: true,
          withdrawals: true,
       },
-
       checkout: {
          paymentOrchestration: true,
          successRedirectUrl: "",
@@ -223,7 +240,6 @@ async function seed() {
          cancelSubsAfterFailedPayments: true,
          sendTransactionalEmails: true,
       },
-
       checkoutBranding: {
          backgroundColor: "#000000",
          buttonColor: "#ffffff",
@@ -231,7 +247,6 @@ async function seed() {
          borderStyle: "rounded",
          previewTheme: "dark",
       },
-
       payments: {
          applyForFinancing: false,
          maxPrice: 2500,
@@ -244,7 +259,6 @@ async function seed() {
          autoRefundMessage: "Sorry you had a bad experience. Here's a refund.",
          earlyDisputeAlertBelow: 500,
       },
-
       verification: {
          individual: "none",
          business: "none",
@@ -253,12 +267,7 @@ async function seed() {
          bankDeposits: "inactive",
          financing: "inactive",
       },
-
-      invoices: {
-         customPrefixEnabled: false,
-         customPrefix: "",
-      },
-
+      invoices: { customPrefixEnabled: false, customPrefix: "" },
       legal: {
          termsUrl: "",
          privacyUrl: "",
@@ -270,7 +279,6 @@ async function seed() {
          supportName: "",
          supportEmail: "",
       },
-
       tax: {
          taxCollectionMode: "spaceex_collects",
          businessAddress: "",
@@ -278,13 +286,11 @@ async function seed() {
          taxType: "exclusive",
          collectVatFromUsers: false,
       },
-
       openGraph: {
          imageUrl: "",
          useLogoAsFallback: false,
          mediaUrl: "",
       },
-
       homePreferences: {
          hideMemberCount: false,
          hideMembersCard: false,
@@ -337,8 +343,7 @@ async function seed() {
          name: "Starter Course",
          slug: "starter-course",
          headline: "Everything you need to launch your first digital product.",
-         description:
-            "A 6-week step-by-step program. Includes video lessons, templates, and a community of founders.",
+         description: "A 6-week step-by-step program.",
          accessType: "paid",
          pricingType: "one-time",
          price: 99,
@@ -436,104 +441,123 @@ async function seed() {
    console.log("✅ Products created");
 
    // =========================================
-   // CREATE FOLLOWS + POSTS
-   // ✅ MOVED HERE — after users are defined
+   // CREATE CUSTOMERS, MEMBERSHIPS, PEOPLE
    // =========================================
-   console.log("👥 Creating follows + posts...");
+   console.log("👥 Creating customers, memberships, people...");
 
-   // Dr follows Sarah and Space-Ex Team
-   await Follow.create([
-      { followerId: dr._id, followingId: sarah._id },
-      { followerId: dr._id, followingId: spaceExTeam._id },
-   ]);
-
-   // Sarah and Alex follow each other (for demo data)
-   await Follow.create([
-      { followerId: sarah._id, followingId: alex._id },
-      { followerId: alex._id, followingId: sarah._id },
-   ]);
-
-   // Local time constants (avoid name clash with Transaction block)
-   const postNow = Date.now();
-   const postMinute = 60 * 1000;
-   const postHour = 60 * postMinute;
-   const postDay = 24 * postHour;
-
-   await Post.create([
+   await Customer.create([
       {
-         author: {
-            id: sarah._id,
-            name: sarah.name,
-            username: "sarahj",
-            avatar: "S",
-            verified: true,
-         },
-         forum: "Public forum",
-         content:
-            "Just wrapped a $50k launch using the Economic Intelligence playbook. The 3x-faster pipeline strategy is real — happy to share details if anyone's interested 👇",
-         stats: { comments: 24, likes: 156, views: 12400, shares: 12 },
-         likedBy: [dr._id],
-         createdAt: new Date(postNow - 45 * postMinute),
+         businessId: spaceExBiz._id,
+         userId: dr._id,
+         email: "www.lord5566@gmail.com",
+         name: "Dr. Zakarinović",
+         username: "member",
+         avatar: "DZ",
+         status: "joined",
+         country: "Egypt",
+         state: "Cairo",
+         city: "Al Mansurah",
+         totalSpend: 0,
+         joinedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+         lastAccessed: new Date(Date.now() - 7 * 60 * 1000),
       },
       {
-         author: {
-            id: spaceExTeam._id,
-            name: spaceExTeam.name,
-            username: "spaceex",
-            avatar: "S",
-            verified: true,
-         },
-         forum: "Space-Ex Team",
-         content:
-            "🚀 New feature alert: You can now accept payments in 135+ currencies with automatic conversion. No more juggling Stripe accounts.",
-         stats: { comments: 48, likes: 892, views: 45200, shares: 67 },
-         likedBy: [],
-         createdAt: new Date(postNow - 2 * postHour),
+         businessId: spaceExBiz._id,
+         userId: sarah._id,
+         email: "sarah@test.com",
+         name: "Sarah Jenkins",
+         username: "sarahj",
+         avatar: "SJ",
+         status: "joined",
+         country: "United Kingdom",
+         state: "England",
+         city: "London",
+         totalSpend: 148,
+         joinedAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
+         lastAccessed: new Date(Date.now() - 2 * 60 * 60 * 1000),
       },
       {
-         author: {
-            id: alex._id,
-            name: alex.name,
-            username: "alexv",
-            avatar: "A",
-            verified: false,
-         },
-         forum: "Public forum",
-         content:
-            "Reminder: Most founders don't fail because of bad products. They fail because of bad distribution. Focus 80% of your time on getting your first 100 users before polishing anything else.",
-         media: {
-            type: "link",
-            url: "space-ex.com/blog/distribution-first",
-            title: "The Distribution-First Playbook",
-            description:
-               "How to get your first 100 users without spending a dollar on ads. A step-by-step guide covering SEO, communities, and partnerships.",
-            price: 0,
-            isOpen: true,
-            rating: 4.8,
-            reviewCount: 12,
-         },
-         stats: { comments: 8, likes: 234, views: 8900, shares: 41 },
-         likedBy: [],
-         createdAt: new Date(postNow - 5 * postHour),
-      },
-      {
-         author: {
-            id: sarah._id,
-            name: sarah.name,
-            username: "sarahj",
-            avatar: "S",
-            verified: true,
-         },
-         forum: "Public forum",
-         content:
-            "Reading through the Space-Ex analytics and noticed my conversion rate jumped 3.2% after adding the checkout branding. Small tweaks, big returns.",
-         stats: { comments: 3, likes: 47, views: 1200, shares: 2 },
-         likedBy: [],
-         createdAt: new Date(postNow - postDay),
+         businessId: spaceExBiz._id,
+         userId: alex._id,
+         email: "alex@ventures.com",
+         name: "Alex Ventures",
+         username: "alexv",
+         avatar: "AV",
+         status: "invited",
+         country: "United States",
+         state: "California",
+         city: "San Francisco",
+         totalSpend: 0,
+         joinedAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
+         lastAccessed: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
       },
    ]);
 
-   console.log("✅ Follows + posts created");
+   await Membership.create([
+      {
+         businessId: spaceExBiz._id,
+         userId: sarah._id,
+         productId: spaceExBiz._id,
+         productName: "Pro Membership",
+         email: "sarah@test.com",
+         name: "Sarah Jenkins",
+         avatar: "SJ",
+         status: "active",
+         totalSpend: 147,
+      },
+      {
+         businessId: spaceExBiz._id,
+         userId: alex._id,
+         productId: spaceExBiz._id,
+         productName: "Starter Course",
+         email: "alex@ventures.com",
+         name: "Alex Ventures",
+         avatar: "AV",
+         status: "inactive",
+         totalSpend: 99,
+         canceledAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
+         cancelReason: "Too expensive",
+      },
+   ]);
+
+   await Visitor.create([
+      {
+         businessId: spaceExBiz._id,
+         userId: dr._id,
+         email: "www.lord5566@gmail.com",
+         name: "Dr. Zakarinović",
+         username: "member",
+         avatar: "DZ",
+         location: "Al Mansurah, EG",
+         source: "Direct",
+         utmSource: "",
+         eventType: "visit",
+         country: "Egypt",
+         totalSpend: 0,
+         purchases: 0,
+         events: 20,
+         lastSeen: new Date(Date.now() - 7 * 60 * 1000),
+      },
+      {
+         businessId: spaceExBiz._id,
+         userId: sarah._id,
+         email: "sarah@test.com",
+         name: "Sarah Jenkins",
+         username: "sarahj",
+         avatar: "SJ",
+         location: "London, UK",
+         source: "Google",
+         utmSource: "google_ads",
+         eventType: "purchase",
+         country: "United Kingdom",
+         totalSpend: 148,
+         purchases: 3,
+         events: 45,
+         lastSeen: new Date(Date.now() - 30 * 60 * 1000),
+      },
+   ]);
+
+   console.log("✅ Customers, memberships, people created");
 
    // =========================================
    // CREATE TRANSACTIONS
@@ -658,6 +682,150 @@ async function seed() {
    console.log(`   💰 Business balance: $${balance.toFixed(2)}`);
 
    // =========================================
+   // CREATE PAYMENTS
+   // =========================================
+   console.log("💳 Creating payments...");
+
+   await Payment.create([
+      {
+         businessId: spaceExBiz._id,
+         amount: 49,
+         currency: "USD",
+         status: "succeeded",
+         product: "Pro Membership",
+         plan: "Monthly",
+         method: "card",
+         methodLast4: "4242",
+         email: "john@example.com",
+         customerName: "John Smith",
+         reason: "",
+         promoCode: "WELCOME10",
+         userAvatar: "JS",
+         refunded: false,
+         createdAt: new Date(txNow - 8 * txDay),
+      },
+      {
+         businessId: spaceExBiz._id,
+         amount: 99,
+         currency: "USD",
+         status: "succeeded",
+         product: "Starter Course",
+         plan: "One-time",
+         method: "paypal",
+         email: "sarah@test.com",
+         customerName: "Sarah Jenkins",
+         reason: "",
+         promoCode: "",
+         userAvatar: "SJ",
+         refunded: false,
+         createdAt: new Date(txNow - 5 * txDay),
+      },
+      {
+         businessId: spaceExBiz._id,
+         amount: 199,
+         currency: "USD",
+         status: "needs_review",
+         product: "VIP Coaching",
+         plan: "One-time",
+         method: "card",
+         methodLast4: "5555",
+         email: "mike@demo.io",
+         customerName: "Michael Chen",
+         reason: "Unusual location",
+         promoCode: "",
+         userAvatar: "MC",
+         refunded: false,
+         createdAt: new Date(txNow - 3 * 60 * 60 * 1000),
+      },
+      {
+         businessId: spaceExBiz._id,
+         amount: 29,
+         currency: "USD",
+         status: "failed",
+         product: "Template Pack",
+         plan: "One-time",
+         method: "card",
+         methodLast4: "0005",
+         email: "emma@mail.com",
+         customerName: "Emma Watson",
+         reason: "Insufficient funds",
+         promoCode: "",
+         userAvatar: "EW",
+         refunded: false,
+         createdAt: new Date(txNow - 1 * txDay),
+      },
+      {
+         businessId: spaceExBiz._id,
+         amount: 49,
+         currency: "USD",
+         status: "disputed",
+         product: "Pro Membership",
+         plan: "Monthly",
+         method: "card",
+         methodLast4: "4242",
+         email: "john@example.com",
+         customerName: "John Smith",
+         reason: "Duplicate charge",
+         promoCode: "",
+         userAvatar: "JS",
+         refunded: true,
+         createdAt: new Date(txNow - 2 * txDay),
+      },
+      {
+         businessId: spaceExBiz._id,
+         amount: 499,
+         currency: "USD",
+         status: "pending",
+         product: "Pro Membership",
+         plan: "Yearly",
+         method: "card",
+         methodLast4: "1111",
+         email: "pending@example.com",
+         customerName: "Pending User",
+         reason: "",
+         promoCode: "SAVE20",
+         refunded: false,
+         createdAt: new Date(txNow - 30 * 60 * 1000),
+      },
+   ]);
+
+   console.log("✅ Payments created");
+
+   // =========================================
+   // CREATE CHECKOUT LINKS
+   // =========================================
+   console.log("🔗 Creating checkout links...");
+
+   await CheckoutLink.create([
+      {
+         businessId: spaceExBiz._id,
+         createdBy: dr._id,
+         productName: "Premium Membership",
+         headline: "How to Build a Viral App: $0 to $100k/mo",
+         description: "Get access to all premium courses and templates.",
+         includedApps: ["forums"],
+         pricingType: "one-time",
+         price: 10,
+         currency: "USD",
+         recurringInterval: "",
+         amountPresets: [50, 100, 250],
+         advancedOptions: false,
+         acceptLocalCurrencies: true,
+         customizePaymentMethods: false,
+         checkoutBranding: {
+            backgroundColor: "#000000",
+            buttonColor: "#ffffff",
+            font: "global",
+            borderStyle: "global",
+         },
+         slug: "premium-membership",
+         url: "space-ex.com/s/premium-membership",
+      },
+   ]);
+
+   console.log("✅ Checkout links created");
+
+   // =========================================
    // CREATE WEBSITES
    // =========================================
    console.log("🌐 Creating websites...");
@@ -736,6 +904,250 @@ async function seed() {
    console.log("✅ Live events created");
 
    // =========================================
+   // CREATE AD SETTINGS + CAMPAIGNS
+   // =========================================
+   console.log("📢 Creating ad settings + campaigns...");
+
+   await AdSettings.create({
+      businessId: spaceExBiz._id,
+      reportingCurrency: "USD",
+      accountTimezone: "America/New_York",
+   });
+
+   await Campaign.create([
+      {
+         businessId: spaceExBiz._id,
+         createdBy: dr._id,
+         platform: "facebook",
+         objective: "sales",
+         title: "space-ex",
+         budgetType: "daily",
+         budgetAmount: 200,
+         budgetControl: "campaign",
+         bidStrategy: "highest_volume",
+         specialAdCategory: "none",
+         status: "active",
+         onOff: true,
+         conversionLocation: "website",
+         conversionEvent: "Purchase",
+         advantagePlacements: true,
+         advantageAudience: true,
+         minAge: 18,
+         countries: ["United States"],
+         performanceGoal: "maximize_conversions",
+         startDate: new Date(),
+         stats: {
+            spent: 420.5,
+            impressions: 128400,
+            clicks: 2140,
+            results: 42,
+            roas: 3.2,
+            revenue: 1345.6,
+         },
+      },
+      {
+         businessId: spaceExBiz._id,
+         createdBy: dr._id,
+         platform: "tiktok",
+         objective: "engagement",
+         title: "Spring promo · TikTok",
+         budgetType: "daily",
+         budgetAmount: 100,
+         budgetControl: "campaign",
+         bidStrategy: "highest_volume",
+         specialAdCategory: "none",
+         status: "paused",
+         onOff: false,
+         conversionLocation: "website",
+         conversionEvent: "Add to cart",
+         advantagePlacements: true,
+         advantageAudience: false,
+         minAge: 21,
+         countries: ["United Kingdom", "United States"],
+         performanceGoal: "maximize_conversions",
+         startDate: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
+         stats: {
+            spent: 215.3,
+            impressions: 45200,
+            clicks: 890,
+            results: 12,
+            roas: 1.8,
+            revenue: 387.5,
+         },
+      },
+      {
+         businessId: spaceExBiz._id,
+         createdBy: dr._id,
+         platform: "google",
+         objective: "traffic",
+         title: "Brand awareness Q4",
+         budgetType: "lifetime",
+         budgetAmount: 5000,
+         budgetControl: "campaign",
+         bidStrategy: "cost_cap",
+         specialAdCategory: "none",
+         status: "draft",
+         onOff: false,
+         conversionLocation: "website",
+         conversionEvent: "View content",
+         advantagePlacements: false,
+         advantageAudience: true,
+         minAge: 25,
+         countries: ["United States"],
+         performanceGoal: "maximize_conversions",
+         startDate: null,
+         stats: {
+            spent: 0,
+            impressions: 0,
+            clicks: 0,
+            results: 0,
+            roas: 0,
+            revenue: 0,
+         },
+      },
+   ]);
+
+   console.log("✅ Ad settings + campaigns created");
+
+   // =========================================
+   // CREATE AFFILIATES + SETTINGS
+   // =========================================
+   console.log("🤝 Creating affiliates...");
+
+   await AffiliateSettings.create({
+      businessId: spaceExBiz._id,
+      defaultCommission: 30,
+      portalLink: "space-ex.com/s/affiliates",
+      waitlistEnabled: false,
+   });
+
+   await Affiliate.create([
+      {
+         businessId: spaceExBiz._id,
+         userId: sarah._id,
+         name: "Sarah Jenkins",
+         email: "sarah@test.com",
+         username: "sarahj",
+         avatar: "S",
+         referralCode: "SARAH2024",
+         commissionRate: 30,
+         status: "active",
+         referrals: 24,
+         rewardsEarned: 842.5,
+         retention: 68,
+      },
+      {
+         businessId: spaceExBiz._id,
+         userId: alex._id,
+         name: "Alex Ventures",
+         email: "alex@ventures.com",
+         username: "alexv",
+         avatar: "A",
+         referralCode: "ALEXV55",
+         commissionRate: 25,
+         status: "active",
+         referrals: 12,
+         rewardsEarned: 381.0,
+         retention: 55,
+      },
+   ]);
+
+   console.log("✅ Affiliates created");
+
+   // =========================================
+   // CREATE FOLLOWS + POSTS
+   // =========================================
+   console.log("👥 Creating follows + posts...");
+
+   await Follow.create([
+      { followerId: dr._id, followingId: sarah._id },
+      { followerId: dr._id, followingId: spaceExTeam._id },
+      { followerId: sarah._id, followingId: alex._id },
+      { followerId: alex._id, followingId: sarah._id },
+   ]);
+
+   const postNow = Date.now();
+   const postMinute = 60 * 1000;
+   const postHour = 60 * postMinute;
+   const postDay = 24 * postHour;
+
+   await Post.create([
+      {
+         author: {
+            id: sarah._id,
+            name: sarah.name,
+            username: "sarahj",
+            avatar: "S",
+            verified: true,
+         },
+         forum: "Public forum",
+         content:
+            "Just wrapped a $50k launch using the Economic Intelligence playbook. The 3x-faster pipeline strategy is real — happy to share details if anyone's interested 👇",
+         stats: { comments: 24, likes: 156, views: 12400, shares: 12 },
+         likedBy: [dr._id],
+         createdAt: new Date(postNow - 45 * postMinute),
+      },
+      {
+         author: {
+            id: spaceExTeam._id,
+            name: spaceExTeam.name,
+            username: "spaceex",
+            avatar: "S",
+            verified: true,
+         },
+         forum: "Space-Ex Team",
+         content:
+            "🚀 New feature alert: You can now accept payments in 135+ currencies with automatic conversion. No more juggling Stripe accounts.",
+         stats: { comments: 48, likes: 892, views: 45200, shares: 67 },
+         likedBy: [],
+         createdAt: new Date(postNow - 2 * postHour),
+      },
+      {
+         author: {
+            id: alex._id,
+            name: alex.name,
+            username: "alexv",
+            avatar: "A",
+            verified: false,
+         },
+         forum: "Public forum",
+         content:
+            "Reminder: Most founders don't fail because of bad products. They fail because of bad distribution. Focus 80% of your time on getting your first 100 users before polishing anything else.",
+         media: {
+            type: "link",
+            url: "space-ex.com/blog/distribution-first",
+            title: "The Distribution-First Playbook",
+            description:
+               "How to get your first 100 users without spending a dollar on ads. A step-by-step guide covering SEO, communities, and partnerships.",
+            price: 0,
+            isOpen: true,
+            rating: 4.8,
+            reviewCount: 12,
+         },
+         stats: { comments: 8, likes: 234, views: 8900, shares: 41 },
+         likedBy: [],
+         createdAt: new Date(postNow - 5 * postHour),
+      },
+      {
+         author: {
+            id: sarah._id,
+            name: sarah.name,
+            username: "sarahj",
+            avatar: "S",
+            verified: true,
+         },
+         forum: "Public forum",
+         content:
+            "Reading through the Space-Ex analytics and noticed my conversion rate jumped 3.2% after adding the checkout branding. Small tweaks, big returns.",
+         stats: { comments: 3, likes: 47, views: 1200, shares: 2 },
+         likedBy: [],
+         createdAt: new Date(postNow - postDay),
+      },
+   ]);
+
+   console.log("✅ Follows + posts created");
+
+   // =========================================
    // CREATE CONVERSATIONS
    // =========================================
    console.log("💬 Creating conversations...");
@@ -795,6 +1207,70 @@ async function seed() {
    ]);
 
    console.log("✅ Messages created");
+
+   // =========================================
+   // CREATE SUPPORT CHATS
+   // =========================================
+   console.log("💬 Creating support chats...");
+
+   await SupportChat.create([
+      {
+         businessId: spaceExBiz._id,
+         memberId: sarah._id,
+         memberName: "Sarah Jenkins",
+         memberEmail: "sarah@test.com",
+         memberAvatar: "S",
+         lastMessage: "Thanks for the quick reply!",
+         lastMessageAt: new Date(Date.now() - 10 * 60 * 1000),
+         unreadForAdmin: 1,
+         status: "open",
+         messages: [
+            {
+               senderId: sarah._id,
+               senderName: "Sarah Jenkins",
+               senderRole: "member",
+               text: "Hi, I have a question about my Pro membership renewal.",
+               createdAt: new Date(Date.now() - 30 * 60 * 1000),
+            },
+            {
+               senderId: dr._id,
+               senderName: "Admin",
+               senderRole: "admin",
+               text: "Sure! What would you like to know?",
+               createdAt: new Date(Date.now() - 20 * 60 * 1000),
+            },
+            {
+               senderId: sarah._id,
+               senderName: "Sarah Jenkins",
+               senderRole: "member",
+               text: "Thanks for the quick reply!",
+               createdAt: new Date(Date.now() - 10 * 60 * 1000),
+            },
+         ],
+      },
+      {
+         businessId: spaceExBiz._id,
+         memberId: alex._id,
+         memberName: "Alex Ventures",
+         memberEmail: "alex@ventures.com",
+         memberAvatar: "A",
+         lastMessage: "Can you help me with the checkout flow?",
+         lastMessageAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+         unreadForAdmin: 0,
+         status: "open",
+         messages: [
+            {
+               senderId: alex._id,
+               senderName: "Alex Ventures",
+               senderRole: "member",
+               text: "Can you help me with the checkout flow?",
+               createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000),
+            },
+         ],
+      },
+   ]);
+
+   console.log("✅ Support chats created");
 
    // =========================================
    // CREATE NOTIFICATIONS
@@ -913,6 +1389,27 @@ async function seed() {
    console.log("✅ Team invites created");
 
    // =========================================
+   // CREATE TEAM MEMBERS
+   // =========================================
+   console.log("👥 Creating team members...");
+
+   await TeamMember.create([
+      {
+         businessId: spaceExBiz._id,
+         userId: dr._id,
+         name: "Dr. Zakarinović",
+         email: "www.lord5566@gmail.com",
+         avatar: "DZ",
+         role: "owner",
+         auth: "one-step",
+         pay: "pay",
+         status: "active",
+      },
+   ]);
+
+   console.log("✅ Team members created");
+
+   // =========================================
    // CREATE PAYMENT METHODS
    // =========================================
    console.log("💳 Creating payment methods...");
@@ -973,6 +1470,703 @@ async function seed() {
    console.log("✅ Resolution cases created");
 
    // =========================================
+   // CREATE INVOICES
+   // =========================================
+   console.log("📄 Creating invoices...");
+
+   await Invoice.create([
+      {
+         businessId: spaceExBiz._id,
+         createdBy: dr._id,
+         number: "INV-000001",
+         customerName: "John Smith",
+         customerEmail: "john@example.com",
+         product: "Pro Membership",
+         pricingType: "one-time",
+         price: 49,
+         currency: "USD",
+         status: "sent",
+         dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+         description: "Monthly Pro Membership",
+         subtotal: 49,
+         total: 49,
+      },
+   ]);
+
+   console.log("✅ Invoices created");
+
+   // =========================================
+   // CREATE PROMO CODES
+   // =========================================
+   console.log("🎫 Creating promo codes...");
+
+   await PromoCode.create([
+      {
+         businessId: spaceExBiz._id,
+         code: "WELCOME10",
+         discount: 10,
+         discountType: "percentage",
+         discountDuration: "once",
+         eligibleUsers: "new_customers",
+         status: "active",
+         onePerUser: true,
+         uses: 12,
+      },
+      {
+         businessId: spaceExBiz._id,
+         code: "SUMMER_SALE",
+         discount: 25,
+         discountType: "percentage",
+         discountDuration: "forever",
+         eligibleUsers: "everyone",
+         status: "active",
+         onePerUser: true,
+         uses: 34,
+      },
+   ]);
+
+   console.log("✅ Promo codes created");
+
+   // =========================================
+   // CREATE SUB ACCOUNTS
+   // =========================================
+   console.log("🏢 Creating sub accounts...");
+
+   await SubAccount.create([
+      {
+         parentBusinessId: spaceExBiz._id,
+         createdBy: dr._id,
+         accountName: "Acme Trading",
+         email: "seller@example.com",
+         kind: "marketplace_sellers",
+         status: "pending",
+         kycStatus: "not_started",
+      },
+   ]);
+
+   console.log("✅ Sub accounts created");
+
+   // =========================================
+   // APP STORE LISTINGS
+   // =========================================
+   console.log("🏪 Creating app store listings...");
+
+   await AppListing.create([
+      {
+         slug: "digital-products-ai",
+         name: "Digital Products AI",
+         tagline: "Create your entire offer & product in less than 10 minutes.",
+         description: "AI-powered product creation",
+         category: "ecommerce",
+         iconColor: "#f97316",
+         iconEmoji: "🧠",
+         price: 0,
+         rating: 5,
+         reviewCount: 35,
+         installs: 3200,
+         installsRange: "3.2k+",
+      },
+      {
+         slug: "dashboard-agent",
+         name: "Dashboard Agent",
+         tagline: "An AI agent for managing your Whop business.",
+         description: "AI agent management",
+         category: "ai",
+         iconColor: "#ef4444",
+         iconEmoji: "🤖",
+         price: 0,
+         rating: 5,
+         reviewCount: 18,
+         installs: 1800,
+         installsRange: "1.8k+",
+      },
+      {
+         slug: "email-marketing",
+         name: "Email Marketing & Automations",
+         tagline:
+            "Recover failed payments, win back cancelled members, and email.",
+         description: "Email automations",
+         category: "marketing",
+         iconColor: "#3b82f6",
+         iconEmoji: "📧",
+         price: 0,
+         rating: 5,
+         reviewCount: 9,
+         installs: 41200,
+         installsRange: "41.2k+",
+      },
+      {
+         slug: "post-purchase-upsell",
+         name: "Post Purchase Upsell",
+         tagline: "Increase AOV with One-Click upsells",
+         description: "Upsell builder",
+         category: "sales-crm",
+         iconColor: "#f43f5e",
+         iconEmoji: "🛒",
+         price: 0,
+         rating: 5,
+         reviewCount: 1,
+         installs: 890,
+         installsRange: "890+",
+      },
+      {
+         slug: "automations",
+         name: "Automations",
+         tagline: "Send emails and create workflows (replaces Zapier and N8N)",
+         description: "No-code workflows",
+         category: "business",
+         iconColor: "#6366f1",
+         iconEmoji: "⚙️",
+         price: 0,
+         rating: 5,
+         reviewCount: 14,
+         installs: 2400,
+         installsRange: "2.4k+",
+      },
+      {
+         slug: "drops",
+         name: "Drops - Instant Paid Links",
+         tagline: "Turn posts into paid links",
+         description: "Instant paid links",
+         category: "marketing",
+         iconColor: "#eab308",
+         iconEmoji: "⚡",
+         price: 0,
+         rating: 5,
+         reviewCount: 7,
+         installs: 1400,
+         installsRange: "1.4k+",
+      },
+      {
+         slug: "sendo",
+         name: "Sendo - Email & Support Chats",
+         tagline: "Send email, DMs and support chats to your Whop members",
+         description: "Support chats",
+         category: "support",
+         iconColor: "#14b8a6",
+         iconEmoji: "💬",
+         price: 0,
+         rating: 5,
+         reviewCount: 4,
+         installs: 620,
+         installsRange: "620+",
+      },
+      {
+         slug: "app-ads",
+         name: "App Ads - Ads in Whop Apps",
+         tagline:
+            "Advertise inside Whop Apps or make money placing ads inside your own app",
+         description: "In-app ads",
+         category: "marketing",
+         iconColor: "#f59e0b",
+         iconEmoji: "📢",
+         price: 0,
+         rating: 5,
+         reviewCount: 3,
+         installs: 410,
+         installsRange: "410+",
+      },
+      {
+         slug: "whop-fulfillment",
+         name: "Whop Fulfillment",
+         tagline:
+            "Push orders to any supplier and get tracking back automatically.",
+         description: "Auto fulfillment",
+         category: "business",
+         iconColor: "#8b5cf6",
+         iconEmoji: "📦",
+         price: 0,
+         rating: 5,
+         reviewCount: 6,
+         installs: 780,
+         installsRange: "780+",
+      },
+      {
+         slug: "formify",
+         name: "Formify",
+         tagline:
+            "The easiest way to create beautiful forms and surveys for your business",
+         description: "Form builder",
+         category: "business",
+         iconColor: "#0ea5e9",
+         iconEmoji: "📝",
+         price: 0,
+         rating: 5,
+         reviewCount: 11,
+         installs: 1200,
+         installsRange: "1.2k+",
+      },
+      {
+         slug: "super-closer",
+         name: "Super Closer",
+         tagline:
+            "The sales CRM built for high-ticket closers. Track your pipeline.",
+         description: "High-ticket CRM",
+         category: "sales-crm",
+         iconColor: "#3b82f6",
+         iconEmoji: "🎯",
+         price: 0,
+         rating: 5,
+         reviewCount: 1,
+         installs: 340,
+         installsRange: "340+",
+      },
+      {
+         slug: "tracking-links",
+         name: "Tracking Links",
+         tagline:
+            "Call funnels & Custom Checkouts with tracking. Custom embeds.",
+         description: "Custom tracking",
+         category: "business",
+         iconColor: "#a855f7",
+         iconEmoji: "🔗",
+         price: 0,
+         rating: 5,
+         reviewCount: 4,
+         installs: 290,
+         installsRange: "290+",
+      },
+      {
+         slug: "subscription-analytics",
+         name: "Subscription Analytics",
+         tagline:
+            "The #1 analytics dashboard for Whop subscription businesses.",
+         description: "Subscription metrics",
+         category: "business",
+         iconColor: "#f97316",
+         iconEmoji: "📊",
+         price: 0,
+         rating: 5,
+         reviewCount: 0,
+         installs: 220,
+         installsRange: "220+",
+      },
+      {
+         slug: "start-llc",
+         name: "Start your LLC | doola",
+         tagline: "LLC Formation, Business Bank Account, Bookkeeping, Taxes.",
+         description: "LLC formation",
+         category: "business",
+         iconColor: "#eab308",
+         iconEmoji: "💼",
+         price: 0,
+         rating: 5,
+         reviewCount: 8,
+         installs: 890,
+         installsRange: "890+",
+      },
+      {
+         slug: "rejoin",
+         name: "Rejoin - Revenue Recovery",
+         tagline: "Recover churned members automatically with branded winback.",
+         description: "Churn recovery",
+         category: "marketing",
+         iconColor: "#10b981",
+         iconEmoji: "♻️",
+         price: 0,
+         rating: 5,
+         reviewCount: 5,
+         installs: 560,
+         installsRange: "560+",
+      },
+      {
+         slug: "quickbooks-sync",
+         name: "QuickBooks Sync",
+         tagline: "Two way sync between Whop and QuickBooks Online. Invoices.",
+         description: "QuickBooks integration",
+         category: "finance",
+         iconColor: "#22c55e",
+         iconEmoji: "📗",
+         price: 0,
+         rating: 5,
+         reviewCount: 2,
+         installs: 320,
+         installsRange: "320+",
+      },
+      {
+         slug: "checkout-builder",
+         name: "Checkout Builder",
+         tagline: "Create custom checkout links with product upsells",
+         description: "Checkout customization",
+         category: "finance",
+         iconColor: "#3b82f6",
+         iconEmoji: "🛒",
+         price: 0,
+         rating: 5,
+         reviewCount: 1,
+         installs: 460,
+         installsRange: "460+",
+      },
+      {
+         slug: "signer",
+         name: "Signer",
+         tagline: "Create custom contract forms",
+         description: "Digital signatures",
+         category: "finance",
+         iconColor: "#06b6d4",
+         iconEmoji: "✍️",
+         price: 0,
+         rating: 5,
+         reviewCount: 2,
+         installs: 280,
+         installsRange: "280+",
+      },
+      {
+         slug: "contracts",
+         name: "Contracts",
+         tagline:
+            "Create contracts, collect signatures and payments, and automate.",
+         description: "Contract management",
+         category: "finance",
+         iconColor: "#6366f1",
+         iconEmoji: "📄",
+         price: 0,
+         rating: 5,
+         reviewCount: 2,
+         installs: 210,
+         installsRange: "210+",
+      },
+      {
+         slug: "lobuly",
+         name: "Lobuly AI Support",
+         tagline: "AI FAQ bot and live chat support for Whop communities.",
+         description: "AI live chat support",
+         category: "support",
+         iconColor: "#a855f7",
+         iconEmoji: "💬",
+         price: 0,
+         rating: 5,
+         reviewCount: 12,
+         installs: 640,
+         installsRange: "640+",
+      },
+      {
+         slug: "ticketeo",
+         name: "Ticketeo - AI Support Tickets",
+         tagline: "Your AI agent for Whop support tickets",
+         description: "AI ticket support",
+         category: "support",
+         iconColor: "#ef4444",
+         iconEmoji: "🎫",
+         price: 0,
+         rating: 5,
+         reviewCount: 3,
+         installs: 380,
+         installsRange: "380+",
+      },
+   ]);
+
+   console.log("✅ App store listings created");
+
+   // =========================================
+   // DISCOVER CONTENT REWARDS CAMPAIGNS
+   // =========================================
+   console.log("🎬 Creating discover campaigns...");
+
+   const PREVIEW_IMAGES = [
+      "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1536440136628-849c177e76a1?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1493711662062-fa541adb3fc8?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1560155016-bd4879ae8f21?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1552820728-8b83bb6b773f?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1547036967-23d11aacaee0?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1542204165-65bf26472b9b?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1518791841217-8f162f1e1131?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1578632767115-351597cf2477?w=400&h=250&fit=crop",
+      "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=250&fit=crop",
+   ];
+
+   const CAMPAIGN_DATA = [
+      {
+         title: "Backyard Breaks [Clipping Campaign]",
+         category: "Entertainment",
+         budget: 49500,
+         raised: 60200,
+         cpm: 21,
+         duration: "3mo",
+         brand: "ClipHouse",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "ForgeGUI Clipping [Roblox]",
+         category: "Gaming",
+         budget: 167600,
+         raised: 189700,
+         cpm: 1,
+         duration: "5mo",
+         brand: "BloxClips",
+         socials: ["youtube", "tiktok"],
+         featured: true,
+      },
+      {
+         title: "FR Yomi Denzel Campagne Principale",
+         category: "Business",
+         budget: 272700,
+         raised: 277400,
+         cpm: 1,
+         duration: "10mo",
+         brand: "ml Denzel Clipping",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "HardScope x ClipFarm",
+         category: "Entertainment",
+         budget: 2500,
+         raised: 13100,
+         cpm: 1,
+         duration: "1w",
+         brand: "Clip Farm",
+         socials: ["youtube", "x", "tiktok"],
+      },
+      {
+         title: "... All I Got | Multi Edit Type Campaign",
+         category: "Music",
+         budget: 70,
+         raised: 1000,
+         cpm: 1,
+         duration: "3w",
+         brand: "Artist Influence",
+         socials: ["tiktok"],
+      },
+      {
+         title: "Shuffle Streamers - Clipping",
+         category: "Gaming",
+         budget: 12100,
+         raised: 25000,
+         cpm: 1,
+         duration: "2w",
+         brand: "Shuffle Clipping",
+         socials: ["youtube", "x", "tiktok"],
+      },
+      {
+         title: "Michael Sartain's Clipping Army",
+         category: "Business",
+         budget: 6700,
+         raised: 10000,
+         cpm: 2,
+         duration: "2mo",
+         brand: "S Clipper Army",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Jacques Amoako x EAT",
+         category: "Entertainment",
+         budget: 926,
+         raised: 1070,
+         cpm: 1,
+         duration: "2mo",
+         brand: "Maison D'elite",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Alpha Futures Clipping Campaign",
+         category: "Business",
+         budget: 9100,
+         raised: 2000,
+         cpm: 2,
+         duration: "3mo",
+         brand: "Click Culture",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "ARZ Urus Clipping Campaign",
+         category: "Entertainment",
+         budget: 1100,
+         raised: 1500,
+         cpm: 1,
+         duration: "1mo",
+         brand: "Arz Urus Clipping",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "... Mini Mixed Capsule Clipping [VIRAL]",
+         category: "Entertainment",
+         budget: 10700,
+         raised: 9090,
+         cpm: 0,
+         duration: "2w",
+         brand: "Clip Influence",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "WatchMeWin Clipping",
+         category: "Gaming",
+         budget: 21600,
+         raised: 20000,
+         cpm: 0,
+         duration: "7mo",
+         brand: "WMW CLIPPING",
+         socials: ["youtube"],
+      },
+      {
+         title: "TJR $23,100 Weekly Clipping Campaign",
+         category: "Music",
+         budget: 6200,
+         raised: 23100,
+         cpm: 1,
+         duration: "5d",
+         brand: "Reach",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "...AGON MMA | $7,500 Budget | $1 CPM",
+         category: "Sports",
+         budget: 4700,
+         raised: 7500,
+         cpm: 1,
+         duration: "1w",
+         brand: "Clipping Outlaws",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Elo Cooking Slideshows Campaign",
+         category: "Entertainment",
+         budget: 5700,
+         raised: 8800,
+         cpm: 1,
+         duration: "2mo",
+         brand: "Clip Track",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Santa Cruz Medicinals Clipping",
+         category: "Entertainment",
+         budget: 4200,
+         raised: 9900,
+         cpm: 1,
+         duration: "2w",
+         brand: "VitaClip",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "...ble Clipping | $9K Budget | $1.25 CPM",
+         category: "Gaming",
+         budget: 7500,
+         raised: 12500,
+         cpm: 1,
+         duration: "1mo",
+         brand: "Clipix",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "COINBASE x VALORANT",
+         category: "Gaming",
+         budget: 5300,
+         raised: 10000,
+         cpm: 1,
+         duration: "2w",
+         brand: "ClipHaus",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "...s Hablando - 1$ por cada 1000 vistas",
+         category: "Entertainment",
+         budget: 5400,
+         raised: 10000,
+         cpm: 1,
+         duration: "1w",
+         brand: "Carlos Esparraga Clipping",
+         socials: ["tiktok"],
+      },
+      {
+         title: "Magic Sort | $1 CPM",
+         category: "Gaming",
+         budget: 468,
+         raised: 1000,
+         cpm: 1,
+         duration: "5d",
+         brand: "VOLUM",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "POST THIRST TRAP VIDEOS [$5 EASY]",
+         category: "Entertainment",
+         budget: 972,
+         raised: 25000,
+         cpm: 1,
+         duration: "2w",
+         brand: "Duetti",
+         socials: ["tiktok"],
+      },
+      {
+         title: "...Like a Remedy | Audio Only Campaign",
+         category: "Music",
+         budget: 130,
+         raised: 50000,
+         cpm: 1,
+         duration: "1w",
+         brand: "Music Promo Clippers",
+         socials: ["youtube", "x", "tiktok"],
+      },
+      {
+         title: "Kaa2ty Streamer Clipping",
+         category: "Gaming",
+         budget: 982,
+         raised: 2000,
+         cpm: 1,
+         duration: "1mo",
+         brand: "Funnel Clips Community",
+         socials: ["youtube", "tiktok"],
+      },
+      {
+         title: "Clipback: $CLIP",
+         category: "Gaming",
+         budget: 1800,
+         raised: 3500,
+         cpm: 1,
+         duration: "2w",
+         brand: "Clipback Limited",
+         socials: ["youtube", "x", "tiktok"],
+      },
+   ];
+
+   await DiscoverCampaign.create(
+      CAMPAIGN_DATA.map((c, i) => ({
+         slug:
+            c.title
+               .toLowerCase()
+               .replace(/[^\w\s-]/g, "")
+               .replace(/\s+/g, "-")
+               .slice(0, 50) +
+            "-" +
+            i,
+         title: c.title,
+         subtitle: "",
+         category: c.category,
+         previewImage: PREVIEW_IMAGES[i % PREVIEW_IMAGES.length],
+         heroImage: "",
+         brandName: c.brand,
+         brandAvatar: c.brand.charAt(0).toUpperCase(),
+         brandVerified: true,
+         socials: c.socials as any,
+         budget: c.budget,
+         raised: c.raised,
+         cpm: c.cpm,
+         totalEarned: c.raised,
+         status: "active",
+         duration: c.duration,
+         ageRestricted: false,
+         featured: c.featured || false,
+         createdBy: dr._id,
+         businessId: spaceExBiz._id,
+      })),
+   );
+
+   console.log(`✅ ${CAMPAIGN_DATA.length} discover campaigns created`);
+
+   // =========================================
    // SUMMARY
    // =========================================
    console.log("\n" + "=".repeat(60));
@@ -993,27 +2187,40 @@ async function seed() {
    console.log("📊 Data summary:\n");
    console.log("   • 4 users");
    console.log("   • 1 business (Space/Ex)");
-   console.log("   • 4 products (Pro, Starter, Free, VIP)");
-   console.log("   • 4 follows (Dr → Sarah + Team, Sarah ↔ Alex)");
-   console.log("   • 4 posts in Townhall");
+   console.log("   • 4 products");
+   console.log("   • 3 customers");
+   console.log("   • 2 memberships");
+   console.log("   • 2 people/visitors");
    console.log(`   • 8 transactions (Balance: $${balance.toFixed(2)})`);
-   console.log("   • 1 website (space-ex.com, 1240 visits)");
+   console.log("   • 6 payments");
+   console.log("   • 1 checkout link");
+   console.log("   • 1 website");
    console.log("   • 5 live events");
-   console.log("   • 2 conversations (Space-Ex Team + Sarah)");
-   console.log("   • 6 messages");
+   console.log("   • 3 ad campaigns + settings");
+   console.log("   • 2 affiliates + settings");
+   console.log("   • 4 follows");
+   console.log("   • 4 posts in Townhall");
+   console.log("   • 2 conversations + 6 messages");
+   console.log("   • 2 support chats");
    console.log("   • 3 notifications");
    console.log("   • 2 orders");
    console.log("   • 2 partner requests");
    console.log("   • 2 team invites");
+   console.log("   • 1 team member (owner)");
    console.log("   • 2 payment methods");
-   console.log("   • 2 resolution cases\n");
+   console.log("   • 2 resolution cases");
+   console.log("   • 1 invoice");
+   console.log("   • 2 promo codes");
+   console.log("   • 1 sub account");
+   console.log("   • 21 app store listings");
+   console.log(`   • ${CAMPAIGN_DATA.length} discover campaigns\n`);
 
    console.log("🎯 Next steps:\n");
    console.log("   1. Start the dev server:  npm run dev");
    console.log("   2. Visit:  http://localhost:3000/login");
    console.log("   3. Log in with:  dr@spaceex.com / password123\n");
    console.log(
-      "   💡 Try Townhall at /townhall — real posts, follows, likes\n",
+      "   💡 Try: /business (dashboard) · /discover (content rewards)\n",
    );
 
    await mongoose.disconnect();
