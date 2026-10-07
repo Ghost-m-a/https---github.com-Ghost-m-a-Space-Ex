@@ -22,7 +22,6 @@
    }
 }
 
-/* Header */
 .header {
    display: flex;
    justify-content: space-between;
@@ -58,6 +57,7 @@
 .primaryBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 10px 18px;
    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
@@ -288,7 +288,6 @@
    background: var(--bg-hover);
    border-color: var(--border-strong);
 }
-
 .filtersRight {
    display: flex;
    gap: 8px;
@@ -315,7 +314,6 @@
    font-size: 13px;
    min-width: 1400px;
 }
-
 .table thead {
    background: rgba(255, 255, 255, 0.03);
 }
@@ -342,11 +340,9 @@
 .table tr:last-child td {
    border-bottom: none;
 }
-
 .table tbody tr {
    transition: background 0.15s ease;
 }
-
 .table tbody tr:hover {
    background: rgba(255, 255, 255, 0.025);
 }
@@ -407,28 +403,37 @@
    gap: 6px;
    text-transform: capitalize;
 }
-
 .emailCell {
    color: var(--text-secondary);
    font-size: 12.5px;
 }
 
+/* ✅ CENTERED LOADING */
 .loading {
-   padding: 60px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   min-height: 300px;
+   width: 100%;
+   padding: 60px 24px;
    text-align: center;
    color: var(--text-secondary);
    font-size: 14px;
+   gap: 12px;
 }
 
-/* Empty State */
+/* ✅ CENTERED EMPTY STATE */
 .emptyState {
    display: flex;
    flex-direction: column;
    align-items: center;
    justify-content: center;
    padding: 100px 24px;
+   min-height: 500px;
    gap: 14px;
    text-align: center;
+   width: 100%;
    position: relative;
 }
 
@@ -449,6 +454,9 @@
 }
 
 .emptyIcon {
+   display: flex;
+   align-items: center;
+   justify-content: center;
    width: 100px;
    height: 100px;
    border-radius: 28px;
@@ -457,9 +465,6 @@
       rgba(59, 130, 246, 0.15) 0%,
       rgba(139, 92, 246, 0.08) 100%
    );
-   display: flex;
-   align-items: center;
-   justify-content: center;
    color: #60a5fa;
    margin-bottom: 8px;
    border: 1px solid rgba(59, 130, 246, 0.2);
@@ -484,12 +489,14 @@
    color: var(--text-secondary);
    max-width: 380px;
    line-height: 1.5;
+   margin: 0 auto;
+   text-align: center;
    position: relative;
    z-index: 1;
 }
 
 .emptyCta {
-   margin-top: 20px;
+   margin: 20px auto 0;
    padding: 22px 28px;
    background: linear-gradient(
       180deg,
@@ -516,11 +523,14 @@
    display: flex;
    gap: 10px;
    justify-content: center;
+   align-items: center;
+   flex-wrap: wrap;
 }
 
 .emptyBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 10px 18px;
    background: linear-gradient(
@@ -553,6 +563,7 @@
 .emptyBtnSecondary {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 10px 18px;
    background: transparent;

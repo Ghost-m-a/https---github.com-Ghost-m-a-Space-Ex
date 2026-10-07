@@ -22,7 +22,6 @@
    }
 }
 
-/* Header */
 .header {
    display: flex;
    justify-content: space-between;
@@ -57,6 +56,7 @@
 .createBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 10px 18px;
    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
@@ -80,6 +80,7 @@
 .secondaryBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 10px 16px;
    background: var(--bg-tertiary);
@@ -120,7 +121,6 @@
    align-items: center;
    flex-wrap: wrap;
 }
-
 .dropdownWrap {
    position: relative;
 }
@@ -203,7 +203,6 @@
    border-collapse: collapse;
    font-size: 13.5px;
 }
-
 .table thead {
    background: rgba(255, 255, 255, 0.03);
 }
@@ -255,7 +254,6 @@
    cursor: pointer;
    transition: background 0.15s ease;
 }
-
 .row:hover {
    background: rgba(255, 255, 255, 0.025);
 }
@@ -331,14 +329,22 @@
    border: 1px solid var(--border-subtle);
 }
 
+/* ✅ CENTERED LOADING */
 .loading {
-   padding: 60px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   min-height: 300px;
+   width: 100%;
+   padding: 60px 24px;
    text-align: center;
    color: var(--text-secondary);
    font-size: 14px;
+   gap: 12px;
 }
 
-/* Empty State */
+/* ✅ CENTERED EMPTY STATE */
 .emptyState {
    display: flex;
    flex-direction: column;
@@ -346,7 +352,9 @@
    justify-content: center;
    text-align: center;
    padding: 100px 20px;
+   min-height: 500px;
    gap: 16px;
+   width: 100%;
    position: relative;
 }
 
@@ -368,6 +376,9 @@
 }
 
 .emptyIcon {
+   display: flex;
+   align-items: center;
+   justify-content: center;
    width: 96px;
    height: 96px;
    border-radius: 24px;
@@ -376,9 +387,6 @@
       rgba(59, 130, 246, 0.15) 0%,
       rgba(139, 92, 246, 0.08) 100%
    );
-   display: flex;
-   align-items: center;
-   justify-content: center;
    color: #60a5fa;
    margin-bottom: 8px;
    border: 1px solid rgba(59, 130, 246, 0.2);
@@ -394,6 +402,7 @@
    font-size: 18px;
    font-weight: 600;
    color: var(--text-primary);
+   text-align: center;
    position: relative;
    z-index: 1;
 }
@@ -403,7 +412,13 @@
    color: var(--text-secondary);
    max-width: 340px;
    line-height: 1.5;
-   margin-bottom: 12px;
+   margin: 0 auto 12px;
+   text-align: center;
+   position: relative;
+   z-index: 1;
+}
+
+.emptyState > .createBtn {
    position: relative;
    z-index: 1;
 }
@@ -442,12 +457,10 @@
    background: var(--bg-tertiary);
    color: var(--text-primary);
 }
-
 .pageBtn:disabled {
    opacity: 0.3;
    cursor: not-allowed;
 }
-
 .pageInfo {
    margin: 0 8px;
    font-weight: 500;
@@ -560,7 +573,6 @@
 .colRow:hover {
    background: rgba(255, 255, 255, 0.05);
 }
-
 .dragHandle {
    margin-left: auto;
    color: var(--text-muted);

@@ -1,10 +1,8 @@
 /* =========================================
-   BUSINESS MODULE — Home, Products, Analytics, Payments, etc.
+   BUSINESS MODULE
    ========================================= */
 
-/* =========================================
-   BASE LAYOUT
-   ========================================= */
+/* Base layout */
 .page,
 .bizHome {
    display: flex;
@@ -57,20 +55,27 @@
    margin-top: 4px;
 }
 
+/* ✅ CENTERED LOADING */
 .loading {
-   padding: 60px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   min-height: 300px;
+   width: 100%;
+   padding: 60px 24px;
    color: var(--text-secondary);
-   text-align: center;
    font-size: 14px;
+   text-align: center;
+   gap: 12px;
 }
 
-/* =========================================
-   BUTTONS
-   ========================================= */
+/* Buttons */
 .primaryBtn,
 .secondaryBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 10px 18px;
    border-radius: 10px;
@@ -79,8 +84,6 @@
    cursor: pointer;
    border: none;
    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-   position: relative;
-   overflow: hidden;
 }
 
 .primaryBtn {
@@ -95,10 +98,6 @@
    transform: translateY(-1px);
 }
 
-.primaryBtn:active {
-   transform: translateY(0);
-}
-
 .secondaryBtn {
    background: var(--bg-tertiary);
    color: var(--text-primary);
@@ -111,9 +110,7 @@
    transform: translateY(-1px);
 }
 
-/* =========================================
-   STATS CARDS
-   ========================================= */
+/* Stats */
 .statsGrid {
    display: grid;
    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -204,18 +201,14 @@
    font-size: 12px;
    font-weight: 500;
 }
-
 .pos {
    color: var(--accent-green);
 }
-
 .neg {
    color: var(--accent-red);
 }
 
-/* =========================================
-   CHARTS
-   ========================================= */
+/* Charts */
 .chartCard {
    background: linear-gradient(
       180deg,
@@ -238,21 +231,17 @@
    margin-bottom: 16px;
    color: var(--text-primary);
 }
-
 .chart {
    width: 100%;
    height: 240px;
 }
-
 .analyticsGrid {
    display: grid;
    grid-template-columns: 1fr 1fr;
    gap: 16px;
 }
 
-/* =========================================
-   KPI GRID
-   ========================================= */
+/* KPI */
 .kpiGrid {
    display: grid;
    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -287,16 +276,13 @@
    margin-bottom: 8px;
    font-weight: 500;
 }
-
 .kpiValue {
    font-size: 24px;
    font-weight: 700;
    letter-spacing: -0.02em;
 }
 
-/* =========================================
-   TABLES
-   ========================================= */
+/* Tables */
 .tableCard {
    background: linear-gradient(
       180deg,
@@ -337,16 +323,13 @@
 .tableRow:last-child {
    border-bottom: none;
 }
-
 .tableRow:hover {
    background: rgba(255, 255, 255, 0.025);
 }
-
 .cell {
    color: var(--text-primary);
 }
 
-/* Product cell */
 .prodCell {
    display: flex;
    gap: 12px;
@@ -372,14 +355,12 @@
    font-weight: 500;
    font-size: 14px;
 }
-
 .prodDesc {
    font-size: 12px;
    color: var(--text-muted);
    margin-top: 2px;
 }
 
-/* Customer cell */
 .custCell {
    display: flex;
    gap: 12px;
@@ -404,16 +385,13 @@
    font-weight: 500;
    font-size: 14px;
 }
-
 .custEmail {
    font-size: 12px;
    color: var(--text-muted);
    margin-top: 2px;
 }
 
-/* =========================================
-   STATUS BADGES
-   ========================================= */
+/* Status Badges */
 .status {
    display: inline-block;
    padding: 4px 12px;
@@ -459,9 +437,7 @@
    border: 1px solid rgba(59, 130, 246, 0.25);
 }
 
-/* =========================================
-   ICON BUTTON
-   ========================================= */
+/* Icon button */
 .iconBtn {
    background: transparent;
    border: none;
@@ -480,9 +456,7 @@
    color: var(--text-primary);
 }
 
-/* =========================================
-   FILTERS
-   ========================================= */
+/* Filters */
 .filters {
    display: flex;
    gap: 8px;
@@ -504,16 +478,13 @@
    border-color: var(--text-secondary);
    color: var(--text-primary);
 }
-
 .filterActive {
    background: var(--bg-tertiary);
    color: var(--text-primary);
    border-color: transparent;
 }
 
-/* =========================================
-   SEARCH BAR
-   ========================================= */
+/* Search */
 .searchBar {
    display: flex;
    align-items: center;
@@ -542,9 +513,7 @@
    font-size: 14px;
 }
 
-/* =========================================
-   WEBSITES
-   ========================================= */
+/* Websites */
 .websiteGrid {
    display: grid;
    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -574,33 +543,27 @@
    align-items: center;
    margin-bottom: 8px;
 }
-
 .websiteDomain {
    font-weight: 600;
    font-size: 14px;
 }
-
 .websiteName {
    font-size: 12px;
    color: var(--text-muted);
    margin-bottom: 16px;
 }
-
 .websiteStats {
    display: grid;
    grid-template-columns: 1fr 1fr;
    gap: 16px;
    margin-bottom: 16px;
 }
-
 .websiteActions {
    display: flex;
    gap: 8px;
 }
 
-/* =========================================
-   CARDS GRID (Credit cards)
-   ========================================= */
+/* Credit cards */
 .cardGrid {
    display: grid;
    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
@@ -622,26 +585,10 @@
    box-shadow: 0 8px 32px rgba(30, 58, 138, 0.4);
 }
 
-.creditCard::before {
-   content: "";
-   position: absolute;
-   top: -50%;
-   right: -50%;
-   width: 200%;
-   height: 200%;
-   background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.08) 0%,
-      transparent 60%
-   );
-   pointer-events: none;
-}
-
 .creditCard:hover {
    transform: translateY(-4px);
    box-shadow: 0 16px 48px rgba(30, 58, 138, 0.5);
 }
-
 .creditCard.frozen {
    opacity: 0.5;
    filter: grayscale(0.5);
@@ -651,33 +598,23 @@
    display: flex;
    justify-content: space-between;
    align-items: center;
-   position: relative;
-   z-index: 1;
 }
-
 .creditBrand {
    font-size: 18px;
    font-weight: 700;
    letter-spacing: 0.05em;
 }
-
 .creditNumber {
    font-size: 20px;
    letter-spacing: 3px;
    font-family: "SF Mono", monospace;
    margin: 12px 0;
-   position: relative;
-   z-index: 1;
 }
-
 .creditBottom {
    display: flex;
    justify-content: space-between;
    margin-top: auto;
-   position: relative;
-   z-index: 1;
 }
-
 .creditLabel {
    font-size: 10px;
    opacity: 0.7;
@@ -685,7 +622,6 @@
    letter-spacing: 0.08em;
    font-weight: 500;
 }
-
 .creditValue {
    font-size: 13px;
    font-weight: 500;
@@ -699,8 +635,6 @@
    margin-top: auto;
    padding-top: 14px;
    border-top: 1px solid rgba(255, 255, 255, 0.2);
-   position: relative;
-   z-index: 1;
 }
 
 .creditBalanceValue {
@@ -709,9 +643,7 @@
    letter-spacing: -0.02em;
 }
 
-/* =========================================
-   MODAL
-   ========================================= */
+/* Modal */
 .modalOverlay {
    position: fixed;
    inset: 0;
@@ -748,6 +680,7 @@
    padding: 32px;
    max-width: 480px;
    width: 100%;
+   margin: auto;
    display: flex;
    flex-direction: column;
    gap: 16px;
@@ -789,9 +722,7 @@
    box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
 }
 
-/* =========================================
-   MORE PAGE
-   ========================================= */
+/* More page */
 .moreGrid {
    display: grid;
    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -809,24 +740,12 @@
    padding: 24px;
    cursor: pointer;
    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-   position: relative;
-   overflow: hidden;
 }
 
 .moreCard:hover {
    border-color: rgba(59, 130, 246, 0.4);
    transform: translateY(-3px);
    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-}
-
-.moreCard:hover .moreIcon {
-   background: linear-gradient(
-      135deg,
-      rgba(59, 130, 246, 0.25),
-      rgba(139, 92, 246, 0.15)
-   );
-   color: #60a5fa;
-   box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
 }
 
 .moreIcon {
@@ -847,16 +766,13 @@
    font-weight: 600;
    margin-bottom: 6px;
 }
-
 .moreDesc {
    font-size: 13px;
    color: var(--text-secondary);
    line-height: 1.5;
 }
 
-/* =========================================
-   BUSINESS HOME LAYOUT (Right sidebar)
-   ========================================= */
+/* Home layout */
 .bizHomeLayout {
    display: grid;
    grid-template-columns: 1fr 360px;
@@ -872,7 +788,6 @@
    min-width: 0;
 }
 
-/* Balance Header — glowing gradient card */
 .balanceHeader {
    margin-top: 8px;
    padding: 28px 32px;
@@ -886,33 +801,6 @@
    border-radius: 18px;
    position: relative;
    overflow: hidden;
-}
-
-.balanceHeader::before {
-   content: "";
-   position: absolute;
-   top: -50%;
-   right: -20%;
-   width: 400px;
-   height: 400px;
-   background: radial-gradient(
-      circle,
-      rgba(59, 130, 246, 0.15) 0%,
-      transparent 70%
-   );
-   pointer-events: none;
-}
-
-.balanceHeader::after {
-   content: "";
-   position: absolute;
-   inset: 0;
-   background: linear-gradient(
-      180deg,
-      rgba(255, 255, 255, 0.03) 0%,
-      transparent 100%
-   );
-   pointer-events: none;
 }
 
 .balanceLabel {
@@ -948,7 +836,6 @@
    background-clip: text;
 }
 
-/* Chart */
 .chartWrapper {
    position: relative;
    height: 240px;
@@ -968,7 +855,6 @@
    height: 100%;
 }
 
-/* Action Buttons */
 .actionRow {
    display: grid;
    grid-template-columns: repeat(3, 1fr);
@@ -993,19 +879,6 @@
    overflow: hidden;
 }
 
-.actionBtn::before {
-   content: "";
-   position: absolute;
-   inset: 0;
-   background: linear-gradient(
-      135deg,
-      rgba(59, 130, 246, 0.12),
-      rgba(139, 92, 246, 0.06)
-   );
-   opacity: 0;
-   transition: opacity 0.2s;
-}
-
 .actionBtn:hover {
    background: rgba(255, 255, 255, 0.06);
    border-color: rgba(59, 130, 246, 0.4);
@@ -1013,16 +886,7 @@
    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
 }
 
-.actionBtn:hover::before {
-   opacity: 1;
-}
-
-.actionBtn > * {
-   position: relative;
-   z-index: 1;
-}
-
-/* Economic Intelligence card */
+/* Econ card */
 .econCard {
    background: linear-gradient(
       135deg,
@@ -1034,21 +898,6 @@
    padding: 20px 22px;
    position: relative;
    overflow: hidden;
-}
-
-.econCard::before {
-   content: "";
-   position: absolute;
-   top: -30%;
-   right: -20%;
-   width: 250px;
-   height: 250px;
-   background: radial-gradient(
-      circle,
-      rgba(59, 130, 246, 0.12) 0%,
-      transparent 70%
-   );
-   pointer-events: none;
 }
 
 .econTitle {
@@ -1099,13 +948,11 @@
    font-size: 13px;
    color: var(--text-primary);
 }
-
 .zapIcon {
    color: #fbbf24;
    filter: drop-shadow(0 0 6px rgba(251, 191, 36, 0.5));
 }
 
-/* Toggle Switch */
 .switch {
    width: 42px;
    height: 24px;
@@ -1139,9 +986,7 @@
    transform: translateX(18px);
 }
 
-/* =========================================
-   SIDEBAR (right column)
-   ========================================= */
+/* Sidebar */
 .bizSidebar {
    display: flex;
    flex-direction: column;
@@ -1182,13 +1027,11 @@
    flex-direction: column;
    gap: 8px;
 }
-
 .sideEmptyTitle {
    font-size: 13px;
    font-weight: 600;
    color: var(--text-primary);
 }
-
 .sideEmptySub {
    font-size: 12px;
    color: rgba(255, 255, 255, 0.5);
@@ -1214,7 +1057,6 @@
    color: #93c5fd;
 }
 
-/* Visa card visual */
 .cardVisual {
    width: 100%;
    aspect-ratio: 1.6;
@@ -1232,21 +1074,6 @@
    overflow: hidden;
 }
 
-.cardVisual::after {
-   content: "";
-   position: absolute;
-   top: -40%;
-   right: -40%;
-   width: 200%;
-   height: 200%;
-   background: radial-gradient(
-      circle,
-      rgba(255, 255, 255, 0.4) 0%,
-      transparent 50%
-   );
-   pointer-events: none;
-}
-
 .cardBrand {
    text-align: right;
    font-weight: 900;
@@ -1254,7 +1081,6 @@
    font-size: 18px;
    letter-spacing: 1px;
    font-style: italic;
-   position: relative;
    z-index: 1;
 }
 
@@ -1263,7 +1089,6 @@
    height: 24px;
    background: linear-gradient(135deg, #e8c547 0%, #d4af37 50%, #b8941f 100%);
    border-radius: 5px;
-   position: relative;
    z-index: 1;
    box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.5),
@@ -1275,7 +1100,6 @@
    color: rgba(255, 255, 255, 0.6);
    font-weight: 500;
 }
-
 .cardSpendValue {
    font-size: 24px;
    font-weight: 700;
@@ -1292,7 +1116,6 @@
    height: 64px;
    align-items: flex-end;
 }
-
 .spendBarCol {
    display: flex;
    flex-direction: column;
@@ -1320,7 +1143,6 @@
    letter-spacing: 0.02em;
 }
 
-/* Balance row */
 .balanceRow {
    display: flex;
    justify-content: space-between;
@@ -1337,14 +1159,12 @@
 .balanceRow:hover {
    padding-left: 4px;
 }
-
 .balanceRowLeft {
    display: flex;
    align-items: center;
    gap: 10px;
    font-size: 13.5px;
 }
-
 .balanceRowRight {
    display: flex;
    align-items: center;
@@ -1353,14 +1173,11 @@
    font-weight: 600;
    font-size: 14px;
 }
-
 .flagIcon {
    font-size: 18px;
 }
 
-/* =========================================
-   RESPONSIVE
-   ========================================= */
+/* Responsive */
 @media (max-width: 1100px) {
    .bizHomeLayout {
       grid-template-columns: 1fr 300px;

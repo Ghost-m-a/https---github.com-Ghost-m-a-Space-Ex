@@ -276,7 +276,6 @@ select:focus {
    background-clip: content-box;
 }
 
-/* Firefox */
 * {
    scrollbar-width: thin;
    scrollbar-color: var(--border-subtle) transparent;
@@ -295,6 +294,108 @@ select:focus {
    color: #ffffff;
 }
 
+/* =========================================
+   CENTERING UTILITIES
+   ========================================= */
+
+/* Flex centering */
+.flex-center {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+}
+
+.flex-center-x {
+   display: flex;
+   justify-content: center;
+}
+
+.flex-center-y {
+   display: flex;
+   align-items: center;
+}
+
+.flex-center-col {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+}
+
+/* Text centering */
+.text-center {
+   text-align: center;
+}
+
+.text-center-x {
+   margin-left: auto;
+   margin-right: auto;
+}
+
+/* Absolute centering */
+.absolute-center {
+   position: absolute;
+   top: 50%;
+   left: 50%;
+   transform: translate(-50%, -50%);
+}
+
+/* Full-page centering */
+.full-center {
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   min-height: 100vh;
+   width: 100%;
+}
+
+.full-center-content {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   gap: 16px;
+   text-align: center;
+   padding: 24px;
+}
+
+/* Grid centering */
+.grid-center {
+   display: grid;
+   place-items: center;
+}
+
+.grid-center-x {
+   display: grid;
+   justify-items: center;
+}
+
+/* Margin auto (horizontal center) */
+.mx-auto {
+   margin-left: auto;
+   margin-right: auto;
+}
+
+.my-auto {
+   margin-top: auto;
+   margin-bottom: auto;
+}
+
+/* Centered card / content */
+.centered-card {
+   max-width: 480px;
+   margin-left: auto;
+   margin-right: auto;
+   width: 100%;
+}
+
+.centered-content {
+   max-width: 800px;
+   margin-left: auto;
+   margin-right: auto;
+   width: 100%;
+}
+
 /* -----------------------------------------
    UTILITY CLASSES
    ----------------------------------------- */
@@ -310,7 +411,7 @@ select:focus {
    border: 0;
 }
 
-/* Card lift effect — add className="card-lift" to any element */
+/* Card lift */
 .card-lift {
    transition:
       transform var(--transition-base),
@@ -323,7 +424,7 @@ select:focus {
    box-shadow: var(--shadow-lg);
 }
 
-/* Skeleton shimmer — add className="skeleton" while loading */
+/* Skeleton shimmer */
 @keyframes shimmer {
    0% {
       background-position: -1000px 0;
@@ -345,7 +446,7 @@ select:focus {
    border-radius: var(--radius-md);
 }
 
-/* Fade-in on mount — add className="fade-in" */
+/* Fade in */
 @keyframes fadeInUp {
    from {
       opacity: 0;
@@ -361,7 +462,7 @@ select:focus {
    animation: fadeInUp var(--transition-slow) both;
 }
 
-/* Gradient text — add className="gradient-text" */
+/* Gradient text */
 .gradient-text {
    background: linear-gradient(135deg, #ffffff 0%, #94a3b8 100%);
    -webkit-background-clip: text;
@@ -376,7 +477,7 @@ select:focus {
    background-clip: text;
 }
 
-/* Glassmorphism panel — add className="glass" */
+/* Glass */
 .glass {
    background: rgba(20, 20, 25, 0.75);
    backdrop-filter: blur(20px);
@@ -389,7 +490,7 @@ select:focus {
    border: 1px solid rgba(0, 0, 0, 0.08);
 }
 
-/* Divider — add className="divider" */
+/* Divider */
 .divider {
    height: 1px;
    width: 100%;
@@ -403,7 +504,7 @@ select:focus {
    margin: 16px 0;
 }
 
-/* Radial glow background — add className="glow-bg" */
+/* Glow background */
 .glow-bg {
    position: relative;
 }
@@ -426,7 +527,7 @@ select:focus {
 }
 
 /* -----------------------------------------
-   GLOBAL ANIMATIONS
+   ANIMATIONS
    ----------------------------------------- */
 @keyframes spin {
    to {

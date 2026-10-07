@@ -22,21 +22,27 @@
    }
 }
 
+/* ✅ CENTERED LOADING */
 .loading {
-   padding: 60px;
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   justify-content: center;
+   min-height: 300px;
+   width: 100%;
+   padding: 60px 24px;
    color: var(--text-secondary);
-   text-align: center;
    font-size: 14px;
+   text-align: center;
+   gap: 12px;
 }
 
-/* Header */
 .header {
    display: flex;
    justify-content: space-between;
    align-items: center;
    gap: 12px;
 }
-
 .headerLeft {
    display: flex;
    align-items: center;
@@ -58,7 +64,6 @@
    background: var(--bg-hover);
    border-color: var(--border-strong);
 }
-
 .dateText {
    font-size: 13px;
    color: var(--text-secondary);
@@ -68,6 +73,7 @@
 .customizeBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 8px 14px;
    background: var(--bg-tertiary);
@@ -84,14 +90,12 @@
    border-color: var(--border-strong);
 }
 
-/* Cards — general */
 .cardLabel {
    font-size: 12.5px;
    color: var(--text-secondary);
    margin-bottom: 8px;
    font-weight: 500;
 }
-
 .cardValue {
    font-size: 30px;
    font-weight: 700;
@@ -99,14 +103,12 @@
    margin-bottom: 4px;
    letter-spacing: -0.02em;
 }
-
 .cardSub {
    font-size: 12px;
    color: var(--text-muted);
    margin-bottom: 12px;
 }
 
-/* Top row */
 .topRow {
    display: grid;
    grid-template-columns: 2fr 1fr;
@@ -141,6 +143,7 @@
 .chartLegend {
    display: flex;
    justify-content: center;
+   align-items: center;
    gap: 24px;
    font-size: 12px;
    color: var(--text-secondary);
@@ -162,13 +165,11 @@
    background: #10b981;
    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
 }
-
 .legendDotRed {
    background: #ef4444;
    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
 }
 
-/* Cashflow rows */
 .cashflowRow {
    display: flex;
    justify-content: space-between;
@@ -180,13 +181,11 @@
 .cashflowRow:last-of-type {
    border-bottom: none;
 }
-
 .cfLabel {
    font-size: 13px;
    color: var(--text-primary);
    font-weight: 500;
 }
-
 .cfValue {
    font-size: 12px;
    color: var(--text-muted);
@@ -226,7 +225,6 @@
    color: var(--text-primary);
 }
 
-/* Metrics row */
 .metricsRow {
    display: grid;
    grid-template-columns: repeat(4, 1fr);
@@ -261,7 +259,6 @@
    margin-bottom: 8px;
    font-weight: 500;
 }
-
 .metricValue {
    font-size: 22px;
    font-weight: 700;
@@ -269,7 +266,6 @@
    letter-spacing: -0.02em;
 }
 
-/* Grids */
 .gridRow {
    display: grid;
    grid-template-columns: 2fr 1fr;
@@ -314,7 +310,6 @@
 .smallCard {
    min-height: 160px;
 }
-
 .fullCard {
    min-height: 240px;
 }
@@ -343,6 +338,7 @@
    color: var(--text-primary);
 }
 
+/* ✅ CENTERED EMPTY STATES */
 .emptyChart,
 .smallEmpty,
 .tallEmpty {
@@ -350,9 +346,12 @@
    display: flex;
    align-items: center;
    justify-content: center;
+   text-align: center;
    color: var(--text-muted);
    font-size: 12.5px;
    font-weight: 500;
+   width: 100%;
+   min-height: 80px;
 }
 
 .tallEmpty {
@@ -362,6 +361,7 @@
 .smallOutlineBtn {
    display: inline-flex;
    align-items: center;
+   justify-content: center;
    gap: 6px;
    padding: 8px 14px;
    background: transparent;
@@ -387,7 +387,6 @@
    font-weight: 500;
    transition: color 0.15s;
 }
-
 .smallLink:hover {
    color: #93c5fd;
 }
@@ -428,14 +427,16 @@
    flex-direction: column;
    align-items: center;
    justify-content: center;
+   text-align: center;
    gap: 12px;
+   width: 100%;
+   min-height: 140px;
 }
 
 .globePlaceholder {
    font-size: 48px;
    opacity: 0.3;
 }
-
 .liveEmptyTitle {
    font-size: 13px;
    color: var(--text-secondary);
@@ -447,14 +448,12 @@
    flex-direction: column;
    gap: 10px;
 }
-
 .liveEvent {
    display: flex;
    gap: 10px;
    padding: 10px 0;
    border-bottom: 1px solid var(--border-hairline);
 }
-
 .liveEvent:last-child {
    border-bottom: none;
 }
@@ -475,14 +474,12 @@
    line-height: 1.45;
    font-weight: 500;
 }
-
 .liveEventMeta {
    font-size: 11px;
    color: var(--text-muted);
    margin-top: 3px;
 }
 
-/* Source list */
 .sourceList {
    list-style: none;
    padding: 0;
@@ -495,6 +492,7 @@
 .sourceList li {
    display: flex;
    justify-content: space-between;
+   align-items: center;
    font-size: 13px;
    color: var(--text-primary);
    padding: 6px 0;
@@ -506,7 +504,6 @@
    border-bottom: none;
 }
 
-/* Users breakdown */
 .breakdownBar {
    height: 8px;
    background: var(--bg-tertiary);
