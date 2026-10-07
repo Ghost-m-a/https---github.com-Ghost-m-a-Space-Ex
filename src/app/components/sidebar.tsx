@@ -20,15 +20,21 @@ import {
    Users,
    Globe,
    Megaphone,
+   Trophy,
    Briefcase,
    Wallet,
    LifeBuoy,
    MoreHorizontal,
    Code2,
    ChevronDown,
+   ChevronRight,
    FileText,
    Receipt,
    Tag,
+   MessageCircle,
+   Shield,
+   Flag,
+   BarChart3,
 } from "lucide-react";
 import { useWorkspace } from "../context/workspace-context";
 import BusinessModal from "./business-modal";
@@ -46,6 +52,7 @@ interface MenuItem {
    badge?: string | number;
    badgeVariant?: "red" | "blue";
    hasSubmenu?: boolean;
+   submenu?: { label: string; href: string }[];
 }
 
 interface Section {
@@ -58,6 +65,7 @@ const Sidebar = () => {
    const [isMounted, setIsMounted] = useState(false);
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [showTooltip, setShowTooltip] = useState(false);
+   const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
    const sidebarRef = useRef<HTMLElement>(null);
    const pathname = usePathname();
    const {
@@ -68,16 +76,12 @@ const Sidebar = () => {
       resetToPersonal,
    } = useWorkspace();
 
-   // Personal settings modal state
    const [settingsOpen, setSettingsOpen] = useState(false);
    const [settingsTab, setSettingsTab] = useState<TabId>("profile");
-
-   // Business settings modal state
    const [businessSettingsOpen, setBusinessSettingsOpen] = useState(false);
    const [businessSettingsTab, setBusinessSettingsTab] =
       useState<BusinessTabId>("general");
 
-   // Load persisted collapse state
    useEffect(() => {
       setIsMounted(true);
       const saved = localStorage.getItem("sidebar-collapsed");
@@ -94,7 +98,6 @@ const Sidebar = () => {
       }
    }, [isCollapsed, isMounted]);
 
-   // Auto-shrink on resize
    useEffect(() => {
       const handleResize = () => {
          if (window.innerWidth < 1024) setIsCollapsed(true);
@@ -103,7 +106,6 @@ const Sidebar = () => {
       return () => window.removeEventListener("resize", handleResize);
    }, []);
 
-   // Click outside → collapse
    useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
          if (isCollapsed) return;
@@ -117,7 +119,6 @@ const Sidebar = () => {
          document.removeEventListener("mousedown", handleClickOutside);
    }, [isCollapsed]);
 
-   // Ctrl/Cmd + B shortcut
    useEffect(() => {
       const handleKeyDown = (e: KeyboardEvent) => {
          if ((e.ctrlKey || e.metaKey) && e.key === "b") {
@@ -131,13 +132,11 @@ const Sidebar = () => {
 
    const toggleSidebar = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
-   // Open personal settings
    const openSettings = (tab: TabId = "profile") => {
       setSettingsTab(tab);
       setSettingsOpen(true);
    };
 
-   // Open business settings
    const openBusinessSettings = (tab: BusinessTabId = "general") => {
       setBusinessSettingsTab(tab);
       setBusinessSettingsOpen(true);
@@ -212,8 +211,9 @@ const Sidebar = () => {
       {
          title: "Grow",
          items: [
+            // ✅ CAMPAIGNS — content rewards (distinct icon from Ads)
             {
-               icon: <Megaphone size={20} />,
+               icon: <Trophy size={20} />,
                label: "Campaigns",
                href: "/business/campaigns",
             },
@@ -275,6 +275,20 @@ const Sidebar = () => {
                href: "/business/promo",
             },
             {
+               icon: <MessageCircle size={20} />,
+               label: "Community",
+               hasSubmenu: true,
+               submenu: [
+                  { label: "Overview", href: "/business/community" },
+                  { label: "Members", href: "/business/community/members" },
+                  {
+                     label: "Moderation",
+                     href: "/business/community/moderation",
+                  },
+                  { label: "Posts", href: "/business/community/posts" },
+               ],
+            },
+            {
                icon: <Users size={20} />,
                label: "Team",
                href: "/business/team",
@@ -309,12 +323,9 @@ const Sidebar = () => {
             className={`${styles.sidebar} ${isCollapsed ? styles.collapsed : ""}`}
             aria-label="Main navigation"
          >
-            {/* TOP HEADER */}
             <div className={styles.topHeader}>
                <button
-                  className={`${styles.profileAvatar} ${
-                     mode === "personal" ? styles.avatarActive : ""
-                  }`}
+                  className={`${styles.profileAvatar} ${mode === "personal" ? styles.avatarActive : ""}`}
                   onClick={resetToPersonal}
                   title="Personal workspace"
                   aria-label="Switch to personal"
@@ -352,7 +363,6 @@ const Sidebar = () => {
                </button>
             </div>
 
-            {/* SECTIONS */}
             <nav className={styles.navMenu}>
                {sections.map((section, sIdx) => (
                   <div key={section.title} className={styles.sectionGroup}>
@@ -368,7 +378,93 @@ const Sidebar = () => {
                         const isActive = item.href
                            ? pathname === item.href
                            : false;
+                        const hasSub = item.hasSubmenu && item.submenu;
+                        const isSubOpen = openSubmenu === item.label;
 
+                        // Submenu items
+                        if (hasSub) {
+                           return (
+                              <div key={item.label}>
+                                 <button
+                                    type="button"
+                                    className={styles.navItem}
+                                    onClick={() => {
+                                       if (isCollapsed) return;
+                                       setOpenSubmenu(
+                                          isSubOpen ? null : item.label,
+                                       );
+                                    }}
+                                    style={{
+                                       background: "transparent",
+                                       border: "none",
+                                       cursor: "pointer",
+                                       textAlign: "left",
+                                       width: "100%",
+                                    }}
+                                 >
+                                    <div className={styles.navIconWrapper}>
+                                       {item.icon}
+                                    </div>
+                                    {!isCollapsed && (
+                                       <>
+                                          <span className={styles.label}>
+                                             {item.label}
+                                          </span>
+                                          <span
+                                             style={{
+                                                marginLeft: "auto",
+                                                color: "var(--text-muted)",
+                                                display: "flex",
+                                             }}
+                                          >
+                                             {isSubOpen ? (
+                                                <ChevronDown size={14} />
+                                             ) : (
+                                                <ChevronRight size={14} />
+                                             )}
+                                          </span>
+                                       </>
+                                    )}
+                                    {isCollapsed && (
+                                       <span className={styles.tooltip}>
+                                          {item.label}
+                                       </span>
+                                    )}
+                                 </button>
+                                 {!isCollapsed && isSubOpen && (
+                                    <div
+                                       style={{
+                                          paddingLeft: 32,
+                                          display: "flex",
+                                          flexDirection: "column",
+                                          gap: 2,
+                                          marginTop: 2,
+                                       }}
+                                    >
+                                       {item.submenu!.map((sub) => (
+                                          <Link
+                                             key={sub.href}
+                                             href={sub.href}
+                                             className={styles.navItem}
+                                             style={{
+                                                fontSize: 13,
+                                                padding: "6px 12px",
+                                                color:
+                                                   pathname === sub.href
+                                                      ? "var(--text-primary)"
+                                                      : "var(--text-secondary)",
+                                             }}
+                                          >
+                                             {sub.label}
+                                          </Link>
+                                       ))}
+                                    </div>
+                                 )}
+                              </div>
+                           );
+                        }
+
+                        // Regular items
                         if (item.onClick) {
                            return (
                               <button
@@ -403,9 +499,7 @@ const Sidebar = () => {
                            <Link
                               key={item.label}
                               href={item.href || "#"}
-                              className={`${styles.navItem} ${
-                                 isActive ? styles.active : ""
-                              }`}
+                              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
                               aria-current={isActive ? "page" : undefined}
                            >
                               <div className={styles.navIconWrapper}>
@@ -430,12 +524,6 @@ const Sidebar = () => {
                                              {item.badge}
                                           </span>
                                        )}
-                                    {item.hasSubmenu && (
-                                       <ChevronDown
-                                          size={16}
-                                          className={styles.submenuChevron}
-                                       />
-                                    )}
                                  </>
                               )}
                               {isCollapsed && (
@@ -450,7 +538,6 @@ const Sidebar = () => {
                ))}
             </nav>
 
-            {/* BOTTOM SECTION */}
             <div className={styles.bottomSection}>
                <Link href="/developer" className={styles.navItem}>
                   <div className={styles.navIconWrapper}>
@@ -468,11 +555,8 @@ const Sidebar = () => {
                   type="button"
                   className={styles.navItem}
                   onClick={() => {
-                     if (mode === "business") {
-                        openBusinessSettings("general");
-                     } else {
-                        openSettings("profile");
-                     }
+                     if (mode === "business") openBusinessSettings("general");
+                     else openSettings("profile");
                   }}
                   style={{
                      background: "transparent",
@@ -509,20 +593,17 @@ const Sidebar = () => {
             </div>
          </aside>
 
-         {/* Business Creation Modal */}
          <BusinessModal
             isOpen={isModalOpen}
             onClose={() => setIsModalOpen(false)}
          />
 
-         {/* Personal Settings Modal */}
          <SettingsModal
             isOpen={settingsOpen}
             onClose={() => setSettingsOpen(false)}
             initialTab={settingsTab}
          />
 
-         {/* Business Settings Modal */}
          <BusinessSettingsModal
             isOpen={businessSettingsOpen}
             onClose={() => setBusinessSettingsOpen(false)}
