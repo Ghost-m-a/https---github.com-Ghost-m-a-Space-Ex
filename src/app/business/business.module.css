@@ -8,9 +8,9 @@
    display: flex;
    flex-direction: column;
    gap: 24px;
-   max-width: 1200px;
+   max-width: 1200px; /* ✅ keep this */
    width: 100%;
-   animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+   margin: 0 auto; /* ✅ ADD THIS — redundant but harmless */
 }
 
 @keyframes fadeInUp {
