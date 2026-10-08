@@ -19,7 +19,6 @@ import {
    CreditCard,
    Users,
    Globe,
-   Megaphone,
    Trophy,
    Briefcase,
    Wallet,
@@ -211,16 +210,10 @@ const Sidebar = () => {
       {
          title: "Grow",
          items: [
-            // ✅ CAMPAIGNS — content rewards (distinct icon from Ads)
             {
                icon: <Trophy size={20} />,
                label: "Campaigns",
                href: "/business/campaigns",
-            },
-            {
-               icon: <Megaphone size={20} />,
-               label: "Ads",
-               href: "/business/ads",
             },
             {
                icon: <Briefcase size={20} />,
@@ -255,11 +248,6 @@ const Sidebar = () => {
          title: "More",
          items: [
             {
-               icon: <FileText size={20} />,
-               label: "Reports",
-               href: "/business/reports/balance",
-            },
-            {
                icon: <Receipt size={20} />,
                label: "Checkout links",
                href: "/business/checkout-links",
@@ -273,20 +261,6 @@ const Sidebar = () => {
                icon: <Tag size={20} />,
                label: "Promo codes",
                href: "/business/promo",
-            },
-            {
-               icon: <MessageCircle size={20} />,
-               label: "Community",
-               hasSubmenu: true,
-               submenu: [
-                  { label: "Overview", href: "/business/community" },
-                  { label: "Members", href: "/business/community/members" },
-                  {
-                     label: "Moderation",
-                     href: "/business/community/moderation",
-                  },
-                  { label: "Posts", href: "/business/community/posts" },
-               ],
             },
             {
                icon: <Users size={20} />,

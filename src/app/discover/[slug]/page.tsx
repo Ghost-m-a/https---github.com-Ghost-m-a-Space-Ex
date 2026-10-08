@@ -62,14 +62,20 @@ export default function CampaignDetailPage() {
    const handleJoin = async () => {
       setJoining(true);
       try {
-         const res = await fetch(`/api/discover/campaigns/${slug}/join`, {
+         const res = await fetch(`/api/campaigns/${slug}/join`, {
             method: "POST",
          });
          if (res.status === 401) {
             router.push("/login");
             return;
          }
-         await load();
+         const data = await res.json();
+         if (res.ok) {
+            // Reload campaign to show updated state
+            await load();
+            // Optional: navigate to user's home to see it listed
+            // router.push("/");
+         }
       } finally {
          setJoining(false);
       }

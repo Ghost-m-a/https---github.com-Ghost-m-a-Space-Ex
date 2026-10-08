@@ -66,7 +66,7 @@ export async function GET(req: NextRequest) {
          })),
       });
    } catch (err) {
-      console.error("[Discover campaigns GET]", err);
+      console.error("[Campaigns GET]", err);
       return NextResponse.json({ campaigns: [] });
    }
 }

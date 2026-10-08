@@ -1,20 +1,19 @@
 import { NextResponse, NextRequest } from "next/server";
 import { connectDB } from "@/app/lib/mongodb";
 import Business from "@/app/lib/models/Business";
-import Transaction from "@/app/lib/models/Transaction";
-import Website from "@/app/lib/models/Website";
-import LiveEvent from "@/app/lib/models/LiveEvent";
+import Product from "@/app/lib/models/Product";
+import Payment from "@/app/lib/models/Payment";
+import Campaign from "@/app/lib/models/Campaign";
+import CampaignContribution from "@/app/lib/models/CampaignContribution";
+import Customer from "@/app/lib/models/Customer";
 import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
-
-async function requireUser(req: NextRequest) {
-   const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-   if (!token) return null;
-   return await verifySessionToken(token);
-}
 
 export async function GET(req: NextRequest) {
    try {
-      const session = await requireUser(req);
+      const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
+      if (!token)
+         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      const session = await verifySessionToken(token);
       if (!session)
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -34,252 +33,209 @@ export async function GET(req: NextRequest) {
             .sort({ createdAt: 1 })
             .lean();
       }
-
-      if (!business) {
+      if (!business)
          return NextResponse.json(
             { error: "No business found" },
             { status: 404 },
          );
-      }
 
       const bizId = business._id;
 
-      // ---- Time range ----
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      // ─── PAYMENTS ───
+      const payments = await Payment.find({ businessId: bizId }).lean();
+      const succeeded = payments.filter((p) => p.status === "succeeded");
+      const failed = payments.filter((p) => p.status === "failed");
+      const refunded = payments.filter((p) => p.refunded);
 
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
+      const grossRevenue = succeeded.reduce((s, p) => s + p.amount, 0);
+      const refundedAmount = refunded.reduce((s, p) => s + p.amount, 0);
+      const netRevenue = grossRevenue - refundedAmount;
+      const totalPayments = succeeded.length;
+      const avgOrderValue =
+         totalPayments > 0 ? grossRevenue / totalPayments : 0;
 
-      // ---- Today's transactions ----
-      const todayTx = await Transaction.find({
-         businessId: bizId,
-         createdAt: { $gte: today },
-         status: "completed",
-      }).lean();
-
-      const yesterdayTx = await Transaction.find({
-         businessId: bizId,
-         createdAt: { $gte: yesterday, $lt: today },
-         status: "completed",
-      }).lean();
-
-      // ---- Profit calculation ----
-      const calcProfit = (txs: any[]) => {
-         let moneyIn = 0;
-         let moneyOut = 0;
-         txs.forEach((t) => {
-            if (["deposit", "payment"].includes(t.kind)) moneyIn += t.amount;
-            if (
-               [
-                  "send",
-                  "refund",
-                  "withdrawal",
-                  "card_spend",
-                  "ad_spend",
-               ].includes(t.kind)
-            ) {
-               moneyOut += t.amount;
-            }
-         });
-         return { moneyIn, moneyOut, profit: moneyIn - moneyOut };
-      };
-
-      const todayProfit = calcProfit(todayTx);
-      const yesterdayProfit = calcProfit(yesterdayTx);
-
-      // ---- Hourly chart for today (24 hours) ----
-      const hourlyProfit: {
-         hour: number;
-         profit: number;
-         moneyIn: number;
-         moneyOut: number;
-      }[] = [];
-      for (let h = 0; h < 24; h++) {
-         const hourStart = new Date(today);
-         hourStart.setHours(h, 0, 0, 0);
-         const hourEnd = new Date(today);
-         hourEnd.setHours(h, 59, 59, 999);
-
-         const hourTx = todayTx.filter((t) => {
-            const created = new Date(t.createdAt);
-            return created >= hourStart && created <= hourEnd;
-         });
-
-         const { moneyIn, moneyOut, profit } = calcProfit(hourTx);
-         hourlyProfit.push({ hour: h, profit, moneyIn, moneyOut });
-      }
-
-      // ---- Cashflow breakdown ----
-      const paymentsCount = todayTx.filter((t) => t.kind === "payment").length;
-      const cardSpendCount = todayTx.filter(
-         (t) => t.kind === "card_spend",
-      ).length;
-      const adsCount = todayTx.filter((t) => t.kind === "ad_spend").length;
-
-      // ---- Metrics ----
-      const adSpend = todayTx
-         .filter((t) => t.kind === "ad_spend")
-         .reduce((s, t) => s + t.amount, 0);
-
-      const successfulPayments = todayTx.filter(
-         (t) => t.kind === "payment",
-      ).length;
-
-      const grossTransactionValue = todayTx
-         .filter((t) => t.kind === "payment")
-         .reduce((s, t) => s + t.amount, 0);
-
-      const avgRevenuePerCustomer =
-         successfulPayments > 0
-            ? grossTransactionValue / successfulPayments
-            : 0;
-
-      const refundedToday = todayTx
-         .filter((t) => t.kind === "refund")
-         .reduce((s, t) => s + t.amount, 0);
-
-      // ---- Visitors from websites ----
-      const websites = await Website.find({ businessId: bizId }).lean();
-      const totalVisitors = websites.reduce((s, w) => s + w.visits, 0);
-      const totalPageViews = websites.reduce((s, w) => s + w.pageViews, 0);
-      const totalCheckouts = websites.reduce((s, w) => s + w.checkouts, 0);
-
-      // ---- Top sources / pages from websites ----
-      const sourceMap = new Map<string, number>();
-      const pageMap = new Map<string, number>();
-
-      websites.forEach((w) => {
-         (w.topSources || []).forEach((s: any) => {
-            sourceMap.set(s.source, (sourceMap.get(s.source) || 0) + s.visits);
-         });
-         (w.topPages || []).forEach((p: any) => {
-            pageMap.set(p.path, (pageMap.get(p.path) || 0) + p.visits);
-         });
-      });
-
-      const topSources = Array.from(sourceMap.entries())
-         .map(([source, visits]) => ({ source, visits }))
-         .sort((a, b) => b.visits - a.visits)
+      // ─── PRODUCTS ───
+      const products = await Product.find({ businessId: bizId }).lean();
+      const activeProducts = products.filter((p) => p.visibility === "visible");
+      const topProducts = [...products]
+         .sort(
+            (a, b) =>
+               (b.stats?.allTimeRevenue || 0) - (a.stats?.allTimeRevenue || 0),
+         )
          .slice(0, 5);
 
-      const topPages = Array.from(pageMap.entries())
-         .map(([path, visits]) => ({ path, visits }))
-         .sort((a, b) => b.visits - a.visits)
-         .slice(0, 5);
+      const totalProductRevenue = products.reduce(
+         (s, p) => s + (p.stats?.allTimeRevenue || 0),
+         0,
+      );
+      const totalActiveUsers = products.reduce(
+         (s, p) => s + (p.stats?.activeUsers || 0),
+         0,
+      );
 
-      // ---- Traffic by time (hourly visitors) ----
-      const trafficByHour = Array.from({ length: 24 }, (_, i) => ({
-         hour: i,
-         visitors: 0,
-      }));
+      // ─── CAMPAIGNS ───
+      const campaigns = await Campaign.find({ businessId: bizId }).lean();
+      const activeCampaigns = campaigns.filter((c) => c.status === "active");
+      const totalCampaignBudget = campaigns.reduce((s, c) => s + c.budget, 0);
+      const totalCampaignSpent = campaigns.reduce(
+         (s, c) => s + c.budgetSpent,
+         0,
+      );
+      const totalCampaignViews = campaigns.reduce(
+         (s, c) => s + c.totalViews,
+         0,
+      );
+      const totalCampaignCreators = campaigns.reduce(
+         (s, c) => s + c.joinedUsers,
+         0,
+      );
 
-      // ---- Live events ----
-      const liveEvents = await LiveEvent.find({ businessId: bizId })
-         .sort({ createdAt: -1 })
-         .limit(20)
+      const topCampaigns = [...campaigns]
+         .sort((a, b) => b.budgetSpent - a.budgetSpent)
+         .slice(0, 5)
+         .map((c) => ({
+            id: c._id.toString(),
+            slug: c.slug,
+            title: c.title,
+            budget: c.budget,
+            budgetSpent: c.budgetSpent,
+            totalViews: c.totalViews,
+            joinedUsers: c.joinedUsers,
+            cpm: c.cpm,
+            status: c.status,
+         }));
+
+      // Top contributors across campaigns
+      const campaignIds = campaigns.map((c) => c._id);
+      const contributors = await CampaignContribution.find({
+         campaignId: { $in: campaignIds },
+      })
+         .sort({ totalEarned: -1 })
+         .limit(10)
          .lean();
 
-      // ---- Rate calculations ----
-      const refundRate =
-         grossTransactionValue > 0
-            ? (refundedToday / grossTransactionValue) * 100
-            : 0;
-      const disputeRate = 0;
+      const topCreators = contributors.map((c) => ({
+         id: c._id.toString(),
+         name: c.userName,
+         avatar: c.userAvatar,
+         views: c.totalViews,
+         earned: c.totalEarned,
+      }));
 
-      // ---- Members ----
-      const paidActiveMembers = 0; // placeholder for subscription system
-      const churnRate = 0;
-      const churnedRevenue = 0;
+      // ─── CUSTOMERS ───
+      const customers = await Customer.find({ businessId: bizId }).lean();
+      const joinedCustomers = customers.filter((c) => c.status === "joined");
+      const totalCustomerSpend = customers.reduce(
+         (s, c) => s + c.totalSpend,
+         0,
+      );
 
-      const mrr = 0; // monthly recurring revenue placeholder
+      // ─── REVENUE CHART (last 30 days) ───
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const recentPayments = await Payment.find({
+         businessId: bizId,
+         status: "succeeded",
+         createdAt: { $gte: thirtyDaysAgo },
+      }).lean();
+
+      const chartData: { date: string; revenue: number; count: number }[] = [];
+      for (let i = 29; i >= 0; i--) {
+         const day = new Date();
+         day.setDate(day.getDate() - i);
+         const dayStart = new Date(day.setHours(0, 0, 0, 0));
+         const dayEnd = new Date(day.setHours(23, 59, 59, 999));
+
+         const dayPayments = recentPayments.filter((p) => {
+            const d = new Date(p.createdAt);
+            return d >= dayStart && d <= dayEnd;
+         });
+
+         chartData.push({
+            date: day.toISOString().split("T")[0],
+            revenue: dayPayments.reduce((s, p) => s + p.amount, 0),
+            count: dayPayments.length,
+         });
+      }
+
+      // ─── CUSTOMER GROWTH (30 days) ───
+      const customerChart: { date: string; count: number }[] = [];
+      let running = 0;
+      for (let i = 29; i >= 0; i--) {
+         const day = new Date();
+         day.setDate(day.getDate() - i);
+         const dayEnd = new Date(day.setHours(23, 59, 59, 999));
+
+         const joinedBefore = customers.filter(
+            (c) => new Date(c.joinedAt) <= dayEnd,
+         ).length;
+
+         customerChart.push({
+            date: day.toISOString().split("T")[0],
+            count: joinedBefore,
+         });
+      }
 
       return NextResponse.json({
          business: {
             id: bizId.toString(),
             name: business.name,
-            initial: business.initial,
+            balance: business.balance || 0,
          },
-         date: today.toISOString().split("T")[0],
-
-         profit: {
-            today: todayProfit.profit,
-            yesterday: yesterdayProfit.profit,
-            moneyIn: todayProfit.moneyIn,
-            moneyOut: todayProfit.moneyOut,
-            hourly: hourlyProfit,
-         },
-
-         cashflow: {
-            payments: { count: paymentsCount, amount: todayProfit.moneyIn },
-            cardSpend: {
-               count: cardSpendCount,
-               amount: todayTx
-                  .filter((t) => t.kind === "card_spend")
-                  .reduce((s, t) => s + t.amount, 0),
-            },
-            ads: {
-               count: adsCount,
-               amount: adSpend,
-            },
-         },
-
-         metrics: {
-            adSpend,
-            visitors: totalVisitors,
-            successfulPayments,
-            profitMargin:
-               todayProfit.moneyIn > 0
-                  ? (todayProfit.profit / todayProfit.moneyIn) * 100
+         revenue: {
+            gross: grossRevenue,
+            net: netRevenue,
+            refunded: refundedAmount,
+            avgOrderValue,
+            totalTransactions: payments.length,
+            successfulTransactions: succeeded.length,
+            failedTransactions: failed.length,
+            failedRate:
+               payments.length > 0
+                  ? (failed.length / payments.length) * 100
                   : 0,
-            grossTransactionValue,
-            avgRevenuePerCustomer,
-            totalRefunded: refundedToday,
-            newCustomers: successfulPayments,
-            refundRate,
-            disputeRate,
-            paidActiveMembers,
-            churnRate,
-            churnedRevenue,
-            mrr,
-            grossPaymentRevenue: grossTransactionValue,
+            chart: chartData,
          },
-
-         traffic: {
-            visitors: totalVisitors,
-            pageViews: totalPageViews,
-            checkouts: totalCheckouts,
-            byHour: trafficByHour,
-            topSources,
-            topPages,
-            abandonedCheckouts: 0,
+         products: {
+            total: products.length,
+            active: activeProducts.length,
+            totalRevenue: totalProductRevenue,
+            totalActiveUsers,
+            top: topProducts.map((p) => ({
+               id: p._id.toString(),
+               name: p.name,
+               slug: p.slug,
+               revenue: p.stats?.allTimeRevenue || 0,
+               activeUsers: p.stats?.activeUsers || 0,
+               visibility: p.visibility,
+            })),
          },
-
-         usersBreakdown: {
-            joined: successfulPayments,
-            total: successfulPayments,
+         campaigns: {
+            total: campaigns.length,
+            active: activeCampaigns.length,
+            totalBudget: totalCampaignBudget,
+            totalSpent: totalCampaignSpent,
+            totalViews: totalCampaignViews,
+            totalCreators: totalCampaignCreators,
+            avgCpm:
+               totalCampaignViews > 0
+                  ? (totalCampaignSpent / totalCampaignViews) * 1000
+                  : 0,
+            top: topCampaigns,
          },
-
-         liveEvents: liveEvents.map((e) => ({
-            id: e._id.toString(),
-            type: e.type,
-            country: e.country,
-            city: e.city,
-            message: e.message,
-            amount: e.amount,
-            createdAt: e.createdAt,
-         })),
-
-         websites: websites.map((w) => ({
-            id: w._id.toString(),
-            domain: w.domain,
-            name: w.name,
-            status: w.status,
-            visits: w.visits,
-         })),
+         customers: {
+            total: customers.length,
+            joined: joinedCustomers.length,
+            totalSpend: totalCustomerSpend,
+            growth: customerChart,
+         },
+         creators: {
+            top: topCreators,
+         },
       });
    } catch (err) {
-      console.error("[Business Analytics GET]", err);
+      console.error("[Analytics GET]", err);
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }
 }

@@ -1,8 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Pencil, Plus, ArrowRight } from "lucide-react";
 import { useWorkspace } from "../../context/workspace-context";
+import {
+   TrendingUp,
+   TrendingDown,
+   Users,
+   Package,
+   Trophy,
+   Eye,
+   DollarSign,
+} from "lucide-react";
 import styles from "./analytics.module.css";
 
 export default function AnalyticsPage() {
@@ -11,11 +19,9 @@ export default function AnalyticsPage() {
    const [loading, setLoading] = useState(true);
 
    useEffect(() => {
-      const url = activeBusiness?.id
-         ? `/api/business/analytics?businessId=${activeBusiness.id}`
-         : `/api/business/analytics`;
+      if (!activeBusiness?.id) return;
       setLoading(true);
-      fetch(url)
+      fetch(`/api/business/analytics?businessId=${activeBusiness.id}`)
          .then((r) => r.json())
          .then(setData)
          .finally(() => setLoading(false));
@@ -23,196 +29,211 @@ export default function AnalyticsPage() {
 
    if (loading)
       return <div className={styles.loading}>Loading analytics...</div>;
-   if (!data) return <div className={styles.loading}>No business found.</div>;
+   if (!data) return <div className={styles.loading}>No business data</div>;
 
-   const m = data.metrics;
-   const p = data.profit;
+   const fmtMoney = (n: number) =>
+      `$${(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-   // Profit chart points
-   const chartW = 800;
-   const chartH = 200;
-   const maxVal = Math.max(1, ...p.hourly.map((h: any) => Math.abs(h.profit)));
-   const mid = chartH / 2;
-   const profitPoints = p.hourly.map((h: any, i: number) => {
-      const x = (i / 23) * chartW;
-      const y = mid - (h.profit / maxVal) * (mid - 20);
+   const maxRevenue = Math.max(
+      1,
+      ...data.revenue.chart.map((d: any) => d.revenue),
+   );
+   const revPoints = data.revenue.chart.map((d: any, i: number) => {
+      const x = (i / (data.revenue.chart.length - 1)) * 800;
+      const y = 200 - (d.revenue / maxRevenue) * 180;
       return `${x},${y}`;
    });
-   const profitPath = `M ${profitPoints.join(" L ")}`;
+   const revPath = revPoints.length > 0 ? `M ${revPoints.join(" L ")}` : "";
 
    return (
       <div className={styles.page}>
-         {/* Header */}
          <div className={styles.header}>
-            <div className={styles.headerLeft}>
-               <button className={styles.dateBtn}>Today ▾</button>
-               <span className={styles.dateText}>
-                  📅{" "}
-                  {new Date(data.date).toLocaleDateString("en-US", {
-                     month: "short",
-                     day: "numeric",
-                     year: "numeric",
-                  })}
+            <h1 className={styles.title}>Analytics</h1>
+         </div>
+
+         {/* Primary KPIs */}
+         <div className={styles.kpiGrid}>
+            <div className={styles.kpiCard}>
+               <div className={styles.kpiIconGreen}>
+                  <DollarSign size={18} />
+               </div>
+               <div className={styles.kpiLabel}>Gross Revenue</div>
+               <div className={styles.kpiValue}>
+                  {fmtMoney(data.revenue.gross)}
+               </div>
+            </div>
+            <div className={styles.kpiCard}>
+               <div className={styles.kpiIconBlue}>
+                  <TrendingUp size={18} />
+               </div>
+               <div className={styles.kpiLabel}>Net Revenue</div>
+               <div className={styles.kpiValue}>
+                  {fmtMoney(data.revenue.net)}
+               </div>
+            </div>
+            <div className={styles.kpiCard}>
+               <div className={styles.kpiIconPurple}>
+                  <Package size={18} />
+               </div>
+               <div className={styles.kpiLabel}>Avg Order Value</div>
+               <div className={styles.kpiValue}>
+                  {fmtMoney(data.revenue.avgOrderValue)}
+               </div>
+            </div>
+            <div className={styles.kpiCard}>
+               <div className={styles.kpiIconRed}>
+                  <TrendingDown size={18} />
+               </div>
+               <div className={styles.kpiLabel}>Failed Rate</div>
+               <div className={styles.kpiValue}>
+                  {data.revenue.failedRate.toFixed(1)}%
+               </div>
+            </div>
+         </div>
+
+         {/* Revenue Chart */}
+         <div className={styles.bigCard}>
+            <div className={styles.cardHeaderRow}>
+               <div className={styles.cardTitle}>Revenue · Last 30 days</div>
+               <div className={styles.cardValue}>
+                  {fmtMoney(data.revenue.gross)}
+               </div>
+            </div>
+            <svg
+               viewBox="0 0 800 200"
+               className={styles.chart}
+               preserveAspectRatio="none"
+            >
+               <defs>
+                  <linearGradient id="revGrad" x1="0" y1="0" x2="0" y2="1">
+                     <stop offset="0%" stopColor="rgba(59, 130, 246, 0.3)" />
+                     <stop offset="100%" stopColor="rgba(59, 130, 246, 0)" />
+                  </linearGradient>
+               </defs>
+               <path
+                  d={`${revPath} L 800,200 L 0,200 Z`}
+                  fill="url(#revGrad)"
+               />
+               <path d={revPath} fill="none" stroke="#3b82f6" strokeWidth="2" />
+            </svg>
+            <div className={styles.chartLegend}>
+               <span>
+                  <span className={styles.legendDotGreen} /> Revenue
                </span>
             </div>
-            <button className={styles.customizeBtn}>
-               <Pencil size={14} /> Customize
-            </button>
          </div>
 
-         {/* Top row: Profit + Cashflow */}
-         <div className={styles.topRow}>
-            <div className={styles.profitCard}>
-               <div className={styles.cardLabel}>Profit</div>
-               <div className={styles.cardValue}>${p.today.toFixed(2)}</div>
-               <svg
-                  viewBox={`0 0 ${chartW} ${chartH}`}
-                  className={styles.profitChart}
-                  preserveAspectRatio="none"
-               >
-                  <defs>
-                     <linearGradient
-                        id="profitGrad"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                     >
-                        <stop offset="0%" stopColor="rgba(16, 185, 129, 0.2)" />
-                        <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
-                     </linearGradient>
-                  </defs>
-                  <line
-                     x1="0"
-                     y1={mid}
-                     x2={chartW}
-                     y2={mid}
-                     stroke="var(--border-color)"
-                     strokeDasharray="4 4"
-                  />
-                  <path
-                     d={profitPath}
-                     fill="none"
-                     stroke="#10b981"
-                     strokeWidth="2"
-                  />
-               </svg>
-               <div className={styles.chartLegend}>
-                  <span>
-                     <span className={styles.legendDotGreen} /> Money in $
-                     {p.moneyIn.toFixed(2)}
-                  </span>
-                  <span>
-                     <span className={styles.legendDotRed} /> Money out $
-                     {p.moneyOut.toFixed(2)}
-                  </span>
-               </div>
-            </div>
-
-            <div className={styles.cashflowCard}>
-               <div className={styles.cardLabel}>Cashflow</div>
-
-               <div className={styles.cashflowRow}>
-                  <div>
-                     <div className={styles.cfLabel}>Payments</div>
-                     <div className={styles.cfValue}>
-                        {data.cashflow.payments.count} payments
-                     </div>
-                  </div>
-                  <button className={styles.cfBtn}>Accept a payment</button>
-               </div>
-
-               <div className={styles.cashflowRow}>
-                  <div>
-                     <div className={styles.cfLabel}>Card spend</div>
-                     <div className={styles.cfValue}>
-                        {data.cashflow.cardSpend.count} transactions
-                     </div>
-                  </div>
-                  <button className={styles.cfBtn}>Get a card</button>
-               </div>
-
-               <div className={styles.cashflowRow}>
-                  <div>
-                     <div className={styles.cfLabel}>Ads</div>
-                     <div className={styles.cfValue}>
-                        {data.cashflow.ads.count} campaigns
-                     </div>
-                  </div>
-                  <button className={styles.cfBtn}>Run ads</button>
-               </div>
-
-               <a href="#" className={styles.cashflowFooter}>
-                  View cashflow report <ArrowRight size={14} />
-               </a>
-            </div>
-         </div>
-
-         {/* Metrics row */}
-         <div className={styles.metricsRow}>
-            <div className={styles.metric}>
-               <div className={styles.metricLabel}>Ad spend</div>
-               <div className={styles.metricValue}>${m.adSpend.toFixed(2)}</div>
-            </div>
-            <div className={styles.metric}>
-               <div className={styles.metricLabel}>Visitors</div>
-               <div className={styles.metricValue}>{m.visitors || "--"}</div>
-            </div>
-            <div className={styles.metric}>
-               <div className={styles.metricLabel}>Successful payments</div>
-               <div className={styles.metricValue}>{m.successfulPayments}</div>
-            </div>
-            <div className={styles.metric}>
-               <div className={styles.metricLabel}>Profit margin</div>
-               <div className={styles.metricValue}>
-                  {m.profitMargin > 0 ? `${m.profitMargin.toFixed(1)}%` : "--"}
-               </div>
-            </div>
-         </div>
-
-         {/* Gross transaction value + Live events */}
-         <div className={styles.gridRow}>
-            <div className={styles.bigCard}>
+         {/* Secondary KPIs — Campaigns + Customers */}
+         <div className={styles.gridRow3}>
+            <div className={styles.smallCard}>
                <div className={styles.cardHeaderRow}>
-                  <div className={styles.cardLabel}>
-                     Gross transaction value
-                  </div>
-                  <button className={styles.dropdownSmall}>Per period ▾</button>
+                  <div className={styles.cardLabel}>Campaigns</div>
+                  <Trophy size={16} />
+               </div>
+               <div className={styles.cardValue}>{data.campaigns.total}</div>
+               <div className={styles.statRow}>
+                  <span>Active</span>
+                  <strong>{data.campaigns.active}</strong>
+               </div>
+               <div className={styles.statRow}>
+                  <span>Total budget</span>
+                  <strong>{fmtMoney(data.campaigns.totalBudget)}</strong>
+               </div>
+               <div className={styles.statRow}>
+                  <span>Total spent</span>
+                  <strong>{fmtMoney(data.campaigns.totalSpent)}</strong>
+               </div>
+            </div>
+
+            <div className={styles.smallCard}>
+               <div className={styles.cardHeaderRow}>
+                  <div className={styles.cardLabel}>Content Creators</div>
+                  <Users size={16} />
                </div>
                <div className={styles.cardValue}>
-                  ${m.grossTransactionValue.toFixed(2)}
+                  {data.campaigns.totalCreators}
                </div>
-               <div className={styles.cardSub}>Today</div>
-               <div className={styles.emptyChart}>
-                  {m.grossTransactionValue === 0 && "No data available"}
+               <div className={styles.statRow}>
+                  <span>Total views</span>
+                  <strong>{data.campaigns.totalViews.toLocaleString()}</strong>
+               </div>
+               <div className={styles.statRow}>
+                  <span>Avg CPM</span>
+                  <strong>${data.campaigns.avgCpm.toFixed(2)}</strong>
                </div>
             </div>
 
-            <div className={styles.bigCard}>
-               <div className={styles.liveEventsHeader}>
-                  <span className={styles.liveDot} />
-                  <span>Live events</span>
+            <div className={styles.smallCard}>
+               <div className={styles.cardHeaderRow}>
+                  <div className={styles.cardLabel}>Customers</div>
+                  <Users size={16} />
                </div>
-               {data.liveEvents.length === 0 ? (
-                  <div className={styles.liveEmpty}>
-                     <div className={styles.globePlaceholder}>🌍</div>
-                     <div className={styles.liveEmptyTitle}>
-                        No website connected
-                     </div>
-                     <button className={styles.smallOutlineBtn}>
-                        Add website
-                     </button>
-                  </div>
+               <div className={styles.cardValue}>{data.customers.total}</div>
+               <div className={styles.statRow}>
+                  <span>Joined</span>
+                  <strong>{data.customers.joined}</strong>
+               </div>
+               <div className={styles.statRow}>
+                  <span>Total spend</span>
+                  <strong>{fmtMoney(data.customers.totalSpend)}</strong>
+               </div>
+            </div>
+         </div>
+
+         {/* Top Products */}
+         <div className={styles.gridRow2}>
+            <div className={styles.bigCard}>
+               <div className={styles.cardTitle}>Top Products</div>
+               {data.products.top.length === 0 ? (
+                  <div className={styles.smallEmpty}>No products yet</div>
                ) : (
-                  <div className={styles.liveList}>
-                     {data.liveEvents.slice(0, 5).map((e: any) => (
-                        <div key={e.id} className={styles.liveEvent}>
-                           <div className={styles.liveEventDot} />
-                           <div className={styles.liveEventText}>
-                              <div>{e.message}</div>
-                              <div className={styles.liveEventMeta}>
-                                 {e.city}, {e.country}
+                  <div className={styles.leaderboardList}>
+                     {data.products.top.map((p: any, i: number) => (
+                        <div key={p.id} className={styles.leaderboardRow}>
+                           <div className={styles.leaderboardRank}>
+                              #{i + 1}
+                           </div>
+                           <div className={styles.leaderboardInfo}>
+                              <div className={styles.leaderboardName}>
+                                 {p.name}
                               </div>
+                              <div className={styles.leaderboardMeta}>
+                                 {p.activeUsers.toLocaleString()} active users ·{" "}
+                                 {p.visibility}
+                              </div>
+                           </div>
+                           <div className={styles.leaderboardValue}>
+                              {fmtMoney(p.revenue)}
+                           </div>
+                        </div>
+                     ))}
+                  </div>
+               )}
+            </div>
+
+            {/* Top Campaigns */}
+            <div className={styles.bigCard}>
+               <div className={styles.cardTitle}>Top Campaigns</div>
+               {data.campaigns.top.length === 0 ? (
+                  <div className={styles.smallEmpty}>No campaigns yet</div>
+               ) : (
+                  <div className={styles.leaderboardList}>
+                     {data.campaigns.top.map((c: any, i: number) => (
+                        <div key={c.id} className={styles.leaderboardRow}>
+                           <div className={styles.leaderboardRank}>
+                              #{i + 1}
+                           </div>
+                           <div className={styles.leaderboardInfo}>
+                              <div className={styles.leaderboardName}>
+                                 {c.title}
+                              </div>
+                              <div className={styles.leaderboardMeta}>
+                                 {c.joinedUsers} creators ·{" "}
+                                 {c.totalViews.toLocaleString()} views
+                              </div>
+                           </div>
+                           <div className={styles.leaderboardValue}>
+                              {fmtMoney(c.budgetSpent)}
                            </div>
                         </div>
                      ))}
@@ -221,183 +242,32 @@ export default function AnalyticsPage() {
             </div>
          </div>
 
-         {/* Top sources + Traffic over time + Avg revenue */}
-         <div className={styles.gridRow3}>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Top sources</div>
-               {data.traffic.topSources.length === 0 ? (
-                  <div className={styles.smallEmpty}>
-                     <button className={styles.smallOutlineBtn}>
-                        <Plus size={14} /> Add website
-                     </button>
-                  </div>
-               ) : (
-                  <ul className={styles.sourceList}>
-                     {data.traffic.topSources.map((s: any) => (
-                        <li key={s.source}>
-                           <span>{s.source}</span>
-                           <span>{s.visits}</span>
-                        </li>
-                     ))}
-                  </ul>
-               )}
-            </div>
-
-            <div className={styles.smallCard}>
-               <div className={styles.cardHeaderRow}>
-                  <div className={styles.cardLabel}>Traffic over time</div>
+         {/* Top Creators */}
+         <div className={styles.bigCard}>
+            <div className={styles.cardTitle}>Top Earning Creators</div>
+            {data.creators.top.length === 0 ? (
+               <div className={styles.smallEmpty}>No contributors yet</div>
+            ) : (
+               <div className={styles.leaderboardList}>
+                  {data.creators.top.map((c: any, i: number) => (
+                     <div key={c.id} className={styles.leaderboardRow}>
+                        <div className={styles.leaderboardRank}>#{i + 1}</div>
+                        <div className={styles.creatorAvatar}>{c.avatar}</div>
+                        <div className={styles.leaderboardInfo}>
+                           <div className={styles.leaderboardName}>
+                              {c.name}
+                           </div>
+                           <div className={styles.leaderboardMeta}>
+                              {c.views.toLocaleString()} views generated
+                           </div>
+                        </div>
+                        <div className={styles.leaderboardValue}>
+                           {fmtMoney(c.earned)}
+                        </div>
+                     </div>
+                  ))}
                </div>
-               <div className={styles.smallEmpty}>
-                  {data.traffic.visitors === 0 && "No website connected"}
-               </div>
-            </div>
-
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Avg revenue per customer</div>
-               <div className={styles.cardValue}>
-                  ${m.avgRevenuePerCustomer.toFixed(2)}
-               </div>
-            </div>
-         </div>
-
-         {/* Total refunded + Devices + Countries */}
-         <div className={styles.gridRow3}>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Total refunded</div>
-               <div className={styles.cardValue}>
-                  ${m.totalRefunded.toFixed(2)}
-               </div>
-               <div className={styles.smallEmpty}>No data available</div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Devices</div>
-               <div className={styles.smallEmpty}>
-                  <button className={styles.smallOutlineBtn}>
-                     + Add website
-                  </button>
-               </div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Countries</div>
-               <div className={styles.smallEmpty}>
-                  <button className={styles.smallOutlineBtn}>
-                     + Add website
-                  </button>
-               </div>
-            </div>
-         </div>
-
-         {/* Top pages + Abandoned checkouts */}
-         <div className={styles.gridRow2}>
-            <div className={styles.bigCard}>
-               <div className={styles.cardLabel}>Top pages</div>
-               {data.traffic.topPages.length === 0 ? (
-                  <div className={styles.tallEmpty}>
-                     <button className={styles.smallOutlineBtn}>
-                        <Plus size={14} /> Add website
-                     </button>
-                  </div>
-               ) : (
-                  <ul className={styles.sourceList}>
-                     {data.traffic.topPages.map((p: any) => (
-                        <li key={p.path}>
-                           <span>{p.path}</span>
-                           <span>{p.visits}</span>
-                        </li>
-                     ))}
-                  </ul>
-               )}
-            </div>
-
-            <div className={styles.bigCard}>
-               <div className={styles.cardHeaderRow}>
-                  <div className={styles.cardLabel}>Abandoned checkouts</div>
-                  <a href="#" className={styles.smallLink}>
-                     View all
-                  </a>
-               </div>
-               <div className={styles.tallEmpty}>
-                  <button className={styles.smallOutlineBtn}>
-                     <Plus size={14} /> Add website
-                  </button>
-               </div>
-            </div>
-         </div>
-
-         {/* Traffic by time */}
-         <div className={styles.fullCard}>
-            <div className={styles.cardLabel}>Traffic by time</div>
-            <div className={styles.tallEmpty}>
-               <button className={styles.smallOutlineBtn}>
-                  <Plus size={14} /> Add website
-               </button>
-            </div>
-         </div>
-
-         {/* Rates row 1 */}
-         <div className={styles.gridRow3}>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>New customers</div>
-               <div className={styles.cardValue}>{m.newCustomers}</div>
-               <div className={styles.smallEmpty}>No data available</div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Refund rate</div>
-               <div className={styles.cardValue}>
-                  {m.refundRate.toFixed(0)}%
-               </div>
-               <div className={styles.smallEmpty}>No data available</div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Dispute rate</div>
-               <div className={styles.cardValue}>{m.disputeRate}%</div>
-               <div className={styles.smallEmpty}>No data available</div>
-            </div>
-         </div>
-
-         {/* Rates row 2 */}
-         <div className={styles.gridRow3}>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Paid active members</div>
-               <div className={styles.cardValue}>{m.paidActiveMembers}</div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Churn rate</div>
-               <div className={styles.cardValue}>{m.churnRate}%</div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Churned revenue</div>
-               <div className={styles.cardValue}>
-                  ${m.churnedRevenue.toFixed(2)}
-               </div>
-            </div>
-         </div>
-
-         {/* Revenue row */}
-         <div className={styles.gridRow3}>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Gross payment revenue</div>
-               <div className={styles.cardValue}>
-                  ${m.grossPaymentRevenue.toFixed(2)}
-               </div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>MRR</div>
-               <div className={styles.cardValue}>${m.mrr.toFixed(2)}</div>
-            </div>
-            <div className={styles.smallCard}>
-               <div className={styles.cardLabel}>Users breakdown</div>
-               <div className={styles.breakdownBar}>
-                  <div
-                     className={styles.breakdownFill}
-                     style={{ width: "100%" }}
-                  />
-               </div>
-               <div className={styles.breakdownLabel}>
-                  <span className={styles.dotPurple} /> Joined{" "}
-                  {data.usersBreakdown.joined} (100%)
-               </div>
-            </div>
+            )}
          </div>
       </div>
    );

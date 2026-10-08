@@ -22,15 +22,9 @@ export async function POST(
 
       const { platform, videoUrl, views } = await req.json();
 
-      if (!platform || !videoUrl || !views) {
+      if (!platform || !videoUrl || !views || views <= 0) {
          return NextResponse.json(
-            { error: "platform, videoUrl, and views are required" },
-            { status: 400 },
-         );
-      }
-      if (views <= 0) {
-         return NextResponse.json(
-            { error: "Views must be positive" },
+            { error: "platform, videoUrl, and positive views are required" },
             { status: 400 },
          );
       }
@@ -61,17 +55,13 @@ export async function POST(
          );
       }
 
-      // Determine the CPM for this platform
       const platformRate = campaign.platformRates.find(
          (r) => r.platform === platform,
       );
       const cpm = platformRate?.cpm || campaign.cpm;
-
-      // Calculate credit (per 1000 views)
       const credit = (views / 1000) * cpm;
-
-      // Check remaining budget
       const budgetRemaining = campaign.budget - campaign.budgetSpent;
+
       if (budgetRemaining <= 0) {
          return NextResponse.json(
             { error: "Campaign budget is fully spent" },
@@ -79,10 +69,8 @@ export async function POST(
          );
       }
 
-      // Cap the credit so we don't exceed the budget
       const finalCredit = Math.min(credit, budgetRemaining);
 
-      // Create submission
       await CampaignSubmission.create({
          campaignId: campaign._id,
          contributionId: contribution._id,
@@ -94,21 +82,15 @@ export async function POST(
          status: "approved",
       });
 
-      // Update contribution
       contribution.totalViews += Number(views);
       contribution.totalEarned += finalCredit;
       await contribution.save();
 
-      // Update campaign
       campaign.budgetSpent += finalCredit;
       campaign.totalViews += Number(views);
-      if (campaign.budgetSpent >= campaign.budget) {
-         campaign.status = "ended";
-      }
+      if (campaign.budgetSpent >= campaign.budget) campaign.status = "ended";
       await campaign.save();
 
-      // ── TRANSACTION: business pays credit to user ──
-      // Record a "campaign_payout" transaction from business
       await Transaction.create({
          businessId: campaign.businessId,
          kind: "ad_spend",
@@ -130,7 +112,6 @@ export async function POST(
          },
       });
 
-      // Deduct from business balance
       const business = await Business.findById(campaign.businessId);
       if (business) {
          business.balance = Math.max(0, (business.balance || 0) - finalCredit);

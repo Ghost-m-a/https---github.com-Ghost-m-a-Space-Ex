@@ -22,7 +22,6 @@ export async function GET(
             { status: 404 },
          );
 
-      // My contribution (if any)
       let myContribution = null;
       if (session) {
          const contrib = await CampaignContribution.findOne({
@@ -39,7 +38,6 @@ export async function GET(
          }
       }
 
-      // Top contributors
       const topContribs = await CampaignContribution.find({
          campaignId: campaign._id,
       })
@@ -88,7 +86,7 @@ export async function GET(
          })),
       });
    } catch (err) {
-      console.error("[Campaign detail GET]", err);
+      console.error("[Campaign GET]", err);
       return NextResponse.json({ error: "Server error" }, { status: 500 });
    }
 }
