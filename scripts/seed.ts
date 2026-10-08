@@ -21,7 +21,6 @@ import CheckoutLink from "../src/app/lib/models/CheckoutLink";
 import Campaign from "../src/app/lib/models/Campaign";
 import CampaignContribution from "../src/app/lib/models/CampaignContribution";
 import CampaignSubmission from "../src/app/lib/models/CampaignSubmission";
-import AdSettings from "../src/app/lib/models/AdSettings";
 import Affiliate from "../src/app/lib/models/Affiliate";
 import AffiliateSignup from "../src/app/lib/models/AffiliateSignup";
 import RevenueSharePartner from "../src/app/lib/models/RevenueSharePartner";
@@ -82,7 +81,7 @@ async function seed() {
       Campaign.deleteMany({}),
       CampaignContribution.deleteMany({}),
       CampaignSubmission.deleteMany({}),
-      AdSettings.deleteMany({}),
+
       Affiliate.deleteMany({}),
       AffiliateSignup.deleteMany({}),
       RevenueSharePartner.deleteMany({}),
@@ -1121,15 +1120,6 @@ async function seed() {
    // =========================================
    // CREATE AD SETTINGS
    // =========================================
-   console.log("📢 Creating ad settings...");
-
-   await AdSettings.create({
-      businessId: spaceExBiz._id,
-      reportingCurrency: "USD",
-      accountTimezone: "America/New_York",
-   });
-
-   console.log("✅ Ad settings created");
 
    // =========================================
    // CREATE AFFILIATES + SETTINGS
@@ -1987,7 +1977,6 @@ async function seed() {
    console.log("   • 6 payments");
    console.log("   • 1 checkout link");
    console.log("   • 1 website + 5 live events");
-   console.log("   • Ad settings");
    console.log("   • 2 affiliates + settings");
    console.log("   • 4 follows + 4 posts");
    console.log("   • 2 conversations + 6 messages");
