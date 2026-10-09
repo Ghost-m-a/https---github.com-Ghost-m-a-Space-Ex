@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/app/lib/mongodb";
+import { connectDB } from "@/app/lib/mongodb";
 import Campaign from "@/app/lib/models/Campaign";
 import AffiliateSignup from "@/app/lib/models/AffiliateSignup";
 import User from "@/app/lib/models/User";
@@ -13,7 +13,7 @@ export async function POST(
    { params }: { params: Promise<{ id: string }> },
 ) {
    try {
-      await dbConnect();
+      await connectDB();
 
       const userId = await getCurrentUserId();
       if (!userId) {

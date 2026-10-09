@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/app/lib/mongodb";
+import { connectDB } from "@/app/lib/mongodb";
 import Campaign from "@/app/lib/models/Campaign";
 import mongoose from "mongoose";
 
@@ -10,7 +10,7 @@ export async function GET(
    { params }: { params: Promise<{ id: string }> },
 ) {
    try {
-      await dbConnect();
+      await connectDB();
 
       const { id } = await params;
 

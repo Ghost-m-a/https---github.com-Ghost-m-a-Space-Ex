@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/app/lib/mongodb";
+import { connectDB } from "@/app/lib/mongodb";
 import Campaign from "@/app/lib/models/Campaign";
 import Business from "@/app/lib/models/Business";
 import User from "@/app/lib/models/User";
@@ -7,151 +7,93 @@ import { getCurrentUserId } from "@/app/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// --------------------------------------------------
-// GET — list campaigns owned by the current user's business
-// --------------------------------------------------
-export async function GET() {
+type Sort = "top" | "newest" | "cpm" | "budget";
+
+export async function GET(req: Request) {
    try {
-      await dbConnect();
+      await connectDB();
 
+      const { searchParams } = new URL(req.url);
+      const q = (searchParams.get("q") ?? "").trim();
+      const social = searchParams.get("social") ?? "";
+      const sort = (searchParams.get("sort") ?? "top") as Sort;
+
+      const filter: Record<string, unknown> = {
+         status: { $in: ["active", "published", "live"] },
+      };
+
+      if (q) {
+         filter.$or = [
+            { title: { $regex: q, $options: "i" } },
+            { subtitle: { $regex: q, $options: "i" } },
+         ];
+      }
+      if (social) filter.socials = social;
+
+      const sortMap: Record<Sort, Record<string, 1 | -1>> = {
+         top: { featured: -1, joinedUsers: -1, createdAt: -1 },
+         newest: { createdAt: -1 },
+         cpm: { cpm: -1 },
+         budget: { budget: -1 },
+      };
+
+      const docs = await Campaign.find(filter)
+         .sort(sortMap[sort] ?? sortMap.top)
+         .limit(60)
+         .lean<any[]>();
+
+      // ---- Per-user "joined" state ----
+      let joinedIds = new Set<string>();
       const userId = await getCurrentUserId();
-      if (!userId) {
-         return NextResponse.json({ campaigns: [] }, { status: 401 });
+
+      if (userId && docs.length > 0) {
+         const AffiliateSignup = (
+            await import("@/app/lib/models/AffiliateSignup")
+         ).default;
+         const signups = await AffiliateSignup.find({
+            userId,
+            campaignId: { $in: docs.map((d) => d._id) },
+         })
+            .select("campaignId")
+            .lean<any[]>();
+
+         joinedIds = new Set(signups.map((s) => String(s.campaignId)));
       }
 
-      const business = await Business.findOne({ userId }).lean();
-      if (!business) {
-         return NextResponse.json({ campaigns: [] });
-      }
+      // ---- Shape for the Discover UI ----
+      const campaigns = docs.map((c) => {
+         const budget = c.budget ?? 0;
+         const budgetSpent = c.budgetSpent ?? c.spent ?? 0;
 
-      const campaigns = await Campaign.find({ businessId: business._id })
-         .sort({ createdAt: -1 })
-         .lean();
+         return {
+            id: String(c._id),
+            slug: c.slug ?? String(c._id),
+            title: c.title ?? "Untitled campaign",
+            subtitle: c.subtitle ?? "",
+            category: c.category ?? "General",
+            coverImage: c.coverImage ?? c.imageUrl ?? c.thumbnail ?? "",
+            previewImage: c.previewImage ?? c.coverImage ?? "",
+            brandName: c.brandName ?? "Unknown",
+            brandAvatar: c.brandAvatar ?? "",
+            brandVerified: Boolean(c.brandVerified),
+            socials: c.socials ?? [],
+            budget,
+            budgetSpent,
+            budgetRemaining: Math.max(0, budget - budgetSpent),
+            cpm: c.cpm ?? 0,
+            joinedUsers: c.joinedUsers ?? c.participants?.length ?? 0,
+            totalViews: c.totalViews ?? 0,
+            duration: c.duration ?? "",
+            featured: Boolean(c.featured),
+            joined: joinedIds.has(String(c._id)),
+         };
+      });
 
       return NextResponse.json({ campaigns });
    } catch (err) {
-      console.error("[GET /api/business/campaigns]", err);
+      console.error("[api/discover/campaigns]", err);
       return NextResponse.json(
          { campaigns: [], error: "Failed to load campaigns" },
-         { status: 500 },
-      );
-   }
-}
-
-// --------------------------------------------------
-// POST — create a new campaign (real, from the UI form)
-// --------------------------------------------------
-export async function POST(req: Request) {
-   try {
-      await dbConnect();
-
-      const userId = await getCurrentUserId();
-      if (!userId) {
-         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
-
-      const body = await req.json();
-
-      const {
-         title,
-         subtitle,
-         category,
-         coverImage,
-         socials,
-         budget,
-         cpm,
-         duration,
-         requirements,
-         instructions,
-         summary,
-      } = body ?? {};
-
-      // -------- validation --------
-      if (!title || typeof title !== "string" || !title.trim()) {
-         return NextResponse.json(
-            { error: "Title is required" },
-            { status: 400 },
-         );
-      }
-      if (typeof budget !== "number" || budget <= 0) {
-         return NextResponse.json(
-            { error: "Budget must be a positive number" },
-            { status: 400 },
-         );
-      }
-      if (typeof cpm !== "number" || cpm <= 0) {
-         return NextResponse.json(
-            { error: "CPM must be a positive number" },
-            { status: 400 },
-         );
-      }
-      if (!Array.isArray(socials) || socials.length === 0) {
-         return NextResponse.json(
-            { error: "Select at least one platform" },
-            { status: 400 },
-         );
-      }
-
-      // -------- resolve business --------
-      const business = await Business.findOne({ userId }).lean<any>();
-      if (!business) {
-         return NextResponse.json(
-            { error: "Create a business before creating campaigns." },
-            { status: 400 },
-         );
-      }
-
-      // -------- unique slug --------
-      const baseSlug = title
-         .toLowerCase()
-         .replace(/[^\w\s-]/g, "")
-         .replace(/\s+/g, "-")
-         .slice(0, 50);
-      const suffix = Math.random().toString(36).slice(2, 8);
-      const slug = `${baseSlug}-${suffix}`;
-
-      // -------- create --------
-      const campaign = await Campaign.create({
-         businessId: business._id,
-         createdBy: userId,
-         slug,
-         title: title.trim(),
-         subtitle: subtitle ?? "",
-         category: category ?? "General",
-         coverImage: coverImage ?? "",
-         previewImage: coverImage ?? "",
-         brandName: business.name ?? "Unknown",
-         brandAvatar:
-            business.initial ?? (business.name?.charAt(0) ?? "?").toUpperCase(),
-         brandVerified: business.verification?.business === "verified",
-         socials,
-         platformRates: socials.map((s: string) => ({
-            platform: s,
-            minViews: 1000,
-            maxViews: 1_000_000,
-            cpm,
-         })),
-         budget,
-         budgetSpent: 0,
-         cpm,
-         duration: duration ?? "1mo",
-         requirements: requirements ?? [],
-         instructions: instructions ?? [],
-         summary:
-            summary ??
-            `Create short-form content for ${title.trim()} and get paid per view.`,
-         joinedUsers: 0,
-         totalViews: 0,
-         status: "active",
-         featured: false,
-         startDate: new Date(),
-      });
-
-      return NextResponse.json({ campaign }, { status: 201 });
-   } catch (err) {
-      console.error("[POST /api/business/campaigns]", err);
-      return NextResponse.json(
-         { error: "Failed to create campaign" },
          { status: 500 },
       );
    }
