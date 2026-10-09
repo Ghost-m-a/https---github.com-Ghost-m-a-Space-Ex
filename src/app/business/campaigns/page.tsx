@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Plus, TrendingUp, Users, Wallet, ExternalLink } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./campaigns.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/campaigns.module.css";
 
 export default function BusinessCampaignsPage() {
    const { activeBusiness } = useWorkspace();

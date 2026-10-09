@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Link2, FileText, Search, Check, X } from "lucide-react";
-import { useWorkspace } from "../../../context/workspace-context";
-import styles from "../affiliates.module.css";
-import portalStyles from "./portal.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/affiliates.module.css";
+import portalStyles from "@/styles/pages/portal.module.css";
 
 export default function AffiliatePortalPage() {
    const { activeBusiness } = useWorkspace();

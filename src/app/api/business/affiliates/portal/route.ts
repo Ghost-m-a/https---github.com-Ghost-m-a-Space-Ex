@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import Business from "@/app/lib/models/Business";
-import AffiliateSettings from "@/app/lib/models/AffiliateSettings";
-import Affiliate from "@/app/lib/models/Affiliate";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import Business from "@/models/Business";
+import AffiliateSettings from "@/models/AffiliateSettings";
+import Affiliate from "@/models/Affiliate";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 async function requireUser(req: NextRequest) {
    const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;

@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
-import { connectDB } from "@/app/lib/mongodb";
-import User from "@/app/lib/models/User";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
 
 export async function GET(req: NextRequest) {
    try {

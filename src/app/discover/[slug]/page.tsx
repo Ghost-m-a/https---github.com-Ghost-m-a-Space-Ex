@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft, Users, Check } from "lucide-react";
-import styles from "./campaign.module.css";
+import styles from "@/styles/pages/campaign.module.css";
 
 interface Campaign {
    id: string;

@@ -11,10 +11,10 @@ import {
    Plus,
    CreditCard,
 } from "lucide-react";
-import { useWorkspace } from "../context/workspace-context";
-import styles from "./business.module.css";
-import DepositModal from "../components/deposit-modal";
-import SendModal from "../components/send-modal";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/business.module.css";
+import DepositModal from "@/components/deposit-modal";
+import SendModal from "@/components/send-modal";
 
 interface HomeData {
    business: {

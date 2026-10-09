@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Search, Edit } from "lucide-react";
-import styles from "./messages.module.css";
+import styles from "@/styles/pages/messages.module.css";
 
 // =========================================
 // TYPES

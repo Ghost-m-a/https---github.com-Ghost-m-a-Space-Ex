@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { X, ChevronDown } from "lucide-react";
-import { useWorkspace } from "../../../context/workspace-context";
-import styles from "./new.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/invoice-new.module.css";
 
 type Preview = "email" | "checkout" | "pdf";
 

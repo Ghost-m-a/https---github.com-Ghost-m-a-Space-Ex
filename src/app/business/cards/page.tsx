@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Plus, Snowflake, Play } from "lucide-react";
-import { BusinessCard } from "../../lib/types";
-import styles from "../business.module.css";
+import { BusinessCard } from "@/lib/types";
+import styles from "@/styles/pages/business.module.css";
 
 export default function CardsPage() {
    const [cards, setCards] = useState<BusinessCard[]>([]);

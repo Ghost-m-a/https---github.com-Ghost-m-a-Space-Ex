@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Camera } from "lucide-react";
-import styles from "../../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 interface Props {
    business: any;

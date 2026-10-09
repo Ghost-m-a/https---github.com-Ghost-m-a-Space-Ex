@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { X, Search, Link2, Building2, Plus } from "lucide-react";
-import styles from "../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 import GeneralTab from "./business-settings/general-tab";
 import AnalyticsTab from "./business-settings/analytics-tab";

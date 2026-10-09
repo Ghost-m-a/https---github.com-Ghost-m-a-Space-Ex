@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Search, Settings, Plus, ChevronDown } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./support.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/support.module.css";
 
 export default function SupportPage() {
    const { activeBusiness } = useWorkspace();

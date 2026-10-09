@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Rocket, Eye, EyeOff, Loader2 } from "lucide-react";
-import styles from "../login/auth.module.css";
+import styles from "@/styles/pages/login.module.css";
 
 export default function SignupPage() {
    const router = useRouter();

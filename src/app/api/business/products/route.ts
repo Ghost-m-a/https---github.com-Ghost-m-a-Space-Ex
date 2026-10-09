@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import Business from "@/app/lib/models/Business";
-import Product from "@/app/lib/models/Product";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import Business from "@/models/Business";
+import Product from "@/models/Product";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 // =========================================
 // AUTH HELPER

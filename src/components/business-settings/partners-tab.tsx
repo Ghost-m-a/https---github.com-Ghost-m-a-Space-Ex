@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import styles from "../../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 const PartnersTab = () => {
    const [tab, setTab] = useState<"pending" | "all">("pending");

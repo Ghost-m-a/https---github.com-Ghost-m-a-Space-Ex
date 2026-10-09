@@ -9,7 +9,7 @@ import {
    Search,
    Sparkles,
 } from "lucide-react";
-import styles from "../styles/navbar.module.css";
+import styles from "@/styles/components/navbar.module.css";
 import { UserDropdown } from "./userdropdown";
 import MessagesPanel from "./messages-panel";
 import NotificationsPanel from "./notifications-panel";

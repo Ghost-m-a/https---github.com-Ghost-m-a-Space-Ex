@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, ChevronDown, Star, X } from "lucide-react";
 import { Suspense } from "react";
-import styles from "./app-store.module.css";
+import styles from "@/styles/pages/app-store.module.css";
 
 const CATEGORIES = [
    { key: "all", label: "All" },

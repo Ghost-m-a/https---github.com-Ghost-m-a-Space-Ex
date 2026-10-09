@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { FileText, Receipt, BarChart3, Zap } from "lucide-react";
-import styles from "../business.module.css";
+import styles from "@/styles/pages/business.module.css";
 
 export default function MorePage() {
    const items = [

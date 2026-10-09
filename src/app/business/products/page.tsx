@@ -14,8 +14,8 @@ import {
    ArrowUpDown,
    Store,
 } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./products.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/products.module.css";
 
 interface ProductRow {
    id: string;

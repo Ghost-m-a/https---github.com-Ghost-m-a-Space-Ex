@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useWorkspace } from "../../context/workspace-context";
+import { useWorkspace } from "@/context/workspace-context";
 import {
    TrendingUp,
    TrendingDown,
@@ -11,7 +11,7 @@ import {
    Eye,
    DollarSign,
 } from "lucide-react";
-import styles from "./analytics.module.css";
+import styles from "@/styles/pages/analytics.module.css";
 
 export default function AnalyticsPage() {
    const { activeBusiness } = useWorkspace();

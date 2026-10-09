@@ -12,7 +12,7 @@ import {
    Users,
    DollarSign,
 } from "lucide-react";
-import styles from "./page.module.css";
+import styles from "@/styles/pages/home.module.css";
 
 interface JoinedCampaign {
    contributionId: string;

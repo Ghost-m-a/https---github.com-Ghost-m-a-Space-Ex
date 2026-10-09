@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Search, ChevronDown, Settings2 } from "lucide-react";
-import { useWorkspace } from "../../../context/workspace-context";
-import styles from "../affiliates.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/affiliates.module.css";
 
 export default function SignupsPage() {
    const { activeBusiness } = useWorkspace();

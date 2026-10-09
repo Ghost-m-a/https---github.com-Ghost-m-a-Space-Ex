@@ -4,7 +4,7 @@ import React, { useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Rocket, Eye, EyeOff, Loader2 } from "lucide-react";
-import styles from "./auth.module.css";
+import styles from "@/styles/pages/login.module.css";
 
 function LoginForm() {
    const router = useRouter();

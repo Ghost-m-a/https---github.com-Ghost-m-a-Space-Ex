@@ -1,9 +1,9 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import AppListing from "@/app/lib/models/AppListing";
-import InstalledApp from "@/app/lib/models/InstalledApp";
-import Business from "@/app/lib/models/Business";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import AppListing from "@/models/AppListing";
+import InstalledApp from "@/models/InstalledApp";
+import Business from "@/models/Business";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
    try {

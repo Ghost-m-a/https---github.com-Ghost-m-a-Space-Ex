@@ -9,8 +9,8 @@ import {
    Image as ImageIcon,
    Shuffle,
 } from "lucide-react";
-import { useWorkspace } from "../context/workspace-context";
-import styles from "../styles/businessModal.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/components/businessModal.module.css";
 
 interface BusinessModalProps {
    isOpen: boolean;

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import Campaign from "@/app/lib/models/Campaign";
-import Business from "@/app/lib/models/Business";
-import User from "@/app/lib/models/User";
-import { getCurrentUserId } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import Campaign from "@/models/Campaign";
+import Business from "@/models/Business";
+import User from "@/models/User";
+import { getCurrentUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 

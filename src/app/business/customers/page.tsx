@@ -14,8 +14,8 @@ import {
    Copy,
    Megaphone,
 } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./customers.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/customers.module.css";
 
 type Tab = "customers" | "memberships" | "people";
 

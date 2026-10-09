@@ -2,7 +2,7 @@
 
 import React, { useEffect } from "react";
 import { X, Maximize2 } from "lucide-react";
-import styles from "../styles/panel.module.css";
+import styles from "@/styles/components/panel.module.css";
 
 interface SidePanelProps {
    isOpen: boolean;

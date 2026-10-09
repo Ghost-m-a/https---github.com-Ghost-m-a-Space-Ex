@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Camera } from "lucide-react";
-import styles from "../../styles/settings.module.css";
+import styles from "@/styles/components/settings.module.css";
 
 interface UserData {
    name: string;

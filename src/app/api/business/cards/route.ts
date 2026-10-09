@@ -1,5 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { businessDb } from "@/app/lib/db";
+import { businessDb } from "@/lib/db";
 
 export async function GET() {
    return NextResponse.json({ cards: businessDb.getCards() });

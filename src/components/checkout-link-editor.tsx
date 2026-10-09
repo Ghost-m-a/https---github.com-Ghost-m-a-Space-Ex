@@ -12,8 +12,8 @@ import {
    Copy,
    Check,
 } from "lucide-react";
-import { useWorkspace } from "../context/workspace-context";
-import styles from "../styles/checkoutLinkEditor.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/components/checkoutLinkEditor.module.css";
 
 interface Props {
    mode: "create" | "edit";

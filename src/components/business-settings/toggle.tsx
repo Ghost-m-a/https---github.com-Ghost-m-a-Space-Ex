@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "../../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 interface ToggleProps {
    checked: boolean;

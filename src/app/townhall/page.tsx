@@ -16,8 +16,8 @@ import {
    Star,
 } from "lucide-react";
 import Link from "next/link";
-import { useWorkspace } from "../context/workspace-context";
-import styles from "./townhall.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/townhall.module.css";
 
 interface PostAuthor {
    id: string;

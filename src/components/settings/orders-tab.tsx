@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { MoreHorizontal } from "lucide-react";
-import styles from "../../styles/settings.module.css";
+import styles from "@/styles/components/settings.module.css";
 
 interface Order {
    id: string;

@@ -9,8 +9,8 @@ import {
    Shield,
    ChevronDown,
 } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./team.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/team.module.css";
 
 export default function TeamPage() {
    const { activeBusiness } = useWorkspace();

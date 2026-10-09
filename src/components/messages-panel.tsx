@@ -10,7 +10,7 @@ import {
    MoreVertical,
 } from "lucide-react";
 import SidePanel from "./side-panel";
-import styles from "../styles/panel.module.css";
+import styles from "@/styles/components/panel.module.css";
 
 interface ConversationSummary {
    id: string;

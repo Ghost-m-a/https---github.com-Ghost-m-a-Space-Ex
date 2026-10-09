@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { BarChart3, ChevronRight, Settings2 } from "lucide-react";
-import { useWorkspace } from "../../../context/workspace-context";
-import styles from "../affiliates.module.css";
-import rsStyles from "./revenue-share.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/affiliates.module.css";
+import rsStyles from "@/styles/pages/revenue-share.module.css";
 
 export default function RevenueSharePage() {
    const { activeBusiness } = useWorkspace();

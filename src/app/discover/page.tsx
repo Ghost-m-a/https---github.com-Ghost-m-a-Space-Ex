@@ -14,7 +14,7 @@ import {
    TrendingUp,
    Wallet,
 } from "lucide-react";
-import styles from "./discover.module.css";
+import styles from "@/styles/pages/discover.module.css";
 
 type SocialPlatform = "youtube" | "tiktok" | "instagram" | "x" | "facebook";
 

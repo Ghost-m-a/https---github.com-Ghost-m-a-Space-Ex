@@ -1,10 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useWorkspace } from "../../../context/workspace-context";
+import { useWorkspace } from "@/context/workspace-context";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect } from "react";
-import CheckoutLinkEditor from "../../../components/checkout-link-editor";
+import CheckoutLinkEditor from "@/components/checkout-link-editor";
 
 function NewCheckoutLinkInner() {
    const router = useRouter();

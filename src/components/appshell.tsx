@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import styles from "../styles/appshell.module.css";
+import styles from "@/styles/components/appshell.module.css";
 import Navbar from "./navbar";
 import Sidebar from "./sidebar";
 import BottomBar from "./bottombar";

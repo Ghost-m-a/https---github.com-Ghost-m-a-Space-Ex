@@ -16,8 +16,8 @@ import {
    HelpCircle,
    AlertTriangle,
 } from "lucide-react";
-import { useWorkspace } from "../context/workspace-context";
-import styles from "../styles/productEditor.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/components/productEditor.module.css";
 
 interface ProductEditorProps {
    mode: "create" | "edit";

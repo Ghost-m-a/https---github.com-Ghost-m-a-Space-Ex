@@ -3,8 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { Plus, ExternalLink, ChevronRight } from "lucide-react";
 import Link from "next/link";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./websites.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/websites.module.css";
 
 interface Website {
    id: string;

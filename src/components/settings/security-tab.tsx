@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { Mail, Smartphone, Check } from "lucide-react";
 import { useRouter } from "next/navigation";
-import styles from "../../styles/settings.module.css";
+import styles from "@/styles/components/settings.module.css";
 
 const SecurityTab = () => {
    const router = useRouter();

@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Search, Link2 } from "lucide-react";
-import styles from "../styles/modal.module.css";
+import styles from "@/styles/components/modal.module.css";
 
 interface User {
    id: string;

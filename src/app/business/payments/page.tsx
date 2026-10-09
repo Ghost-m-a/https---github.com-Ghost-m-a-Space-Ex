@@ -16,8 +16,8 @@ import {
    BellRing,
    Activity,
 } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./payments.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/payments.module.css";
 
 type PaymentStatus =
    | "succeeded"

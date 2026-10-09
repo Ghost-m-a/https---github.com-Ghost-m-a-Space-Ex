@@ -1,6 +1,5 @@
 import { NextResponse, NextRequest } from "next/server";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "./app/lib/auth-edge";
-
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth-edge";
 const PUBLIC_ROUTES = ["/login", "/signup"];
 
 export async function proxy(req: NextRequest) {

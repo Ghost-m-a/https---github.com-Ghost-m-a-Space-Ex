@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import SidePanel from "./side-panel";
-import styles from "../styles/panel.module.css";
+import styles from "@/styles/components/panel.module.css";
 
 interface NotificationItem {
    id: string;

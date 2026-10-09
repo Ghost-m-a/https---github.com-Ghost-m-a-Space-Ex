@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import ResolutionCase from "@/app/lib/models/ResolutionCase";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import ResolutionCase from "@/models/ResolutionCase";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
    try {

@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import User from "@/app/lib/models/User";
-import Conversation from "@/app/lib/models/Conversation";
-import Message from "@/app/lib/models/Message";
-import Notification from "@/app/lib/models/Notification";
-import PaymentMethod from "@/app/lib/models/PaymentMethod";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
+import Conversation from "@/models/Conversation";
+import Message from "@/models/Message";
+import Notification from "@/models/Notification";
+import PaymentMethod from "@/models/PaymentMethod";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 export async function DELETE(req: NextRequest) {
    try {

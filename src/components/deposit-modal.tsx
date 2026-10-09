@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Landmark, ChevronDown } from "lucide-react";
-import styles from "../styles/modal.module.css";
+import styles from "@/styles/components/modal.module.css";
 
 interface Props {
    isOpen: boolean;

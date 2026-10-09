@@ -35,13 +35,13 @@ import {
    Flag,
    BarChart3,
 } from "lucide-react";
-import { useWorkspace } from "../context/workspace-context";
+import { useWorkspace } from "@/context/workspace-context";
 import BusinessModal from "./business-modal";
 import SettingsModal, { TabId } from "./settings-modal";
 import BusinessSettingsModal, {
    BusinessTabId,
 } from "./business-settings-modal";
-import styles from "../styles/sidebar.module.css";
+import styles from "@/styles/components/sidebar.module.css";
 
 interface MenuItem {
    icon: React.ReactNode;

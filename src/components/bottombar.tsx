@@ -4,7 +4,7 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Package, MessageSquare, Compass, Wallet } from "lucide-react";
-import styles from "../styles/bottomBar.module.css";
+import styles from "@/styles/components/bottomBar.module.css";
 
 const BottomBar = () => {
    const pathname = usePathname();

@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Download, Settings2, Search, Receipt } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./checkout-links.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/checkout-links.module.css";
 
 export default function CheckoutLinksPage() {
    const { activeBusiness } = useWorkspace();

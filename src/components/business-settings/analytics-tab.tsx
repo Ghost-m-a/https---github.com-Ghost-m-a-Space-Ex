@@ -2,7 +2,7 @@
 
 import React from "react";
 import { ChevronRight } from "lucide-react";
-import styles from "../../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 interface Props {
    business: any;

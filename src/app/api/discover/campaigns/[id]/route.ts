@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import Campaign from "@/app/lib/models/Campaign";
+import { connectDB } from "@/lib/mongodb";
+import Campaign from "@/models/Campaign";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { Plus } from "lucide-react";
-import styles from "../../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 const AuthorizedAppsTab = () => (
    <div className={styles.tabContent}>

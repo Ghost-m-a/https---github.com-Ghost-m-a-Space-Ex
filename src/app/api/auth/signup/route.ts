@@ -1,13 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import User from "@/app/lib/models/User";
-import Notification from "@/app/lib/models/Notification";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User";
+import Notification from "@/models/Notification";
 import {
    createSessionToken,
    hashPassword,
    getCookieOptions,
    SESSION_COOKIE_NAME,
-} from "@/app/lib/auth";
+} from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
    try {

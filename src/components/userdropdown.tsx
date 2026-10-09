@@ -17,7 +17,7 @@ import {
    Sun,
    Moon,
 } from "lucide-react";
-import styles from "../styles/navbar.module.css";
+import styles from "@/styles/components/navbar.module.css";
 import SettingsModal, { TabId } from "./settings-modal";
 
 // =========================================

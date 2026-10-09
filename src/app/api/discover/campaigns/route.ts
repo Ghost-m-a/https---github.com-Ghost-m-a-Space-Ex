@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import Campaign from "@/app/lib/models/Campaign";
-import Business from "@/app/lib/models/Business";
-import User from "@/app/lib/models/User";
-import { getCurrentUserId } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import Campaign from "@/models/Campaign";
+import Business from "@/models/Business";
+import User from "@/models/User";
+import { getCurrentUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -48,7 +48,7 @@ export async function GET(req: Request) {
 
       if (userId && docs.length > 0) {
          const AffiliateSignup = (
-            await import("@/app/lib/models/AffiliateSignup")
+            await import("@/models/AffiliateSignup")
          ).default;
          const signups = await AffiliateSignup.find({
             userId,

@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { Plus, Download, Settings2, X } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./promo.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/promo.module.css";
 
 export default function PromoCodesPage() {
    const { activeBusiness } = useWorkspace();

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { X, Search } from "lucide-react";
-import styles from "../styles/settings.module.css";
+import styles from "@/styles/components/settings.module.css";
 import ProfileTab from "./settings/profile-tab";
 import InvitesTab from "./settings/invites-tab";
 import SocialTab from "./settings/social-tab";

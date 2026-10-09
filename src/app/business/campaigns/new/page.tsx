@@ -3,8 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X, Check } from "lucide-react";
-import { useWorkspace } from "../../../context/workspace-context";
-import styles from "./new.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/campaign-new.module.css";
 
 type Platform = "youtube" | "tiktok" | "instagram" | "x" | "facebook";
 

@@ -1,5 +1,6 @@
+import "dotenv/config";
 import mongoose from "mongoose";
-import AppListing from "../src/app/lib/models/AppListing";
+import AppListing from "../src/models/AppListing";
 
 async function seed() {
    const uri = process.env.MONGODB_URI;

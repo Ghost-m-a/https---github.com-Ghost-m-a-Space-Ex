@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import styles from "../../styles/settings.module.css";
+import styles from "@/styles/components/settings.module.css";
 
 interface Case {
    id: string;

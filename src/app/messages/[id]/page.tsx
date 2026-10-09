@@ -4,7 +4,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "next/navigation";
 import { Send, CheckCircle2, ChevronLeft } from "lucide-react";
 import Link from "next/link";
-import styles from "../messages.module.css";
+import styles from "@/styles/pages/messages.module.css";
 
 // =========================================
 // TYPES

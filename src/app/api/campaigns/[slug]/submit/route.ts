@@ -1,11 +1,11 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/app/lib/mongodb";
-import Campaign from "@/app/lib/models/Campaign";
-import CampaignContribution from "@/app/lib/models/CampaignContribution";
-import CampaignSubmission from "@/app/lib/models/CampaignSubmission";
-import Business from "@/app/lib/models/Business";
-import Transaction from "@/app/lib/models/Transaction";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
+import { connectDB } from "@/lib/mongodb";
+import Campaign from "@/models/Campaign";
+import CampaignContribution from "@/models/CampaignContribution";
+import CampaignSubmission from "@/models/CampaignSubmission";
+import Business from "@/models/Business";
+import Transaction from "@/models/Transaction";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
 
 export async function POST(
    req: NextRequest,

@@ -3,7 +3,7 @@
 import React from "react";
 import { FileText } from "lucide-react";
 import Toggle from "./toggle";
-import styles from "../../styles/business-settings.module.css";
+import styles from "@/styles/components/business-settings.module.css";
 
 interface Props {
    business: any;

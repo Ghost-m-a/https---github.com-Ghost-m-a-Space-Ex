@@ -11,8 +11,8 @@ import {
    Search,
    Settings2,
 } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./affiliates.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/affiliates.module.css";
 
 type Tab = "dashboard" | "signups" | "portal" | "revenue-share";
 

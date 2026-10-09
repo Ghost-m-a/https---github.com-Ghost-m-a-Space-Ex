@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Download, Settings2, FileText } from "lucide-react";
-import { useWorkspace } from "../../context/workspace-context";
-import styles from "./invoices.module.css";
+import { useWorkspace } from "@/context/workspace-context";
+import styles from "@/styles/pages/invoices.module.css";
 
 export default function InvoicesPage() {
    const { activeBusiness } = useWorkspace();

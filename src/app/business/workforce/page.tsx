@@ -2,8 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { Plus } from "lucide-react";
-import { WorkforceMember } from "../../lib/types";
-import styles from "../business.module.css";
+import { WorkforceMember } from "@/lib/types";
+import styles from "@/styles/pages/business.module.css";
 
 export default function WorkforcePage() {
    const [members, setMembers] = useState<WorkforceMember[]>([]);
