@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Campaign from "@/lib/models/Campaign";
-import AffiliateSignup from "@/lib/models/AffiliateSignup";
-import User from "@/lib/models/User";
-import { getCurrentUserId } from "@/lib/auth";
+import dbConnect from "@/app/lib/mongodb";
+import Campaign from "@/app/lib/models/Campaign";
+import AffiliateSignup from "@/app/lib/models/AffiliateSignup";
+import User from "@/app/lib/models/User";
+import { getCurrentUserId } from "@/app/lib/auth";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";

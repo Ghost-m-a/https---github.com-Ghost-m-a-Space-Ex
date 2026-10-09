@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import dbConnect from "@/lib/mongodb";
-import Campaign from "@/lib/models/Campaign";
-import Business from "@/lib/models/Business";
-import User from "@/lib/models/User";
-import { getCurrentUserId } from "@/lib/auth";
+import dbConnect from "@/app/lib/mongodb";
+import Campaign from "@/app/lib/models/Campaign";
+import Business from "@/app/lib/models/Business";
+import User from "@/app/lib/models/User";
+import { getCurrentUserId } from "@/app/lib/auth";
 
 export const dynamic = "force-dynamic";
 
@@ -100,8 +100,6 @@ export async function POST(req: Request) {
             { status: 400 },
          );
       }
-
-      const user = await User.findById(userId).lean<any>();
 
       // -------- unique slug --------
       const baseSlug = title
