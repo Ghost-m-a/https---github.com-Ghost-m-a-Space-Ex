@@ -25,16 +25,6 @@
    text-decoration: none;
 }
 
-.installBtn {
-   padding: 8px 16px;
-   background: var(--bg-tertiary);
-   border: 1px solid var(--border-subtle);
-   border-radius: 8px;
-   color: var(--text-primary);
-   font-size: 13px;
-   cursor: pointer;
-}
-
 .filterRowOuter {
    display: flex;
    justify-content: space-between;

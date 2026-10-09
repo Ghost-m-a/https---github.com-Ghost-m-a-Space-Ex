@@ -1,4 +1,6 @@
 import crypto from "crypto";
+import { cookies } from "next/headers";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "./auth-edge";
 
 // =========================================
 // RE-EXPORT EDGE-SAFE HELPERS
@@ -36,4 +38,16 @@ export function verifyPassword(password: string, stored: string): boolean {
    } catch {
       return false;
    }
+}
+
+// =========================================
+// CURRENT USER (Node runtime only)
+// Reads the session cookie and returns the userId, or null.
+// =========================================
+export async function getCurrentUserId(): Promise<string | null> {
+   const store = await cookies();
+   const token = store.get(SESSION_COOKIE_NAME)?.value;
+   if (!token) return null;
+   const payload = await verifySessionToken(token);
+   return payload?.userId ?? null;
 }

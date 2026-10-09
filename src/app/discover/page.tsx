@@ -106,9 +106,6 @@ export default function DiscoverPage() {
                <ChevronLeft size={16} />
                <span>Discover Content Rewards</span>
             </Link>
-            <button className={styles.installBtn}>
-               Install app in your whop
-            </button>
          </div>
 
          {/* Filter Row */}
