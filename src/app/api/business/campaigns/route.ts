@@ -2,13 +2,14 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
 import Business from "@/models/Business";
+import AffiliateSignup from "@/models/AffiliateSignup";
 import { getCurrentUserId } from "@/lib/auth";
 import { logError } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
 // --------------------------------------------------
-// GET — list campaigns for the current user's business
+// GET — list campaigns for current business (+ pending request counts)
 // --------------------------------------------------
 export async function GET() {
    try {
@@ -26,10 +27,22 @@ export async function GET() {
          .sort({ createdAt: -1 })
          .lean<any[]>();
 
-      // Map _id → id so the client can use `key={c.id}`
+      // Count pending signups per campaign
+      const counts = await AffiliateSignup.aggregate([
+         {
+            $match: {
+               businessId: business._id,
+               status: { $in: ["pending", "signed_up"] },
+            },
+         },
+         { $group: { _id: "$campaignId", n: { $sum: 1 } } },
+      ]);
+      const pendingMap = new Map(counts.map((c) => [String(c._id), c.n]));
+
       const campaigns = docs.map((c) => ({
          ...c,
          id: String(c._id),
+         pendingRequests: pendingMap.get(String(c._id)) ?? 0,
       }));
 
       return NextResponse.json({ campaigns });
@@ -44,7 +57,6 @@ export async function GET() {
 
 // --------------------------------------------------
 // POST — create a new campaign
-// (unchanged — kept for completeness)
 // --------------------------------------------------
 export async function POST(req: Request) {
    try {
@@ -213,7 +225,13 @@ export async function POST(req: Request) {
       });
 
       return NextResponse.json(
-         { campaign: { ...campaign.toObject(), id: String(campaign._id) } },
+         {
+            campaign: {
+               ...campaign.toObject(),
+               id: String(campaign._id),
+               pendingRequests: 0,
+            },
+         },
          { status: 201 },
       );
    } catch (err) {

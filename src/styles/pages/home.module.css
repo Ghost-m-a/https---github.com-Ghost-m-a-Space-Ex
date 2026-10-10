@@ -1,3 +1,6 @@
+/* =========================================
+   PAGE SHELL
+   ========================================= */
 .page {
    min-height: 100vh;
    background: #0a0a0a;
@@ -26,7 +29,9 @@
    gap: 16px;
 }
 
-/* ---- Hero ---- */
+/* =========================================
+   HERO
+   ========================================= */
 .heroSection {
    display: flex;
    flex-direction: column;
@@ -60,7 +65,9 @@
    display: block;
 }
 
-/* ---- Economic Intelligence ---- */
+/* =========================================
+   ECONOMIC INTELLIGENCE CARD
+   ========================================= */
 .eiCard {
    padding: 16px 20px;
    background: #141414;
@@ -101,7 +108,426 @@
    font-weight: 600;
 }
 
-/* ---- Cards ---- */
+.switch {
+   position: relative;
+   width: 40px;
+   height: 22px;
+   border-radius: 999px;
+   background: #1e1e1e;
+   border: 1px solid #262626;
+   transition: background 0.2s;
+   flex-shrink: 0;
+}
+.switchOn {
+   background: #3b82f6;
+   border-color: #3b82f6;
+}
+.switchKnob {
+   position: absolute;
+   top: 2px;
+   left: 2px;
+   width: 16px;
+   height: 16px;
+   border-radius: 50%;
+   background: #fff;
+   transition: transform 0.2s;
+}
+.switchOn .switchKnob {
+   transform: translateX(18px);
+}
+
+/* =========================================
+   YOUR CAMPAIGNS SECTION
+   ========================================= */
+.campaignsSection {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+   padding-top: 4px;
+}
+
+.sectionHeader {
+   display: flex;
+   align-items: center;
+   justify-content: space-between;
+}
+
+.sectionHeaderLeft {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+}
+
+.sectionTitle {
+   font-size: 16px;
+   font-weight: 700;
+   margin: 0;
+   color: #fff;
+}
+
+.sectionLink {
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   font-size: 12.5px;
+   color: #888;
+   text-decoration: none;
+   transition: color 0.15s;
+}
+.sectionLink:hover {
+   color: #fff;
+}
+
+.pendingChip {
+   padding: 3px 8px;
+   background: rgba(245, 158, 11, 0.15);
+   color: #fbbf24;
+   border-radius: 999px;
+   font-size: 10.5px;
+   font-weight: 700;
+   text-transform: uppercase;
+   letter-spacing: 0.3px;
+}
+
+/* ---- Mini stats row ---- */
+.miniStatsRow {
+   display: grid;
+   grid-template-columns: repeat(3, 1fr);
+   gap: 10px;
+}
+
+.miniStat {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   padding: 12px 14px;
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 10px;
+}
+
+.miniStatIcon {
+   width: 30px;
+   height: 30px;
+   border-radius: 8px;
+   background: #1e1e1e;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #93c5fd;
+   flex-shrink: 0;
+}
+
+.miniStatLabel {
+   font-size: 10.5px;
+   color: #666;
+   text-transform: uppercase;
+   letter-spacing: 0.4px;
+   margin-bottom: 2px;
+}
+
+.miniStatValue {
+   font-size: 14px;
+   font-weight: 700;
+   color: #fff;
+}
+
+/* ---- Loading + empty states ---- */
+.campaignsLoading,
+.campaignsEmpty {
+   padding: 40px 20px;
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 12px;
+   text-align: center;
+}
+
+.campaignsLoading {
+   color: #666;
+   font-size: 13px;
+}
+
+.campaignsEmpty {
+   display: flex;
+   flex-direction: column;
+   align-items: center;
+   gap: 10px;
+   border-style: dashed;
+   border-color: #2a2a2a;
+}
+
+.campaignsEmptyIcon {
+   width: 60px;
+   height: 60px;
+   border-radius: 50%;
+   background: #1e1e1e;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #444;
+}
+
+.campaignsEmptyTitle {
+   font-size: 14.5px;
+   font-weight: 700;
+   color: #fff;
+}
+
+.campaignsEmptySub {
+   font-size: 12.5px;
+   color: #888;
+   max-width: 340px;
+   line-height: 1.5;
+}
+
+.primaryBtn {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   padding: 9px 18px;
+   background: #3b82f6;
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   font-size: 12.5px;
+   font-weight: 600;
+   text-decoration: none;
+   cursor: pointer;
+   transition: background 0.15s;
+   margin-top: 4px;
+}
+.primaryBtn:hover {
+   background: #2563eb;
+}
+
+/* ---- Campaign grid ---- */
+.campaignGrid {
+   display: grid;
+   grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+   gap: 14px;
+}
+
+.campaignCard {
+   display: flex;
+   flex-direction: column;
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 12px;
+   overflow: hidden;
+   transition:
+      border-color 0.15s,
+      transform 0.15s;
+}
+.campaignCard:hover {
+   border-color: #333;
+   transform: translateY(-2px);
+}
+
+.campaignLinkWrap {
+   display: block;
+   text-decoration: none;
+   color: inherit;
+}
+
+.campaignCover {
+   position: relative;
+   aspect-ratio: 16 / 9;
+   background: linear-gradient(135deg, #1e293b, #0f172a);
+   overflow: hidden;
+}
+
+.campaignCover img {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   display: block;
+}
+
+.coverFallback {
+   width: 100%;
+   height: 100%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 38px;
+   opacity: 0.35;
+}
+
+/* ---- Status pills ---- */
+.statusPending,
+.statusApproved,
+.statusRejected {
+   position: absolute;
+   top: 8px;
+   left: 8px;
+   display: inline-flex;
+   align-items: center;
+   gap: 4px;
+   padding: 3px 9px;
+   border-radius: 999px;
+   font-size: 10.5px;
+   font-weight: 700;
+   color: #fff;
+   letter-spacing: 0.2px;
+   z-index: 2;
+   backdrop-filter: blur(4px);
+}
+.statusPending {
+   background: rgba(245, 158, 11, 0.95);
+}
+.statusApproved {
+   background: rgba(16, 185, 129, 0.95);
+}
+.statusRejected {
+   background: rgba(239, 68, 68, 0.95);
+}
+
+/* ---- Card body ---- */
+.campaignBody {
+   padding: 12px 14px 14px;
+   display: flex;
+   flex-direction: column;
+   gap: 8px;
+}
+
+.campaignBrand {
+   font-size: 10.5px;
+   color: #3b82f6;
+   font-weight: 600;
+   text-transform: uppercase;
+   letter-spacing: 0.3px;
+}
+
+.campaignTitle {
+   font-size: 13.5px;
+   font-weight: 600;
+   line-height: 1.3;
+   color: #fff;
+   display: -webkit-box;
+   -webkit-line-clamp: 2;
+   -webkit-box-orient: vertical;
+   overflow: hidden;
+   min-height: 34px;
+}
+
+.campaignStats {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 10px;
+   padding-top: 8px;
+   border-top: 1px solid #1e1e1e;
+}
+
+.statMiniLabel {
+   font-size: 9.5px;
+   color: #666;
+   text-transform: uppercase;
+   letter-spacing: 0.4px;
+   margin-bottom: 3px;
+}
+
+.statMiniValue {
+   font-size: 13px;
+   font-weight: 700;
+   color: #fff;
+}
+
+.statMiniValueEarn {
+   font-size: 13px;
+   font-weight: 700;
+   color: #10b981;
+}
+
+.pendingNote {
+   font-size: 11.5px;
+   color: #fbbf24;
+   line-height: 1.4;
+}
+
+.rejectedNote {
+   font-size: 11.5px;
+   color: #f87171;
+   line-height: 1.4;
+   display: -webkit-box;
+   -webkit-line-clamp: 2;
+   -webkit-box-orient: vertical;
+   overflow: hidden;
+}
+
+.progressTrack {
+   height: 4px;
+   background: #1e1e1e;
+   border-radius: 2px;
+   overflow: hidden;
+   margin-top: 4px;
+}
+
+.progressFill {
+   height: 100%;
+   background: linear-gradient(to right, #f59e0b, #ef4444);
+   border-radius: 2px;
+   transition: width 0.3s;
+}
+
+.progressMeta {
+   font-size: 10.5px;
+   color: #666;
+   display: flex;
+   justify-content: space-between;
+}
+
+/* ---- Card actions ---- */
+.cardActions {
+   display: flex;
+   gap: 8px;
+   padding: 10px 14px 14px;
+   border-top: 1px solid #1e1e1e;
+   margin-top: auto;
+}
+
+.withdrawBtn,
+.retryBtn {
+   flex: 1;
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   padding: 8px 12px;
+   border-radius: 8px;
+   font-size: 11.5px;
+   font-weight: 600;
+   cursor: pointer;
+   font-family: inherit;
+   text-decoration: none;
+   border: 1px solid transparent;
+   transition: all 0.15s;
+}
+
+.withdrawBtn {
+   background: transparent;
+   border-color: #262626;
+   color: #ccc;
+}
+.withdrawBtn:hover:not(:disabled) {
+   background: rgba(239, 68, 68, 0.08);
+   border-color: rgba(239, 68, 68, 0.4);
+   color: #f87171;
+}
+.withdrawBtn:disabled {
+   opacity: 0.5;
+   cursor: default;
+}
+
+.retryBtn {
+   background: #3b82f6;
+   color: #fff;
+}
+.retryBtn:hover {
+   background: #2563eb;
+}
+
+/* =========================================
+   SIDEBAR CARDS (Balances + Pulse)
+   ========================================= */
 .card {
    background: #141414;
    border: 1px solid #262626;
@@ -275,41 +701,38 @@
    }
 }
 
-/* ---- Switch ---- */
-.switch {
-   position: relative;
-   width: 40px;
-   height: 22px;
-   border-radius: 999px;
-   background: #1e1e1e;
-   border: 1px solid #262626;
-   transition: background 0.2s;
-   flex-shrink: 0;
-}
-.switchOn {
-   background: #3b82f6;
-   border-color: #3b82f6;
-}
-.switchKnob {
-   position: absolute;
-   top: 2px;
-   left: 2px;
-   width: 16px;
-   height: 16px;
-   border-radius: 50%;
-   background: #fff;
-   transition: transform 0.2s;
-}
-.switchOn .switchKnob {
-   transform: translateX(18px);
+/* =========================================
+   RESPONSIVE
+   ========================================= */
+@media (max-width: 1100px) {
+   .layout {
+      grid-template-columns: 1fr 300px;
+   }
 }
 
-/* ---- Responsive ---- */
 @media (max-width: 900px) {
    .layout {
       grid-template-columns: 1fr;
    }
    .heroAmount {
       font-size: 34px;
+   }
+   .miniStatsRow {
+      grid-template-columns: 1fr 1fr 1fr;
+   }
+   .campaignGrid {
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+   }
+}
+
+@media (max-width: 600px) {
+   .page {
+      padding: 16px;
+   }
+   .miniStatsRow {
+      grid-template-columns: 1fr;
+   }
+   .campaignGrid {
+      grid-template-columns: 1fr;
    }
 }

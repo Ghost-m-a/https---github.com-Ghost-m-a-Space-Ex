@@ -1,5 +1,16 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
+export type SignupStatus =
+   | "pending"
+   | "approved"
+   | "rejected"
+   | "withdrawn"
+   | "left"
+   // legacy statuses kept for compatibility
+   | "active"
+   | "signed_up"
+   | "inactive";
+
 export interface IAffiliateSignup extends Document {
    businessId: Types.ObjectId;
    affiliateId: Types.ObjectId;
@@ -10,11 +21,18 @@ export interface IAffiliateSignup extends Document {
    username: string;
    avatar: string;
    product: string;
-   status: "signed_up" | "active" | "inactive";
+   status: SignupStatus;
+
+   applicationMessage: string; // creator's pitch
+   reviewedBy?: Types.ObjectId;
+   reviewedAt?: Date;
+   reviewNote: string;
+
    referrals: number;
    rewardsEarned: number;
    signedUpAt: Date;
    createdAt: Date;
+   updatedAt: Date;
 }
 
 const AffiliateSignupSchema = new Schema<IAffiliateSignup>(
@@ -50,10 +68,23 @@ const AffiliateSignupSchema = new Schema<IAffiliateSignup>(
       product: { type: String, default: "" },
       status: {
          type: String,
-         enum: ["signed_up", "active", "inactive"],
-         default: "active",
+         enum: [
+            "pending",
+            "approved",
+            "rejected",
+            "withdrawn",
+            "left",
+            "active",
+            "signed_up",
+            "inactive",
+         ],
+         default: "pending",
          index: true,
       },
+      applicationMessage: { type: String, default: "" },
+      reviewedBy: { type: Schema.Types.ObjectId, ref: "User" },
+      reviewedAt: { type: Date },
+      reviewNote: { type: String, default: "" },
       referrals: { type: Number, default: 0 },
       rewardsEarned: { type: Number, default: 0 },
       signedUpAt: { type: Date, default: Date.now },
@@ -66,6 +97,7 @@ AffiliateSignupSchema.index(
    { unique: true },
 );
 AffiliateSignupSchema.index({ userId: 1, campaignId: 1 });
+AffiliateSignupSchema.index({ businessId: 1, status: 1, createdAt: -1 });
 
 const AffiliateSignup: Model<IAffiliateSignup> =
    mongoose.models.AffiliateSignup ||

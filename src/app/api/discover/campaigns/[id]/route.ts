@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
 import AffiliateSignup from "@/models/AffiliateSignup";
 import { getCurrentUserId } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -15,7 +16,6 @@ export async function GET(
       await connectDB();
 
       const { id } = await params;
-
       const query = mongoose.isValidObjectId(id)
          ? { $or: [{ _id: id }, { slug: id }] }
          : { slug: id };
@@ -28,14 +28,25 @@ export async function GET(
          );
       }
 
-      let joined = false;
+      let requestStatus: string | null = null;
+      let reviewNote = "";
       const userId = await getCurrentUserId();
       if (userId) {
-         const s = await AffiliateSignup.exists({
+         const s = await AffiliateSignup.findOne({
             userId,
             campaignId: campaign._id,
-         });
-         joined = Boolean(s);
+         })
+            .select("status reviewNote")
+            .lean<any>();
+         if (s) {
+            requestStatus =
+               s.status === "active"
+                  ? "approved"
+                  : s.status === "signed_up"
+                    ? "pending"
+                    : s.status;
+            reviewNote = s.reviewNote ?? "";
+         }
       }
 
       const budget = campaign.budget ?? 0;
@@ -67,11 +78,13 @@ export async function GET(
             duration: campaign.duration ?? "",
             featured: Boolean(campaign.featured),
             startDate: campaign.startDate ?? null,
-            joined,
+            requestStatus,
+            reviewNote,
+            joined: requestStatus === "approved",
          },
       });
    } catch (err) {
-      console.error("[GET /api/discover/campaigns/[id]]", err);
+      logError("GET /api/discover/campaigns/[id]", err);
       return NextResponse.json(
          { error: "Failed to load campaign" },
          { status: 500 },

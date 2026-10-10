@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
-   Search,
-   ChevronDown,
    ChevronLeft,
-   Check,
-   Eraser,
+   ChevronRight,
    Users,
+   Check,
+   Clock,
+   X,
 } from "lucide-react";
 import styles from "@/styles/pages/discover.module.css";
 
@@ -19,98 +19,83 @@ interface Campaign {
    slug: string;
    title: string;
    subtitle: string;
-   category: string;
    coverImage: string;
-   previewImage: string;
    brandName: string;
    brandAvatar: string;
    brandVerified: boolean;
    socials: SocialPlatform[];
+   cpm: number;
+   duration: string;
    budget: number;
    budgetSpent: number;
    budgetRemaining: number;
-   cpm: number;
    joinedUsers: number;
    totalViews: number;
-   duration: string;
+   objective: string;
+   adFormat: string;
+   category: string;
    featured: boolean;
+   requestStatus: string | null;
    joined: boolean;
-   objective?: string;
-   adFormat?: string;
+}
+
+interface Feed {
+   featured: Campaign[];
+   yourCampaigns: Campaign[];
+   popular: Campaign[];
+   newCampaigns: Campaign[];
 }
 
 const SOCIALS: Record<SocialPlatform, { label: string; color: string }> = {
    facebook: { label: "f", color: "#1877F2" },
    youtube: { label: "▶", color: "#ff0000" },
-   tiktok: { label: "♪", color: "#fff" },
+   tiktok: { label: "♪", color: "#ffffff" },
    instagram: { label: "◉", color: "#E1306C" },
-   x: { label: "𝕏", color: "#fff" },
+   x: { label: "𝕏", color: "#ffffff" },
 };
 
-const SORTS = [
-   { key: "top", label: "Top" },
-   { key: "newest", label: "Newest" },
-   { key: "cpm", label: "Highest CPM" },
-   { key: "budget", label: "Highest Budget" },
-];
-
 export default function DiscoverPage() {
-   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+   const [feed, setFeed] = useState<Feed | null>(null);
    const [loading, setLoading] = useState(true);
-   const [search, setSearch] = useState("");
-   const [social, setSocial] = useState<SocialPlatform | "">("");
-   const [sort, setSort] = useState("top");
-   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
-
-   const load = useCallback(async () => {
-      setLoading(true);
-      try {
-         const p = new URLSearchParams();
-         if (search) p.set("q", search);
-         if (social) p.set("social", social);
-         if (sort) p.set("sort", sort);
-         const res = await fetch(`/api/discover/campaigns?${p}`, {
-            credentials: "include",
-         });
-         const d = await res.json();
-         setCampaigns(d.campaigns || []);
-      } finally {
-         setLoading(false);
-      }
-   }, [search, social, sort]);
+   const [featuredIndex, setFeaturedIndex] = useState(0);
 
    useEffect(() => {
-      load();
-   }, [load]);
-
-   // Refetch when the tab regains focus or the page is restored from bfcache
-   useEffect(() => {
-      const onFocus = () => load();
-      const onPageShow = (e: PageTransitionEvent) => {
-         if (e.persisted) load();
-      };
-      window.addEventListener("focus", onFocus);
-      window.addEventListener("pageshow", onPageShow);
-      return () => {
-         window.removeEventListener("focus", onFocus);
-         window.removeEventListener("pageshow", onPageShow);
-      };
-   }, [load]);
-
-   useEffect(() => {
-      const h = (e: MouseEvent) => {
-         if (!(e.target as HTMLElement).closest("[data-dropdown]"))
-            setOpenDropdown(null);
-      };
-      document.addEventListener("mousedown", h);
-      return () => document.removeEventListener("mousedown", h);
+      fetch("/api/discover/feed", { credentials: "include" })
+         .then((r) => r.json())
+         .then((d) => setFeed(d))
+         .finally(() => setLoading(false));
    }, []);
+
+   useEffect(() => {
+      if (!feed || feed.featured.length < 2) return;
+      const t = setInterval(() => {
+         setFeaturedIndex((i) => (i + 1) % feed.featured.length);
+      }, 8000);
+      return () => clearInterval(t);
+   }, [feed]);
 
    const fmtMoney = (n: number) => {
       if (n >= 1000000) return `$${(n / 1000000).toFixed(1)}M`;
       if (n >= 1000) return `$${(n / 1000).toFixed(1)}k`;
       return `$${n.toFixed(0)}`;
    };
+
+   if (loading) {
+      return (
+         <div className={styles.page}>
+            <div className={styles.loading}>Loading…</div>
+         </div>
+      );
+   }
+   if (!feed) {
+      return (
+         <div className={styles.page}>
+            <div className={styles.loading}>Failed to load</div>
+         </div>
+      );
+   }
+
+   const featured = feed.featured[featuredIndex];
 
    return (
       <div className={styles.page}>
@@ -120,129 +105,154 @@ export default function DiscoverPage() {
                <ChevronLeft size={16} />
                <span>Discover Content Rewards</span>
             </Link>
+            <button className={styles.installBtn}>
+               Install app in your space
+            </button>
          </div>
 
-         {/* Filter Row */}
-         <div className={styles.filterRowOuter}>
-            <h2 className={styles.title}>Top Campaigns</h2>
-            <div className={styles.searchWrap}>
-               <Search size={14} />
-               <input
-                  className={styles.searchInput}
-                  placeholder="Search campaigns"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-               />
-            </div>
-         </div>
-
-         {/* Filters Bar */}
-         <div className={styles.filterBar}>
-            <div className={styles.socialsRow}>
-               {(
-                  [
-                     "youtube",
-                     "tiktok",
-                     "instagram",
-                     "x",
-                     "facebook",
-                  ] as SocialPlatform[]
-               ).map((s) => {
-                  const active = social === s;
-                  return (
-                     <button
-                        key={s}
-                        className={`${styles.socialBtn} ${
-                           active ? styles.socialBtnActive : ""
-                        }`}
-                        onClick={() => setSocial(active ? "" : s)}
-                        style={
-                           active
-                              ? {
-                                   background: SOCIALS[s].color,
-                                   color:
-                                      s === "youtube"
-                                         ? "#fff"
-                                         : s === "facebook"
-                                           ? "#fff"
-                                           : s === "instagram"
-                                             ? "#fff"
-                                             : "#000",
-                                }
-                              : {}
-                        }
-                     >
-                        {SOCIALS[s].label}
-                     </button>
-                  );
-               })}
-            </div>
-
-            <div className={styles.sortWrap} data-dropdown>
-               <button
-                  className={styles.sortBtn}
-                  onClick={() =>
-                     setOpenDropdown(openDropdown === "sort" ? null : "sort")
-                  }
+         {/* Featured hero carousel */}
+         {featured && (
+            <div className={styles.heroWrap}>
+               <Link
+                  href={`/discover/${featured.slug}`}
+                  className={styles.hero}
                >
-                  {SORTS.find((s) => s.key === sort)?.label}
-                  <ChevronDown size={12} />
-               </button>
-               {openDropdown === "sort" && (
-                  <div className={styles.menu} data-dropdown>
-                     {SORTS.map((s) => (
+                  {featured.coverImage && (
+                     <img
+                        src={featured.coverImage}
+                        alt={featured.title}
+                        className={styles.heroImg}
+                     />
+                  )}
+                  <div className={styles.heroOverlay} />
+                  <div className={styles.heroContent}>
+                     <div className={styles.heroBadge}>
+                        <span className={styles.heroDot} />
+                        <span>Featured campaign</span>
+                     </div>
+                     <div className={styles.heroTitle}>{featured.title}</div>
+                     <div className={styles.heroMetaRow}>
+                        <span>
+                           {fmtMoney(featured.budget)} ·{" "}
+                           {featured.totalViews.toLocaleString()} views
+                        </span>
+                        <span className={styles.heroDotSep}>·</span>
+                        <span>${featured.cpm}/1K</span>
+                        <span className={styles.heroDotSep}>·</span>
+                        <span className={styles.heroCategory}>
+                           {featured.category}
+                        </span>
+                     </div>
+                  </div>
+                  <div className={styles.heroBrand}>
+                     <span className={styles.heroBrandCheck}>✓</span>
+                     <span>{featured.brandName}</span>
+                  </div>
+                  <button className={styles.heroView}>View campaign</button>
+               </Link>
+
+               {feed.featured.length > 1 && (
+                  <div className={styles.heroDots}>
+                     {feed.featured.map((_, i) => (
                         <button
-                           key={s.key}
-                           className={styles.menuItem}
-                           onClick={() => {
-                              setSort(s.key);
-                              setOpenDropdown(null);
-                           }}
-                        >
-                           <span className={styles.checkBox}>
-                              {sort === s.key && <Check size={12} />}
-                           </span>
-                           {s.label}
-                        </button>
+                           key={i}
+                           className={`${styles.heroDotItem} ${
+                              i === featuredIndex ? styles.heroDotActive : ""
+                           }`}
+                           onClick={() => setFeaturedIndex(i)}
+                        />
                      ))}
                   </div>
                )}
             </div>
-
-            {(search || social || sort !== "top") && (
-               <button
-                  className={styles.clearBtn}
-                  onClick={() => {
-                     setSearch("");
-                     setSocial("");
-                     setSort("top");
-                  }}
-               >
-                  <Eraser size={12} /> Clear
-               </button>
-            )}
-         </div>
-
-         {/* Grid */}
-         {loading ? (
-            <div className={styles.loading}>Loading campaigns...</div>
-         ) : campaigns.length === 0 ? (
-            <div className={styles.empty}>
-               <div className={styles.emptyIcon}>🎬</div>
-               <div className={styles.emptyTitle}>No campaigns found</div>
-               <div className={styles.emptySub}>Try a different filter</div>
-            </div>
-         ) : (
-            <div className={styles.grid}>
-               {campaigns.map((c) => (
-                  <CampaignCard key={c.id} c={c} fmtMoney={fmtMoney} />
-               ))}
-            </div>
          )}
+
+         {/* Your campaigns */}
+         {feed.yourCampaigns.length > 0 && (
+            <Row
+               title="Your campaigns"
+               campaigns={feed.yourCampaigns}
+               fmtMoney={fmtMoney}
+            />
+         )}
+
+         {/* Popular this week */}
+         <Row
+            title="Popular this week"
+            campaigns={feed.popular}
+            fmtMoney={fmtMoney}
+         />
+
+         {/* New campaigns */}
+         <Row
+            title="New campaigns"
+            campaigns={feed.newCampaigns}
+            fmtMoney={fmtMoney}
+         />
       </div>
    );
 }
 
+// =========================================
+// SECTION ROW (horizontal carousel)
+// =========================================
+function Row({
+   title,
+   campaigns,
+   fmtMoney,
+}: {
+   title: string;
+   campaigns: Campaign[];
+   fmtMoney: (n: number) => string;
+}) {
+   const scrollerRef = useRef<HTMLDivElement>(null);
+
+   const scroll = (dir: "left" | "right") => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      const amount = el.clientWidth * 0.85;
+      el.scrollBy({
+         left: dir === "left" ? -amount : amount,
+         behavior: "smooth",
+      });
+   };
+
+   if (campaigns.length === 0) return null;
+
+   return (
+      <section className={styles.rowSection}>
+         <div className={styles.rowHeader}>
+            <div className={styles.rowTitle}>{title}</div>
+            <div className={styles.rowNav}>
+               <button
+                  className={styles.navBtn}
+                  onClick={() => scroll("left")}
+                  aria-label="Scroll left"
+               >
+                  <ChevronLeft size={14} />
+               </button>
+               <button
+                  className={styles.navBtn}
+                  onClick={() => scroll("right")}
+                  aria-label="Scroll right"
+               >
+                  <ChevronRight size={14} />
+               </button>
+            </div>
+         </div>
+
+         <div className={styles.scroller} ref={scrollerRef}>
+            {campaigns.map((c) => (
+               <CampaignCard key={c.id} c={c} fmtMoney={fmtMoney} />
+            ))}
+         </div>
+      </section>
+   );
+}
+
+// =========================================
+// CAMPAIGN CARD
+// =========================================
 function CampaignCard({
    c,
    fmtMoney,
@@ -252,91 +262,88 @@ function CampaignCard({
 }) {
    const pct =
       c.budget > 0 ? Math.min(100, (c.budgetSpent / c.budget) * 100) : 0;
+
    return (
       <Link href={`/discover/${c.slug}`} className={styles.card}>
-         {/* Cover */}
-         <div className={styles.cover}>
+         <div className={styles.cardCover}>
             {c.coverImage ? (
-               <img
-                  src={c.coverImage}
-                  alt={c.title}
-                  className={styles.coverImg}
-               />
+               <img src={c.coverImage} alt={c.title} />
             ) : (
-               <div className={styles.coverFallback}>🎬</div>
+               <div className={styles.cardCoverFallback}>🎬</div>
             )}
-            {c.brandVerified && (
-               <div className={styles.brandPill}>
-                  <span className={styles.brandCheck}>✓</span>
-                  <span>{c.brandName}</span>
-               </div>
-            )}
-            {c.joined && (
-               <div className={styles.joinedPill}>
-                  <Check size={12} /> Joined
-               </div>
-            )}
+
+            {/* Left-top platform icons */}
+            <div className={styles.cardCoverLeft}>
+               {c.socials.slice(0, 3).map((s) => (
+                  <span
+                     key={s}
+                     className={styles.cardPlatformIcon}
+                     style={{ color: SOCIALS[s]?.color ?? "#fff" }}
+                  >
+                     {SOCIALS[s]?.label ?? "?"}
+                  </span>
+               ))}
+            </div>
+
+            {/* Right-top status dot */}
+            <div className={styles.cardCoverRight}>
+               {c.requestStatus === "pending" && (
+                  <span className={styles.cardStatusPending}>
+                     <Clock size={10} /> Pending
+                  </span>
+               )}
+               {c.requestStatus === "approved" && (
+                  <span className={styles.cardStatusApproved}>
+                     <Check size={10} /> Joined
+                  </span>
+               )}
+               {c.requestStatus === "rejected" && (
+                  <span className={styles.cardStatusRejected}>
+                     <X size={10} /> Declined
+                  </span>
+               )}
+            </div>
          </div>
 
-         {/* Info */}
-         <div className={styles.info}>
-            {/* Socials + duration + brand */}
-            <div className={styles.metaRow}>
-               <div className={styles.socialsIcons}>
+         <div className={styles.cardBody}>
+            {/* Row 1 — socials + duration + brand */}
+            <div className={styles.cardMetaRow}>
+               <div className={styles.cardSocialsMini}>
                   {c.socials.map((s) => (
-                     <span key={s} style={{ color: SOCIALS[s].color }}>
-                        {SOCIALS[s].label}
+                     <span
+                        key={s}
+                        style={{ color: SOCIALS[s]?.color ?? "#fff" }}
+                     >
+                        {SOCIALS[s]?.label}
                      </span>
                   ))}
                </div>
-               <div className={styles.metaRight}>
-                  <span className={styles.duration}>{c.duration}</span>
-                  <span className={styles.dot}>·</span>
-                  <span className={styles.brandName}>{c.brandName}</span>
-                  {c.brandVerified && (
-                     <span className={styles.brandVerifiedIcon}>✓</span>
-                  )}
-               </div>
+               <span className={styles.cardDuration}>{c.duration}</span>
+               <span className={styles.cardDot}>·</span>
+               <span className={styles.cardBrandName}>{c.brandName}</span>
+               {c.brandVerified && (
+                  <span className={styles.cardBrandCheck}>✓</span>
+               )}
             </div>
 
-            {/* Title */}
+            {/* Row 2 — title */}
             <div className={styles.cardTitle}>{c.title}</div>
 
-            {/* Objective + format pills */}
-            {(c.objective || c.adFormat) && (
-               <div className={styles.tagRow}>
-                  {c.objective && (
-                     <span className={styles.objectivePill}>{c.objective}</span>
-                  )}
-                  {c.adFormat && (
-                     <span className={styles.formatPill}>
-                        {c.adFormat.replace("-", " ")}
-                     </span>
-                  )}
-               </div>
-            )}
-
-            {/* Stats */}
-            <div className={styles.statsRow}>
-               <div className={styles.statLeft}>
-                  <div className={styles.cpmValue}>${c.cpm}/1k</div>
-                  <div className={styles.joinedCount}>
-                     <Users size={11} /> {c.joinedUsers}
-                  </div>
-               </div>
-               <div className={styles.statRight}>
-                  <span className={styles.raised}>
-                     {fmtMoney(c.budgetSpent)}
-                  </span>
-                  <span className={styles.separator}>/</span>
-                  <span className={styles.budget}>{fmtMoney(c.budget)}</span>
-               </div>
+            {/* Row 3 — stats */}
+            <div className={styles.cardStatsRow}>
+               <span className={styles.cardCpm}>${c.cpm}/1k</span>
+               <span className={styles.cardJoins}>
+                  <Users size={10} /> {c.joinedUsers}
+               </span>
+               <span className={styles.cardSpend}>
+                  {fmtMoney(c.budgetSpent)}/{fmtMoney(c.budget)}
+               </span>
             </div>
 
-            {/* Progress */}
-            <div className={styles.progressTrack}>
+            {/* Progress bar */}
+            <div className={styles.cardProgressTrack}>
                <div
-                  className={styles.progressFill}
+                  className={styles.cardProgressFill}
                   style={{ width: `${pct}%` }}
                />
             </div>

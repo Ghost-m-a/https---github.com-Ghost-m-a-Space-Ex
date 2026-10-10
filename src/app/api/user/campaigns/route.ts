@@ -4,6 +4,7 @@ import AffiliateSignup from "@/models/AffiliateSignup";
 import Campaign from "@/models/Campaign";
 import CampaignSubmission from "@/models/CampaignSubmission";
 import { getCurrentUserId } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +19,14 @@ export async function GET() {
       }
 
       await connectDB();
-
-      // Ensure schemas are registered before populate()
       void Campaign;
       void CampaignSubmission;
 
-      // ---- Joined campaigns ----
-      const signups = await AffiliateSignup.find({ userId })
+      // Exclude withdrawn/left — the user no longer has a relationship
+      const signups = await AffiliateSignup.find({
+         userId,
+         status: { $nin: ["withdrawn", "left"] },
+      })
          .sort({ signedUpAt: -1 })
          .populate(
             "campaignId",
@@ -38,12 +40,22 @@ export async function GET() {
             const c = s.campaignId as any;
             const budget = c.budget ?? 0;
             const budgetSpent = c.budgetSpent ?? 0;
+
+            const normalized =
+               s.status === "active"
+                  ? "approved"
+                  : s.status === "signed_up"
+                    ? "pending"
+                    : s.status;
+
             return {
                contributionId: String(s._id),
                joinedAt: s.signedUpAt ?? s.createdAt,
                totalViews: s.totalViews ?? 0,
                totalEarned: s.rewardsEarned ?? 0,
-               status: s.status ?? "active",
+               status: normalized,
+               reviewNote: s.reviewNote ?? "",
+               reviewedAt: s.reviewedAt ?? null,
                campaign: {
                   id: String(c._id),
                   slug: c.slug ?? String(c._id),
@@ -59,7 +71,21 @@ export async function GET() {
             };
          });
 
-      // ---- Recent submissions (best-effort; empty if the model isn't set up) ----
+      // Stats only count approved campaigns
+      const approved = joined.filter((j) => j.status === "approved");
+      const totalEarned = approved.reduce(
+         (sum, j) => sum + (j.totalEarned || 0),
+         0,
+      );
+      const totalViews = approved.reduce(
+         (sum, j) => sum + (j.totalViews || 0),
+         0,
+      );
+      const activeCampaigns = approved.filter(
+         (j) => j.campaign.status === "active",
+      ).length;
+
+      // Recent submissions
       let submissions: any[] = [];
       try {
          const docs = await CampaignSubmission.find({ userId })
@@ -84,22 +110,8 @@ export async function GET() {
                : null,
          }));
       } catch {
-         // Model might not have the fields we expect — return empty
          submissions = [];
       }
-
-      // ---- Aggregate stats ----
-      const totalEarned = joined.reduce(
-         (sum, j) => sum + (j.totalEarned || 0),
-         0,
-      );
-      const totalViews = joined.reduce(
-         (sum, j) => sum + (j.totalViews || 0),
-         0,
-      );
-      const activeCampaigns = joined.filter(
-         (j) => j.campaign.status === "active",
-      ).length;
 
       return NextResponse.json({
          joined,
@@ -109,10 +121,11 @@ export async function GET() {
             totalViews,
             activeCampaigns,
             joinedCount: joined.length,
+            pendingCount: joined.filter((j) => j.status === "pending").length,
          },
       });
    } catch (err) {
-      console.error("[GET /api/user/campaigns]", err);
+      logError("GET /api/user/campaigns", err);
       return NextResponse.json(
          { joined: [], submissions: [], stats: null },
          { status: 500 },

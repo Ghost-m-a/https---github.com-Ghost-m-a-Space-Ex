@@ -3,6 +3,7 @@ import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
 import AffiliateSignup from "@/models/AffiliateSignup";
 import { getCurrentUserId } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,6 @@ export async function GET(req: Request) {
       const filter: Record<string, unknown> = {
          status: { $in: ["active", "published", "live"] },
       };
-
       if (q) {
          filter.$or = [
             { title: { $regex: q, $options: "i" } },
@@ -41,23 +41,32 @@ export async function GET(req: Request) {
          .limit(60)
          .lean<any[]>();
 
-      // ---- Which of these campaigns has the current user joined? ----
-      let joinedIds = new Set<string>();
+      // Build a map of campaignId → request status for the current user
+      const statusMap = new Map<string, string>();
       const userId = await getCurrentUserId();
       if (userId && docs.length > 0) {
          const signups = await AffiliateSignup.find({
             userId,
             campaignId: { $in: docs.map((d) => d._id) },
          })
-            .select("campaignId")
+            .select("campaignId status")
             .lean<any[]>();
-         joinedIds = new Set(signups.map((s) => String(s.campaignId)));
+
+         signups.forEach((s) => statusMap.set(String(s.campaignId), s.status));
       }
 
-      // ---- Shape the response ----
       const campaigns = docs.map((c) => {
          const budget = c.budget ?? 0;
          const budgetSpent = c.budgetSpent ?? c.spent ?? 0;
+         const rawStatus = statusMap.get(String(c._id)) ?? null;
+
+         // Normalize legacy values
+         const requestStatus =
+            rawStatus === "active"
+               ? "approved"
+               : rawStatus === "signed_up"
+                 ? "pending"
+                 : rawStatus;
 
          return {
             id: String(c._id),
@@ -75,19 +84,20 @@ export async function GET(req: Request) {
             budgetSpent,
             budgetRemaining: Math.max(0, budget - budgetSpent),
             cpm: c.cpm ?? 0,
-            joinedUsers: c.joinedUsers ?? c.participants?.length ?? 0,
+            joinedUsers: c.joinedUsers ?? 0,
             totalViews: c.totalViews ?? 0,
             duration: c.duration ?? "",
             featured: Boolean(c.featured),
             objective: c.objective ?? "views",
             adFormat: c.adFormat ?? "short-video",
-            joined: joinedIds.has(String(c._id)),
+            requestStatus,
+            joined: requestStatus === "approved",
          };
       });
 
       return NextResponse.json({ campaigns });
    } catch (err) {
-      console.error("[GET /api/discover/campaigns]", err);
+      logError("GET /api/discover/campaigns", err);
       return NextResponse.json(
          { campaigns: [], error: "Failed to load campaigns" },
          { status: 500 },

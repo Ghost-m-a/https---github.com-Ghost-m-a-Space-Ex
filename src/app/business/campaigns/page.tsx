@@ -2,13 +2,34 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
-import { Plus, TrendingUp, Users, Wallet, ExternalLink } from "lucide-react";
+import {
+   Plus,
+   TrendingUp,
+   Users,
+   Wallet,
+   ExternalLink,
+   Inbox,
+} from "lucide-react";
 import { useWorkspace } from "@/context/workspace-context";
 import styles from "@/styles/pages/campaigns.module.css";
 
+interface CampaignRow {
+   id: string;
+   slug: string;
+   title: string;
+   coverImage: string;
+   status: string;
+   budget: number;
+   budgetSpent: number;
+   joinedUsers: number;
+   totalViews: number;
+   cpm: number;
+   pendingRequests: number;
+}
+
 export default function BusinessCampaignsPage() {
    const { activeBusiness } = useWorkspace();
-   const [campaigns, setCampaigns] = useState<any[]>([]);
+   const [campaigns, setCampaigns] = useState<CampaignRow[]>([]);
    const [loading, setLoading] = useState(true);
 
    const load = useCallback(async () => {
@@ -17,6 +38,7 @@ export default function BusinessCampaignsPage() {
       try {
          const res = await fetch(
             `/api/business/campaigns?businessId=${activeBusiness.id}`,
+            { credentials: "include" },
          );
          const d = await res.json();
          setCampaigns(d.campaigns || []);
@@ -70,64 +92,94 @@ export default function BusinessCampaignsPage() {
                      c.budget > 0
                         ? Math.min(100, (c.budgetSpent / c.budget) * 100)
                         : 0;
+                  const hasPending = (c.pendingRequests ?? 0) > 0;
+
                   return (
-                     <Link
-                        key={c.id}
-                        href={`/discover/${c.slug}`}
-                        className={styles.card}
-                     >
-                        <div className={styles.cover}>
-                           {c.coverImage ? (
-                              <img
-                                 src={c.coverImage}
-                                 alt={c.title}
-                                 className={styles.coverImg}
-                              />
-                           ) : (
-                              <div className={styles.coverFallback}>🎬</div>
-                           )}
-                           <span
-                              className={`${styles.statusBadge} ${styles[c.status]}`}
-                           >
-                              {c.status}
-                           </span>
-                        </div>
-                        <div className={styles.cardBody}>
-                           <div className={styles.cardTitle}>{c.title}</div>
-
-                           <div className={styles.stats}>
-                              <div className={styles.statItem}>
-                                 <Wallet size={12} />
-                                 <span>
-                                    {fmtMoney(c.budgetSpent)} /{" "}
-                                    {fmtMoney(c.budget)}
-                                 </span>
-                              </div>
-                              <div className={styles.statItem}>
-                                 <Users size={12} />
-                                 <span>{c.joinedUsers}</span>
-                              </div>
-                              <div className={styles.statItem}>
-                                 <TrendingUp size={12} />
-                                 <span>${c.cpm}/1k</span>
-                              </div>
-                           </div>
-
-                           <div className={styles.progressTrack}>
-                              <div
-                                 className={styles.progressFill}
-                                 style={{ width: `${pct}%` }}
-                              />
-                           </div>
-
-                           <div className={styles.cardFooter}>
-                              <span>
-                                 {c.totalViews.toLocaleString()} total views
+                     <div key={c.id} className={styles.card}>
+                        {/* Clickable card body → public campaign page */}
+                        <Link
+                           href={`/discover/${c.slug}`}
+                           className={styles.cardLink}
+                        >
+                           <div className={styles.cover}>
+                              {c.coverImage ? (
+                                 <img
+                                    src={c.coverImage}
+                                    alt={c.title}
+                                    className={styles.coverImg}
+                                 />
+                              ) : (
+                                 <div className={styles.coverFallback}>🎬</div>
+                              )}
+                              <span
+                                 className={`${styles.statusBadge} ${
+                                    styles[c.status] || ""
+                                 }`}
+                              >
+                                 {c.status}
                               </span>
-                              <ExternalLink size={12} />
+
+                              {hasPending && (
+                                 <span className={styles.pendingBadge}>
+                                    <Inbox size={10} /> {c.pendingRequests}{" "}
+                                    pending
+                                 </span>
+                              )}
                            </div>
+
+                           <div className={styles.cardBody}>
+                              <div className={styles.cardTitle}>{c.title}</div>
+
+                              <div className={styles.stats}>
+                                 <div className={styles.statItem}>
+                                    <Wallet size={12} />
+                                    <span>
+                                       {fmtMoney(c.budgetSpent)} /{" "}
+                                       {fmtMoney(c.budget)}
+                                    </span>
+                                 </div>
+                                 <div className={styles.statItem}>
+                                    <Users size={12} />
+                                    <span>{c.joinedUsers}</span>
+                                 </div>
+                                 <div className={styles.statItem}>
+                                    <TrendingUp size={12} />
+                                    <span>${c.cpm}/1k</span>
+                                 </div>
+                              </div>
+
+                              <div className={styles.progressTrack}>
+                                 <div
+                                    className={styles.progressFill}
+                                    style={{ width: `${pct}%` }}
+                                 />
+                              </div>
+
+                              <div className={styles.cardFooter}>
+                                 <span>
+                                    {c.totalViews.toLocaleString()} total views
+                                 </span>
+                                 <ExternalLink size={12} />
+                              </div>
+                           </div>
+                        </Link>
+
+                        {/* Actions row — separate from the link */}
+                        <div className={styles.cardActions}>
+                           <Link
+                              href={`/business/campaigns/${c.id}/requests`}
+                              className={styles.requestsBtn}
+                           >
+                              <Inbox size={12} />
+                              <span>View requests</span>
+                              {hasPending && (
+                                 <span className={styles.requestsCount}>
+                                    {c.pendingRequests}
+                                 </span>
+                              )}
+                           </Link>
                         </div>
-                     </Link>
+                     </div>
                   );
                })}
             </div>
