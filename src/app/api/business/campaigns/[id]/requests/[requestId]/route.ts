@@ -3,8 +3,10 @@ import { connectDB } from "@/lib/mongodb";
 import Business from "@/models/Business";
 import Campaign from "@/models/Campaign";
 import AffiliateSignup from "@/models/AffiliateSignup";
+import User from "@/models/User";
 import { getCurrentUserId } from "@/lib/auth";
 import { logError, logInfo } from "@/lib/logger";
+import { sendEmail, approvedEmail, rejectedEmail } from "@/lib/email";
 
 export const dynamic = "force-dynamic";
 
@@ -72,6 +74,14 @@ export async function POST(
          );
       }
 
+      // Shared pieces for both branches
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL(req.url).origin;
+      const businessName = business.name ?? "The business";
+      const campaignTitle = campaign.title ?? "the campaign";
+
+      // ---------------------------------------------------
+      // APPROVE
+      // ---------------------------------------------------
       if (action === "approve") {
          signup.status = "approved";
          signup.reviewedBy = userId as any;
@@ -79,22 +89,71 @@ export async function POST(
          signup.reviewNote = note;
          await signup.save();
 
-         // Bump the campaign counter now — the creator is truly joined
+         // Bump the campaign counter — the creator is now truly joined
          await Campaign.findByIdAndUpdate(campaign._id, {
             $inc: { joinedUsers: 1 },
          });
-      } else {
-         signup.status = "rejected";
-         signup.reviewedBy = userId as any;
-         signup.reviewedAt = new Date();
-         signup.reviewNote = note;
-         await signup.save();
+
+         logInfo("requests/review", "approved", {
+            requestId,
+            campaignId: String(campaign._id),
+         });
+
+         // Notify the creator (fire-and-forget)
+         (async () => {
+            try {
+               const creator = await User.findById(signup.userId).lean<any>();
+               if (!creator?.email) return;
+               const tpl = approvedEmail(
+                  businessName,
+                  campaignTitle,
+                  creator.name ?? "Creator",
+                  appUrl,
+                  campaign.slug ?? String(campaign._id),
+               );
+               await sendEmail({ to: creator.email, ...tpl });
+            } catch (e) {
+               logError("requests:approve-email", e);
+            }
+         })();
+
+         return NextResponse.json({
+            ok: true,
+            status: signup.status,
+         });
       }
 
-      logInfo("requests/review", `${action} applied`, {
+      // ---------------------------------------------------
+      // REJECT
+      // ---------------------------------------------------
+      signup.status = "rejected";
+      signup.reviewedBy = userId as any;
+      signup.reviewedAt = new Date();
+      signup.reviewNote = note;
+      await signup.save();
+
+      logInfo("requests/review", "rejected", {
          requestId,
          campaignId: String(campaign._id),
       });
+
+      // Notify the creator (fire-and-forget)
+      (async () => {
+         try {
+            const creator = await User.findById(signup.userId).lean<any>();
+            if (!creator?.email) return;
+            const tpl = rejectedEmail(
+               businessName,
+               campaignTitle,
+               creator.name ?? "Creator",
+               note,
+               appUrl,
+            );
+            await sendEmail({ to: creator.email, ...tpl });
+         } catch (e) {
+            logError("requests:reject-email", e);
+         }
+      })();
 
       return NextResponse.json({
          ok: true,
