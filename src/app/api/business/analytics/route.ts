@@ -1,12 +1,12 @@
 import { NextResponse, NextRequest } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import Business from "@/models/Business";
-import Product from "@/models/Product";
-import Payment from "@/models/Payment";
-import Campaign from "@/models/Campaign";
-import CampaignContribution from "@/models/CampaignContribution";
-import Customer from "@/models/Customer";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { connectDB } from "@/app/lib/mongodb";
+import Business from "@/app/lib/models/Business";
+import Product from "@/app/lib/models/Product";
+import Payment from "@/app/lib/models/Payment";
+import Campaign from "@/app/lib/models/Campaign";
+import CampaignContribution from "@/app/lib/models/CampaignContribution";
+import Customer from "@/app/lib/models/Customer";
+import { verifySessionToken, SESSION_COOKIE_NAME } from "@/app/lib/auth";
 
 export async function GET(req: NextRequest) {
    try {
