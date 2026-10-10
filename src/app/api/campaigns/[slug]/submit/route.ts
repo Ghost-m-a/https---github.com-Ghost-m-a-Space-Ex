@@ -55,6 +55,8 @@ export async function POST(
          );
       }
 
+      // `r` is inferred as IPlatformRate because Campaign.platformRates
+      // is now typed on the model.
       const platformRate = campaign.platformRates.find(
          (r) => r.platform === platform,
       );

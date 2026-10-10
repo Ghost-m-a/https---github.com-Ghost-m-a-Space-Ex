@@ -1,5 +1,8 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
+// =========================================
+// SHARED TYPES
+// =========================================
 export type AdFormat =
    | "feed"
    | "short-video"
@@ -19,12 +22,27 @@ export type Objective =
    | "traffic"
    | "awareness";
 
-export type SocialPlatform =
+export type CampaignPlatform =
    | "youtube"
    | "tiktok"
    | "instagram"
    | "x"
    | "facebook";
+
+export interface IPlatformRate {
+   platform: CampaignPlatform | string;
+   minViews: number;
+   maxViews: number;
+   cpm: number;
+}
+
+export interface ICampaignAsset {
+   type?: string;
+   url?: string;
+   label?: string;
+   thumbnail?: string;
+   [key: string]: unknown;
+}
 
 export interface ICampaign extends Document {
    // Ownership
@@ -49,8 +67,8 @@ export interface ICampaign extends Document {
 
    // Format & platform
    adFormat: AdFormat;
-   platform: SocialPlatform | "multi";
-   socials: SocialPlatform[];
+   platform: CampaignPlatform | "multi";
+   socials: CampaignPlatform[];
 
    // Objective (what the advertiser wants to grow)
    objective: Objective;
@@ -61,7 +79,7 @@ export interface ICampaign extends Document {
    budgetSpent: number;
    budgetType: "daily" | "lifetime";
    bidStrategy: "highest-volume" | "cost-cap" | "manual";
-   cpm: number; // rate paid per 1000 (views/comments/etc.)
+   cpm: number;
 
    // Audience targeting
    targetCountries: string[];
@@ -80,6 +98,11 @@ export interface ICampaign extends Document {
    instructions: string[];
    requirements: string[];
 
+   // Legacy / compatibility
+   duration: string;
+   platformRates: IPlatformRate[];
+   assets: ICampaignAsset[];
+
    // Schedule
    startDate: Date;
    endDate: Date | null;
@@ -88,13 +111,26 @@ export interface ICampaign extends Document {
    joinedUsers: number;
    totalViews: number;
 
-   // Status
-   status: "draft" | "active" | "paused" | "completed" | "archived";
+   // Status — includes legacy "ended"
+   status: "draft" | "active" | "paused" | "completed" | "archived" | "ended";
    featured: boolean;
 
    createdAt: Date;
    updatedAt: Date;
 }
+
+// =========================================
+// SCHEMA
+// =========================================
+const PlatformRateSchema = new Schema<IPlatformRate>(
+   {
+      platform: { type: String, required: true },
+      minViews: { type: Number, default: 0 },
+      maxViews: { type: Number, default: 0 },
+      cpm: { type: Number, default: 0 },
+   },
+   { _id: false },
+);
 
 const CampaignSchema = new Schema<ICampaign>(
    {
@@ -187,6 +223,10 @@ const CampaignSchema = new Schema<ICampaign>(
       instructions: { type: [String], default: [] },
       requirements: { type: [String], default: [] },
 
+      // ---------- Legacy fields kept for backward compatibility ----------
+      duration: { type: String, default: "" },
+      platformRates: { type: [PlatformRateSchema], default: [] },
+      assets: { type: Schema.Types.Mixed, default: [] },
       startDate: { type: Date, default: Date.now },
       endDate: { type: Date, default: null },
 
@@ -195,7 +235,7 @@ const CampaignSchema = new Schema<ICampaign>(
 
       status: {
          type: String,
-         enum: ["draft", "active", "paused", "completed", "archived"],
+         enum: ["draft", "active", "paused", "completed", "archived", "ended"],
          default: "active",
          index: true,
       },
