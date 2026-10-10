@@ -1,0 +1,590 @@
+.page {
+   min-height: 100vh;
+   background: #0a0a0a;
+   color: #fff;
+   padding: 24px;
+}
+
+.layout {
+   display: grid;
+   grid-template-columns: 1fr 340px;
+   gap: 24px;
+   max-width: 1400px;
+   margin: 0 auto;
+}
+
+.main {
+   display: flex;
+   flex-direction: column;
+   gap: 24px;
+   min-width: 0;
+}
+
+.side {
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+}
+
+.loading {
+   padding: 60px;
+   text-align: center;
+   color: #666;
+}
+
+/* ---- Chart header ---- */
+.chartHead {
+   display: flex;
+   justify-content: space-between;
+   align-items: flex-start;
+   gap: 16px;
+   flex-wrap: wrap;
+}
+
+.chartLabel {
+   font-size: 12.5px;
+   color: #888;
+   font-weight: 500;
+}
+
+.chartValue {
+   font-size: 42px;
+   font-weight: 700;
+   color: #fff;
+   letter-spacing: -0.5px;
+   margin-top: 4px;
+}
+
+.chartControls {
+   display: flex;
+   gap: 8px;
+}
+
+.select {
+   padding: 8px 12px;
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 8px;
+   color: #fff;
+   font-size: 12.5px;
+   font-family: inherit;
+   cursor: pointer;
+   outline: none;
+}
+.select:focus {
+   border-color: #3b82f6;
+}
+
+.chartWrap {
+   position: relative;
+   width: 100%;
+   height: 220px;
+   margin: 8px 0 16px;
+}
+
+.chart {
+   width: 100%;
+   height: 100%;
+   display: block;
+}
+
+.chartEmpty {
+   position: absolute;
+   inset: 0;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   color: #444;
+   font-size: 13px;
+   pointer-events: none;
+}
+
+/* ---- Referrals section ---- */
+.section {
+   display: flex;
+   flex-direction: column;
+   gap: 14px;
+   padding: 16px 0;
+}
+
+.sectionHead {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+}
+
+.sectionTitle {
+   font-size: 16px;
+   font-weight: 700;
+}
+
+.sectionTabs {
+   display: inline-flex;
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 999px;
+   padding: 3px;
+}
+
+.sectionTab,
+.sectionTabActive {
+   padding: 6px 14px;
+   border: none;
+   border-radius: 999px;
+   font-size: 12px;
+   font-weight: 600;
+   cursor: pointer;
+   font-family: inherit;
+}
+
+.sectionTab {
+   background: transparent;
+   color: #888;
+}
+.sectionTab:hover {
+   color: #fff;
+}
+
+.sectionTabActive {
+   background: #262626;
+   color: #fff;
+}
+
+.searchRow {
+   display: flex;
+}
+
+.searchInput {
+   padding: 8px 14px;
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 8px;
+   color: #fff;
+   font-size: 13px;
+   outline: none;
+   font-family: inherit;
+   min-width: 280px;
+}
+.searchInput:focus {
+   border-color: #3b82f6;
+}
+
+.tableHead {
+   display: grid;
+   grid-template-columns: 2fr 1fr 1fr 1.5fr 1fr;
+   gap: 12px;
+   padding: 10px 12px;
+   font-size: 11.5px;
+   color: #666;
+   font-weight: 500;
+   border-bottom: 1px solid #1e1e1e;
+}
+
+.tableRow {
+   display: grid;
+   grid-template-columns: 2fr 1fr 1fr 1.5fr 1fr;
+   gap: 12px;
+   padding: 14px 12px;
+   font-size: 13px;
+   border-bottom: 1px solid #141414;
+   align-items: center;
+}
+.tableRow:hover {
+   background: rgba(255, 255, 255, 0.02);
+}
+
+.tableCell {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
+.bizAvatar {
+   width: 28px;
+   height: 28px;
+   border-radius: 6px;
+   background: #262626;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 11px;
+   font-weight: 700;
+   flex-shrink: 0;
+}
+
+.tableEmpty {
+   padding: 40px 20px;
+   text-align: center;
+   color: #666;
+   font-size: 13px;
+}
+
+/* ---- Partner card ---- */
+.partnerCard {
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 12px;
+   padding: 18px;
+   display: flex;
+   flex-direction: column;
+   gap: 16px;
+}
+
+.partnerHeader {
+   display: flex;
+   align-items: center;
+   gap: 12px;
+}
+
+.partnerAvatar {
+   width: 44px;
+   height: 44px;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 14px;
+   font-weight: 700;
+   color: #fff;
+   flex-shrink: 0;
+}
+
+.partnerInfo {
+   flex: 1;
+   min-width: 0;
+}
+
+.partnerName {
+   font-size: 14px;
+   font-weight: 700;
+   color: #fff;
+}
+
+.partnerLevel {
+   font-size: 11.5px;
+   color: #888;
+   margin-top: 2px;
+}
+
+.partnerStats {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 12px;
+   padding-top: 12px;
+   border-top: 1px solid #1e1e1e;
+}
+
+.partnerStat {
+   display: flex;
+   flex-direction: column;
+   gap: 4px;
+}
+
+.partnerStatValue {
+   font-size: 15px;
+   font-weight: 700;
+   color: #fff;
+}
+
+.partnerStatLabel {
+   font-size: 11px;
+   color: #666;
+   text-transform: uppercase;
+   letter-spacing: 0.3px;
+}
+
+.partnerButtons {
+   display: grid;
+   grid-template-columns: 1fr 1fr;
+   gap: 8px;
+}
+
+.primaryBtn,
+.secondaryBtn {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 6px;
+   padding: 10px 14px;
+   border-radius: 8px;
+   font-size: 12.5px;
+   font-weight: 600;
+   cursor: pointer;
+   font-family: inherit;
+   border: none;
+}
+
+.primaryBtn {
+   background: #3b82f6;
+   color: #fff;
+}
+.primaryBtn:hover {
+   background: #2563eb;
+}
+
+.secondaryBtn {
+   background: #262626;
+   color: #fff;
+}
+.secondaryBtn:hover {
+   background: #333;
+}
+
+/* ---- Generic card ---- */
+.card {
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 12px;
+   padding: 18px;
+   display: flex;
+   flex-direction: column;
+   gap: 12px;
+}
+
+.cardTitle {
+   font-size: 14px;
+   font-weight: 700;
+}
+
+.cardTitleRow {
+   display: flex;
+   justify-content: space-between;
+   align-items: center;
+   font-size: 14px;
+   font-weight: 700;
+}
+
+.liveDot {
+   width: 6px;
+   height: 6px;
+   border-radius: 50%;
+   background: #10b981;
+   box-shadow: 0 0 6px #10b981;
+}
+
+.benefitList {
+   list-style: none;
+   margin: 0;
+   padding: 0;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+}
+
+.benefitList li {
+   display: flex;
+   align-items: flex-start;
+   gap: 8px;
+   font-size: 12.5px;
+   color: #ccc;
+   line-height: 1.45;
+}
+
+.benefitList svg {
+   color: #3b82f6;
+   flex-shrink: 0;
+   margin-top: 2px;
+}
+
+.enrollBtn {
+   padding: 10px 14px;
+   background: #3b82f6;
+   color: #fff;
+   border: none;
+   border-radius: 8px;
+   font-size: 12.5px;
+   font-weight: 600;
+   cursor: pointer;
+   font-family: inherit;
+   margin-top: 4px;
+}
+.enrollBtn:hover {
+   background: #2563eb;
+}
+
+/* ---- Dojo card ---- */
+.dojocard {
+   background: #141414;
+   border: 1px solid #262626;
+   border-radius: 12px;
+   padding: 0 0 18px;
+   display: flex;
+   flex-direction: column;
+   gap: 10px;
+   overflow: hidden;
+}
+
+.dojoBanner {
+   position: relative;
+   padding: 20px;
+   background: linear-gradient(135deg, #1e293b 0%, #0f172a 50%, #1e293b 100%);
+   overflow: hidden;
+}
+
+.dojoTitle {
+   font-size: 10px;
+   color: #94a3b8;
+   letter-spacing: 0.5px;
+   text-transform: uppercase;
+}
+
+.dojoSubtitle {
+   font-size: 20px;
+   font-weight: 700;
+   color: #fff;
+   margin-top: 4px;
+}
+
+.dojoTrophy {
+   position: absolute;
+   right: 16px;
+   bottom: 16px;
+   color: #64748b;
+   opacity: 0.5;
+}
+
+.dojoLock {
+   display: inline-flex;
+   align-items: center;
+   gap: 6px;
+   padding: 4px 10px;
+   background: rgba(255, 255, 255, 0.05);
+   border: 1px solid #262626;
+   border-radius: 999px;
+   font-size: 10.5px;
+   color: #94a3b8;
+   margin: 0 18px;
+   align-self: flex-start;
+}
+
+.dojoHeading {
+   font-size: 14px;
+   font-weight: 700;
+   padding: 4px 18px 0;
+   line-height: 1.35;
+}
+
+.dojoStat {
+   display: flex;
+   align-items: flex-start;
+   gap: 8px;
+   margin: 4px 18px 0;
+   padding: 10px;
+   background: rgba(16, 185, 129, 0.1);
+   border: 1px solid rgba(16, 185, 129, 0.25);
+   border-radius: 8px;
+   font-size: 11.5px;
+   color: #6ee7b7;
+   line-height: 1.45;
+}
+.dojoStat svg {
+   flex-shrink: 0;
+   margin-top: 2px;
+}
+.dojoStat strong {
+   color: #10b981;
+}
+
+.dojoFootnote {
+   font-size: 11.5px;
+   color: #666;
+   padding: 0 18px;
+}
+
+.dojoBtn {
+   display: inline-flex;
+   align-items: center;
+   justify-content: center;
+   gap: 6px;
+   margin: 4px 18px 0;
+   padding: 10px 14px;
+   background: #1e1e1e;
+   border: 1px solid #262626;
+   border-radius: 8px;
+   color: #888;
+   font-size: 12.5px;
+   font-weight: 600;
+   cursor: not-allowed;
+   font-family: inherit;
+}
+
+/* ---- Leaderboard ---- */
+.leaderList {
+   display: flex;
+   flex-direction: column;
+}
+
+.leaderRow {
+   display: flex;
+   align-items: center;
+   gap: 10px;
+   padding: 10px 0;
+}
+.leaderRow + .leaderRow {
+   border-top: 1px solid #1e1e1e;
+}
+
+.leaderRank {
+   width: 16px;
+   font-size: 12px;
+   color: #666;
+   font-weight: 600;
+   flex-shrink: 0;
+}
+
+.leaderAvatar {
+   width: 28px;
+   height: 28px;
+   border-radius: 50%;
+   display: flex;
+   align-items: center;
+   justify-content: center;
+   font-size: 11px;
+   font-weight: 700;
+   color: #fff;
+   flex-shrink: 0;
+}
+
+.leaderInfo {
+   flex: 1;
+   min-width: 0;
+}
+
+.leaderName {
+   font-size: 12px;
+   font-weight: 600;
+   color: #fff;
+   overflow: hidden;
+   text-overflow: ellipsis;
+   white-space: nowrap;
+}
+
+.leaderLocation {
+   font-size: 10.5px;
+   color: #666;
+   margin-top: 1px;
+}
+
+.leaderEarnings {
+   font-size: 12.5px;
+   font-weight: 700;
+   color: #fff;
+   flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+   .layout {
+      grid-template-columns: 1fr;
+   }
+   .tableHead,
+   .tableRow {
+      grid-template-columns: 2fr 1fr 1fr;
+   }
+   .tableHead > *:nth-child(n + 4),
+   .tableRow > *:nth-child(n + 4) {
+      display: none;
+   }
+}

@@ -3,38 +3,57 @@ import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
 import Business from "@/models/Business";
 import { getCurrentUserId } from "@/lib/auth";
+import { logError } from "@/lib/logger";
 
 export const dynamic = "force-dynamic";
 
+// --------------------------------------------------
+// GET — list campaigns for the current user's business
+// --------------------------------------------------
 export async function GET() {
    try {
       await connectDB();
+
       const userId = await getCurrentUserId();
-      if (!userId) return NextResponse.json({ campaigns: [] }, { status: 401 });
+      if (!userId) {
+         return NextResponse.json({ campaigns: [] }, { status: 401 });
+      }
 
       const business = await Business.findOne({ userId }).lean<any>();
       if (!business) return NextResponse.json({ campaigns: [] });
 
-      const campaigns = await Campaign.find({ businessId: business._id })
+      const docs = await Campaign.find({ businessId: business._id })
          .sort({ createdAt: -1 })
-         .lean();
+         .lean<any[]>();
+
+      // Map _id → id so the client can use `key={c.id}`
+      const campaigns = docs.map((c) => ({
+         ...c,
+         id: String(c._id),
+      }));
 
       return NextResponse.json({ campaigns });
    } catch (err) {
-      console.error("[GET /api/business/campaigns]", err);
+      logError("GET /api/business/campaigns", err);
       return NextResponse.json(
-         { campaigns: [], error: "Failed" },
+         { campaigns: [], error: "Failed to load campaigns" },
          { status: 500 },
       );
    }
 }
 
+// --------------------------------------------------
+// POST — create a new campaign
+// (unchanged — kept for completeness)
+// --------------------------------------------------
 export async function POST(req: Request) {
    try {
       await connectDB();
+
       const userId = await getCurrentUserId();
-      if (!userId)
+      if (!userId) {
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
 
       const body = await req.json();
       const {
@@ -51,6 +70,7 @@ export async function POST(req: Request) {
          budgetType,
          budgetControl,
          bidStrategy,
+         bidCapAmount,
          cpm,
          specialAdCategory,
          conversionLocation,
@@ -146,6 +166,7 @@ export async function POST(req: Request) {
          budgetType: budgetType ?? "daily",
          budgetControl: budgetControl ?? "campaign",
          bidStrategy: bidStrategy ?? "highest-volume",
+         bidCapAmount: bidCapAmount ?? 0,
          cpm,
          specialAdCategory: specialAdCategory ?? "none",
 
@@ -191,9 +212,12 @@ export async function POST(req: Request) {
          featured: false,
       });
 
-      return NextResponse.json({ campaign }, { status: 201 });
+      return NextResponse.json(
+         { campaign: { ...campaign.toObject(), id: String(campaign._id) } },
+         { status: 201 },
+      );
    } catch (err) {
-      console.error("[POST /api/business/campaigns]", err);
+      logError("POST /api/business/campaigns", err);
       return NextResponse.json(
          { error: "Failed to create campaign" },
          { status: 500 },

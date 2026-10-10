@@ -34,6 +34,8 @@ import {
    Shield,
    Flag,
    BarChart3,
+   Handshake,
+   Share2,
 } from "lucide-react";
 import { useWorkspace } from "@/context/workspace-context";
 import BusinessModal from "./business-modal";
@@ -65,6 +67,7 @@ const Sidebar = () => {
    const [isModalOpen, setIsModalOpen] = useState(false);
    const [showTooltip, setShowTooltip] = useState(false);
    const [openSubmenu, setOpenSubmenu] = useState<string | null>(null);
+   const [unreadMessages, setUnreadMessages] = useState(0);
    const sidebarRef = useRef<HTMLElement>(null);
    const pathname = usePathname();
    const {
@@ -81,6 +84,7 @@ const Sidebar = () => {
    const [businessSettingsTab, setBusinessSettingsTab] =
       useState<BusinessTabId>("general");
 
+   // ---- Mount + persisted collapse state ----
    useEffect(() => {
       setIsMounted(true);
       const saved = localStorage.getItem("sidebar-collapsed");
@@ -129,6 +133,42 @@ const Sidebar = () => {
       return () => window.removeEventListener("keydown", handleKeyDown);
    }, []);
 
+   // ---- Fetch unread message count ----
+   const fetchUnread = useCallback(async () => {
+      try {
+         const res = await fetch("/api/messages/unread-count", {
+            credentials: "include",
+         });
+         if (!res.ok) return;
+         const data = await res.json();
+         setUnreadMessages(data.count ?? 0);
+      } catch {
+         // silent
+      }
+   }, []);
+
+   useEffect(() => {
+      if (!isMounted) return;
+      fetchUnread();
+
+      // Poll every 30s to keep the badge fresh
+      const interval = setInterval(fetchUnread, 30_000);
+
+      // Refetch when the tab regains focus
+      const onFocus = () => fetchUnread();
+      window.addEventListener("focus", onFocus);
+
+      return () => {
+         clearInterval(interval);
+         window.removeEventListener("focus", onFocus);
+      };
+   }, [isMounted, fetchUnread]);
+
+   // Refetch when the route changes (e.g. after opening /messages)
+   useEffect(() => {
+      if (isMounted) fetchUnread();
+   }, [pathname, isMounted, fetchUnread]);
+
    const toggleSidebar = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
    const openSettings = (tab: TabId = "profile") => {
@@ -153,13 +193,23 @@ const Sidebar = () => {
                icon: <MessageSquare size={20} />,
                label: "Messages",
                href: "/messages",
-               badge: 1,
+               badge: unreadMessages > 0 ? unreadMessages : undefined,
                badgeVariant: "red",
             },
             {
                icon: <Building2 size={20} />,
                label: "Townhall",
                href: "/townhall",
+            },
+            {
+               icon: <Handshake size={20} />,
+               label: "Partners",
+               href: "/partners",
+            },
+            {
+               icon: <Share2 size={20} />,
+               label: "Affiliates",
+               href: "/affiliates",
             },
             {
                icon: <Compass size={20} />,

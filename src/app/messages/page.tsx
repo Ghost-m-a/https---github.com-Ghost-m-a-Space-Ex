@@ -1,134 +1,298 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { Search, Edit } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { Search, Send, Pencil, MessageCircle } from "lucide-react";
 import styles from "@/styles/pages/messages.module.css";
 
-// =========================================
-// TYPES
-// =========================================
-interface ConversationSummary {
+interface ConversationItem {
    id: string;
-   name: string;
-   email: string;
-   avatar: string;
+   displayName: string;
+   displayAvatar: string;
+   avatarColor: string;
    lastMessage: string;
-   timestamp: string;
+   lastMessageAt: string;
    unread: number;
-   isRequest: boolean;
+   participants: {
+      id: string;
+      name: string;
+      username: string;
+      avatarColor: string;
+   }[];
+}
+
+interface MessageItem {
+   id: string;
+   senderId: string;
+   senderName: string;
+   senderAvatar: string;
+   senderColor: string;
+   text: string;
+   isMine: boolean;
+   createdAt: string;
 }
 
 export default function MessagesPage() {
-   const [conversations, setConversations] = useState<ConversationSummary[]>(
-      [],
-   );
-   const [filter, setFilter] = useState<"unread" | "requests">("unread");
+   const router = useRouter();
+   const [conversations, setConversations] = useState<ConversationItem[]>([]);
+   const [activeId, setActiveId] = useState<string | null>(null);
+   const [messages, setMessages] = useState<MessageItem[]>([]);
+   const [loadingList, setLoadingList] = useState(true);
+   const [loadingThread, setLoadingThread] = useState(false);
+   const [composer, setComposer] = useState("");
    const [search, setSearch] = useState("");
-   const [loading, setLoading] = useState(true);
+   const [sending, setSending] = useState(false);
+   const scrollRef = useRef<HTMLDivElement>(null);
+
+   const loadList = () => {
+      setLoadingList(true);
+      fetch("/api/messages/conversations", { credentials: "include" })
+         .then((r) => r.json())
+         .then((d) => {
+            setConversations(d.conversations ?? []);
+            if (!activeId && d.conversations?.length > 0) {
+               setActiveId(d.conversations[0].id);
+            }
+         })
+         .finally(() => setLoadingList(false));
+   };
 
    useEffect(() => {
-      setLoading(true);
-      fetch("/api/messages")
-         .then((r) => r.json())
-         .then((data) => {
-            // ✅ FIX: API returns { conversations: [...] }
-            setConversations(
-               Array.isArray(data.conversations) ? data.conversations : [],
-            );
-         })
-         .catch(() => setConversations([]))
-         .finally(() => setLoading(false));
+      loadList();
    }, []);
 
-   // Client-side filtering
-   const filtered = conversations.filter((c) => {
-      if (filter === "unread" && c.unread === 0) return false;
-      if (filter === "requests" && !c.isRequest) return false;
-      if (search && !c.name.toLowerCase().includes(search.toLowerCase()))
-         return false;
-      return true;
-   });
+   useEffect(() => {
+      if (!activeId) return;
+      setLoadingThread(true);
+      fetch(`/api/messages/${activeId}`, { credentials: "include" })
+         .then((r) => r.json())
+         .then((d) => {
+            setMessages(d.messages ?? []);
+            // Clear the local unread count for the active conversation
+            setConversations((prev) =>
+               prev.map((c) => (c.id === activeId ? { ...c, unread: 0 } : c)),
+            );
+         })
+         .finally(() => setLoadingThread(false));
+   }, [activeId]);
+
+   useEffect(() => {
+      if (scrollRef.current) {
+         scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      }
+   }, [messages]);
+
+   const send = async () => {
+      if (!composer.trim() || !activeId || sending) return;
+      setSending(true);
+      const text = composer.trim();
+      setComposer("");
+      try {
+         const res = await fetch(`/api/messages/${activeId}`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ text }),
+         });
+         if (res.ok) {
+            // Reload the thread to include the new message
+            const r = await fetch(`/api/messages/${activeId}`, {
+               credentials: "include",
+            });
+            const d = await r.json();
+            setMessages(d.messages ?? []);
+            loadList();
+         }
+      } finally {
+         setSending(false);
+      }
+   };
 
    const formatTime = (t: string) => {
       const d = new Date(t);
-      const diff = Date.now() - d.getTime();
-      if (diff < 60000) return "now";
-      if (diff < 3600000) return `${Math.floor(diff / 60000)}m`;
-      if (diff < 86400000) return `${Math.floor(diff / 3600000)}h`;
-      return d.toLocaleDateString([], { month: "short", day: "numeric" });
+      const now = new Date();
+      const sameDay = d.toDateString() === now.toDateString();
+      if (sameDay)
+         return d.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+         });
+      const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400_000);
+      if (diffDays < 7) return d.toLocaleDateString([], { weekday: "short" });
+      return d.toLocaleDateString([], {
+         month: "short",
+         day: "numeric",
+      });
    };
 
+   const filtered = conversations.filter((c) =>
+      c.displayName.toLowerCase().includes(search.toLowerCase()),
+   );
+
+   const active = conversations.find((c) => c.id === activeId);
+
    return (
-      <div className={styles.messagesLayout}>
-         <aside className={styles.convList}>
-            <div className={styles.convSearch}>
-               <Search size={16} className={styles.convSearchIcon} />
-               <input
-                  placeholder="Search..."
-                  className={styles.convSearchInput}
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-               />
-               <Edit size={16} className={styles.convSearchEdit} />
-            </div>
+      <div className={styles.page}>
+         <div className={styles.layout}>
+            {/* ---------- LEFT: conversation list ---------- */}
+            <aside className={styles.list}>
+               <div className={styles.listHeader}>
+                  <div className={styles.searchWrap}>
+                     <Search size={14} />
+                     <input
+                        className={styles.searchInput}
+                        placeholder="Search…"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                     />
+                  </div>
+                  <button className={styles.composeBtn} title="New message">
+                     <Pencil size={14} />
+                  </button>
+               </div>
 
-            <div className={styles.convFilters}>
-               <button
-                  className={`${styles.filterBtn} ${filter === "unread" ? styles.filterActive : ""}`}
-                  onClick={() => setFilter("unread")}
-               >
-                  Unread
-               </button>
-               <button
-                  className={`${styles.filterBtn} ${filter === "requests" ? styles.filterActive : ""}`}
-                  onClick={() => setFilter("requests")}
-               >
-                  Requests
-               </button>
-            </div>
+               <div className={styles.listTabs}>
+                  <button className={styles.listTabActive}>Unread</button>
+                  <button className={styles.listTab}>Requests</button>
+               </div>
 
-            <div className={styles.convItems}>
-               {loading ? (
-                  <div className={styles.emptyState}>Loading...</div>
-               ) : filtered.length === 0 ? (
-                  <div className={styles.emptyState}>
-                     {filter === "unread"
-                        ? "You're all caught up! 🎉"
-                        : "No pending requests."}
+               <div className={styles.listBody}>
+                  {loadingList ? (
+                     <div className={styles.listLoading}>Loading…</div>
+                  ) : filtered.length === 0 ? (
+                     <div className={styles.listEmpty}>
+                        No conversations yet
+                     </div>
+                  ) : (
+                     filtered.map((c) => (
+                        <button
+                           key={c.id}
+                           className={`${styles.convRow} ${
+                              activeId === c.id ? styles.convRowActive : ""
+                           }`}
+                           onClick={() => setActiveId(c.id)}
+                        >
+                           <div
+                              className={styles.convAvatar}
+                              style={{ background: c.avatarColor }}
+                           >
+                              {c.displayAvatar}
+                           </div>
+                           <div className={styles.convInfo}>
+                              <div className={styles.convTop}>
+                                 <div className={styles.convName}>
+                                    {c.displayName}
+                                 </div>
+                                 <div className={styles.convTime}>
+                                    {formatTime(c.lastMessageAt)}
+                                 </div>
+                              </div>
+                              <div className={styles.convPreview}>
+                                 {c.lastMessage || "No messages yet"}
+                              </div>
+                           </div>
+                           {c.unread > 0 && (
+                              <div className={styles.unreadDot}>{c.unread}</div>
+                           )}
+                        </button>
+                     ))
+                  )}
+               </div>
+            </aside>
+
+            {/* ---------- RIGHT: thread ---------- */}
+            <main className={styles.thread}>
+               {!active ? (
+                  <div className={styles.threadEmpty}>
+                     <MessageCircle size={48} />
+                     <div className={styles.threadEmptyTitle}>
+                        Select a conversation
+                     </div>
+                     <div className={styles.threadEmptySub}>
+                        Choose a chat from the sidebar, or start a new one to
+                        say hello.
+                     </div>
                   </div>
                ) : (
-                  filtered.map((c) => (
-                     <Link
-                        key={c.id}
-                        href={`/messages/${c.id}`}
-                        className={styles.convItem}
-                     >
-                        <div className={styles.convAvatar}>{c.avatar}</div>
-                        <div className={styles.convInfo}>
-                           <div className={styles.convHeader}>
-                              <span className={styles.convName}>{c.name}</span>
-                              <span className={styles.convTime}>
-                                 {formatTime(c.timestamp)}
-                              </span>
-                           </div>
-                           <div className={styles.convPreview}>
-                              {c.lastMessage}
-                           </div>
+                  <>
+                     <div className={styles.threadHeader}>
+                        <div
+                           className={styles.threadAvatar}
+                           style={{ background: active.avatarColor }}
+                        >
+                           {active.displayAvatar}
                         </div>
-                        {c.unread > 0 && (
-                           <div className={styles.unreadBadge}>{c.unread}</div>
-                        )}
-                     </Link>
-                  ))
-               )}
-            </div>
-         </aside>
+                        <div className={styles.threadTitle}>
+                           {active.displayName}
+                        </div>
+                     </div>
 
-         <div className={styles.emptyChat}>
-            <div className={styles.emptyChatText}>
-               Select a conversation to start chatting
-            </div>
+                     <div className={styles.threadBody} ref={scrollRef}>
+                        {loadingThread ? (
+                           <div className={styles.threadLoading}>
+                              Loading messages…
+                           </div>
+                        ) : messages.length === 0 ? (
+                           <div className={styles.threadLoading}>
+                              No messages yet. Say hi!
+                           </div>
+                        ) : (
+                           messages.map((m) => (
+                              <div
+                                 key={m.id}
+                                 className={`${styles.msgRow} ${
+                                    m.isMine ? styles.msgRowMine : ""
+                                 }`}
+                              >
+                                 {!m.isMine && (
+                                    <div
+                                       className={styles.msgAvatar}
+                                       style={{ background: m.senderColor }}
+                                    >
+                                       {m.senderAvatar}
+                                    </div>
+                                 )}
+                                 <div
+                                    className={`${styles.msgBubble} ${
+                                       m.isMine ? styles.msgBubbleMine : ""
+                                    }`}
+                                 >
+                                    <div className={styles.msgText}>
+                                       {m.text}
+                                    </div>
+                                    <div className={styles.msgTime}>
+                                       {formatTime(m.createdAt)}
+                                    </div>
+                                 </div>
+                              </div>
+                           ))
+                        )}
+                     </div>
+
+                     <div className={styles.composer}>
+                        <input
+                           className={styles.composerInput}
+                           placeholder="Type a message…"
+                           value={composer}
+                           onChange={(e) => setComposer(e.target.value)}
+                           onKeyDown={(e) => {
+                              if (e.key === "Enter" && !e.shiftKey) {
+                                 e.preventDefault();
+                                 send();
+                              }
+                           }}
+                        />
+                        <button
+                           className={styles.sendBtn}
+                           onClick={send}
+                           disabled={!composer.trim() || sending}
+                        >
+                           <Send size={14} />
+                        </button>
+                     </div>
+                  </>
+               )}
+            </main>
          </div>
       </div>
    );
