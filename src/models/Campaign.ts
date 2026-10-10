@@ -106,6 +106,7 @@ export interface ICampaign extends Document {
    budgetType: "daily" | "lifetime";
    budgetControl: BudgetControl;
    bidStrategy: BidStrategy;
+   bidCapAmount: number;
    cpm: number;
    specialAdCategory: SpecialAdCategory;
 
@@ -267,6 +268,7 @@ const CampaignSchema = new Schema<ICampaign>(
          enum: ["highest-volume", "cost-cap", "bid-cap"],
          default: "highest-volume",
       },
+      bidCapAmount: { type: Number, default: 0 },
       cpm: { type: Number, required: true, min: 0.01, default: 1 },
       specialAdCategory: {
          type: String,

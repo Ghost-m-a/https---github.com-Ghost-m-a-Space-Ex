@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useEffect, useState, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
    Check,
    ChevronLeft,
-   Image as ImageIcon,
    Layout,
    Play,
    Search,
@@ -21,7 +20,8 @@ import {
    Trash2,
    Loader2,
    Link as LinkIcon,
-   Loader,
+   GripVertical,
+   Star,
 } from "lucide-react";
 import styles from "@/styles/pages/campaign-new.module.css";
 
@@ -63,6 +63,7 @@ interface MediaAsset {
    type: "image" | "video";
    name?: string;
    size?: number;
+   thumbnail?: string;
 }
 
 interface SocialPage {
@@ -77,27 +78,21 @@ interface SocialPage {
 interface SavedAudience {
    _id: string;
    name: string;
-   countries: string[];
-   languages: string[];
-   minAge: number;
-   maxAge: number;
 }
 
 interface FormState {
-   // Step 1
    adFormat: AdFormat;
    objective: Objective;
    title: string;
    subtitle: string;
-   category: string;
    budget: number;
    budgetType: "daily" | "lifetime";
    budgetControl: BudgetControl;
    bidStrategy: BidStrategy;
+   bidCapAmount: number;
    cpm: number;
    specialAdCategory: SpecialAdCategory;
 
-   // Step 2
    conversionLocation: ConversionLocation;
    conversionEvent: string;
    performanceGoal: PerformanceGoal;
@@ -118,14 +113,12 @@ interface FormState {
    minDailySpend: number;
    deliveryHours: string[];
 
-   // Step 3
    headline: string;
    primaryText: string;
    ctaType: CTAType;
    ctaUrl: string;
    mediaAssets: MediaAsset[];
 
-   // Step 4
    socials: string[];
    coverImage: string;
    summary: string;
@@ -137,6 +130,7 @@ interface FormState {
    requirements: string[];
 }
 
+// ---- Constants (same as before) ----
 const AD_FORMATS = [
    {
       key: "feed" as AdFormat,
@@ -276,11 +270,11 @@ const emptyForm: FormState = {
    objective: "sales",
    title: "",
    subtitle: "",
-   category: "Entertainment",
    budget: 200,
    budgetType: "daily",
    budgetControl: "campaign",
    bidStrategy: "highest-volume",
+   bidCapAmount: 0,
    cpm: 1,
    specialAdCategory: "none",
 
@@ -326,6 +320,7 @@ const emptyForm: FormState = {
 // =========================================
 export default function NewCampaignPage() {
    const router = useRouter();
+   const searchParams = useSearchParams();
    const [step, setStep] = useState(1);
    const [form, setForm] = useState<FormState>(emptyForm);
    const [submitting, setSubmitting] = useState(false);
@@ -334,22 +329,40 @@ export default function NewCampaignPage() {
    const [socialPages, setSocialPages] = useState<SocialPage[]>([]);
    const [audiences, setAudiences] = useState<SavedAudience[]>([]);
    const [newAudienceModal, setNewAudienceModal] = useState(false);
+   const [oauthToast, setOauthToast] = useState<string | null>(null);
 
    const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
       setForm((f) => ({ ...f, [key]: value }));
 
-   // Load pages + audiences on mount
-   useEffect(() => {
+   const reloadPages = () => {
       fetch("/api/social/pages", { credentials: "include" })
          .then((r) => r.json())
          .then((d) => setSocialPages(d.pages ?? []))
          .catch(() => {});
+   };
 
+   useEffect(() => {
+      reloadPages();
       fetch("/api/business/audiences", { credentials: "include" })
          .then((r) => r.json())
          .then((d) => setAudiences(d.audiences ?? []))
          .catch(() => {});
    }, []);
+
+   // Handle OAuth return
+   useEffect(() => {
+      const connected = searchParams.get("connected");
+      const err = searchParams.get("error");
+      if (connected) {
+         setOauthToast(`Connected ${connected} successfully`);
+         reloadPages();
+         setTimeout(() => setOauthToast(null), 3000);
+      }
+      if (err) {
+         setOauthToast(`OAuth failed: ${err}`);
+         setTimeout(() => setOauthToast(null), 4000);
+      }
+   }, [searchParams]);
 
    const next = () => {
       if (step === 1) {
@@ -359,6 +372,10 @@ export default function NewCampaignPage() {
          }
          if (form.budget <= 0) {
             setError("Budget must be greater than 0");
+            return;
+         }
+         if (form.bidStrategy !== "highest-volume" && form.bidCapAmount <= 0) {
+            setError("Enter a cap amount for the selected bid strategy");
             return;
          }
       }
@@ -389,7 +406,10 @@ export default function NewCampaignPage() {
       try {
          const payload = {
             ...form,
-            coverImage: form.mediaAssets[0]?.url ?? form.coverImage,
+            coverImage:
+               form.mediaAssets.find((a) => a.type === "image")?.url ??
+               form.mediaAssets[0]?.url ??
+               form.coverImage,
          };
          const res = await fetch("/api/business/campaigns", {
             method: "POST",
@@ -462,6 +482,7 @@ export default function NewCampaignPage() {
                   socialPages={socialPages}
                   audiences={audiences}
                   onCreateAudience={() => setNewAudienceModal(true)}
+                  onPagesRefresh={reloadPages}
                />
             )}
             {step === 3 && <StepThree form={form} set={set} />}
@@ -469,6 +490,7 @@ export default function NewCampaignPage() {
          </div>
 
          {error && <div className={styles.errorBox}>{error}</div>}
+         {oauthToast && <div className={styles.toastBox}>{oauthToast}</div>}
 
          <div className={styles.footer}>
             {step > 1 && (
@@ -507,7 +529,7 @@ export default function NewCampaignPage() {
 }
 
 // =========================================
-// STEP 1 — unchanged from before
+// STEP 1 — with bid-cap input
 // =========================================
 function StepOne({
    form,
@@ -687,6 +709,7 @@ function StepOne({
                      <option value="adgroup">Ad group budgets</option>
                   </select>
                </div>
+
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>Bid strategy</div>
@@ -706,6 +729,43 @@ function StepOne({
                      <option value="bid-cap">Bid cap</option>
                   </select>
                </div>
+
+               {/* ---- Conditional bid cap amount ---- */}
+               {form.bidStrategy !== "highest-volume" && (
+                  <div className={styles.advancedRow}>
+                     <div>
+                        <div className={styles.advancedTitle}>
+                           {form.bidStrategy === "cost-cap"
+                              ? "Cost per result cap"
+                              : "Maximum bid"}
+                        </div>
+                        <div className={styles.advancedHint}>
+                           {form.bidStrategy === "cost-cap"
+                              ? "Average cost you're willing to pay per result."
+                              : "Highest amount you'll bid in each auction."}
+                        </div>
+                     </div>
+                     <div className={styles.amountWrap}>
+                        <DollarSign size={14} />
+                        <input
+                           className={styles.amountInput}
+                           type="number"
+                           min={0.01}
+                           step="0.1"
+                           value={form.bidCapAmount}
+                           onChange={(e) =>
+                              set("bidCapAmount", Number(e.target.value) || 0)
+                           }
+                        />
+                        <span className={styles.amountSuffix}>
+                           {form.bidStrategy === "cost-cap"
+                              ? "per result"
+                              : "max bid"}
+                        </span>
+                     </div>
+                  </div>
+               )}
+
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>
@@ -740,7 +800,7 @@ function StepOne({
 }
 
 // =========================================
-// STEP 2 — with Page picker, SavedAudience picker, Delivery hours
+// STEP 2 — with OAuth connect buttons
 // =========================================
 function StepTwo({
    form,
@@ -748,12 +808,14 @@ function StepTwo({
    socialPages,
    audiences,
    onCreateAudience,
+   onPagesRefresh,
 }: {
    form: FormState;
    set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
    socialPages: SocialPage[];
    audiences: SavedAudience[];
    onCreateAudience: () => void;
+   onPagesRefresh: () => void;
 }) {
    const [showCountryPicker, setShowCountryPicker] = useState(false);
    const [countryMode, setCountryMode] = useState<"target" | "exclude">(
@@ -810,6 +872,11 @@ function StepTwo({
       form.socials.length === 0 ? true : form.socials.includes(p.platform),
    );
 
+   const connectProvider = (provider: "meta" | "google" | "tiktok") => {
+      // Full-page redirect — simpler than popup for cross-origin OAuth
+      window.location.href = `/api/social/connect/${provider}`;
+   };
+
    return (
       <div className={styles.formColumn}>
          <h2 className={styles.h2}>Default settings</h2>
@@ -818,9 +885,6 @@ function StepTwo({
          {/* ---- Conversion location ---- */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Conversion location</div>
-            <p className={styles.hint}>
-               Choose where you want to drive results.
-            </p>
             <div className={styles.locRow}>
                <button
                   type="button"
@@ -920,7 +984,7 @@ function StepTwo({
             </section>
          )}
 
-         {/* ---- Page / Social profile pickers ---- */}
+         {/* ---- Pages + Connect buttons ---- */}
          <section className={styles.section}>
             <div className={styles.twoCol}>
                <label className={styles.field}>
@@ -960,14 +1024,52 @@ function StepTwo({
                   </select>
                </label>
             </div>
-            {filteredPages.length === 0 && (
-               <div className={styles.emptyRow}>
-                  No pages connected yet.{" "}
-                  <a href="/business/settings">
-                     Connect your pages and profiles →
-                  </a>
-               </div>
-            )}
+
+            <div className={styles.connectRow}>
+               <span className={styles.connectLabel}>
+                  Connect your pages and profiles:
+               </span>
+               <button
+                  type="button"
+                  className={styles.connectBtn}
+                  onClick={() => connectProvider("meta")}
+               >
+                  <span
+                     className={styles.providerDot}
+                     style={{ background: "#1877F2" }}
+                  />
+                  Meta
+               </button>
+               <button
+                  type="button"
+                  className={styles.connectBtn}
+                  onClick={() => connectProvider("google")}
+               >
+                  <span
+                     className={styles.providerDot}
+                     style={{ background: "#ff0000" }}
+                  />
+                  Google / YouTube
+               </button>
+               <button
+                  type="button"
+                  className={styles.connectBtn}
+                  onClick={() => connectProvider("tiktok")}
+               >
+                  <span
+                     className={styles.providerDot}
+                     style={{ background: "#fff" }}
+                  />
+                  TikTok
+               </button>
+               <button
+                  type="button"
+                  className={styles.refreshBtn}
+                  onClick={onPagesRefresh}
+               >
+                  Refresh
+               </button>
+            </div>
          </section>
 
          {/* ---- Targeting ---- */}
@@ -1172,7 +1274,6 @@ function StepTwo({
                Advanced options
             </summary>
             <div className={styles.advancedBody}>
-               {/* Schedule */}
                <div className={styles.advancedTitle}>Schedule</div>
                <div className={styles.scheduleRow}>
                   <label className={styles.field}>
@@ -1208,11 +1309,10 @@ function StepTwo({
                   </label>
                </div>
 
-               {/* Delivery hours grid */}
                <div className={styles.advancedTitle}>Delivery hours</div>
                <p className={styles.advancedHint}>
-                  Click any cell to toggle. Drag column header to select a whole
-                  day. Leave empty for 24/7.
+                  Click any cell to toggle. Click day name to select whole row.
+                  Empty = 24/7.
                </p>
                <div className={styles.gridWrap}>
                   <div className={styles.gridHeader}>
@@ -1262,7 +1362,6 @@ function StepTwo({
                   )}
                </div>
 
-               {/* Saved audiences */}
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>Audiences</div>
@@ -1294,7 +1393,6 @@ function StepTwo({
                   </div>
                </div>
 
-               {/* Minimum daily spend */}
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>
@@ -1319,7 +1417,6 @@ function StepTwo({
                   </div>
                </div>
 
-               {/* Languages */}
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>Languages</div>
@@ -1346,27 +1443,6 @@ function StepTwo({
                      }}
                   />
                </div>
-
-               {form.targetLanguages.length > 0 && (
-                  <div className={styles.chipList}>
-                     {form.targetLanguages.map((l) => (
-                        <span key={l} className={styles.chip}>
-                           {l}
-                           <button
-                              type="button"
-                              onClick={() =>
-                                 set(
-                                    "targetLanguages",
-                                    form.targetLanguages.filter((x) => x !== l),
-                                 )
-                              }
-                           >
-                              <X size={10} />
-                           </button>
-                        </span>
-                     ))}
-                  </div>
-               )}
             </div>
          </details>
       </div>
@@ -1374,7 +1450,7 @@ function StepTwo({
 }
 
 // =========================================
-// STEP 3 — Ad creative (copy + assets)
+// STEP 3 — with drag-and-drop + video thumbnails
 // =========================================
 function StepThree({
    form,
@@ -1385,6 +1461,94 @@ function StepThree({
 }) {
    const [uploading, setUploading] = useState(false);
    const [uploadError, setUploadError] = useState<string | null>(null);
+   const dragIndex = useRef<number | null>(null);
+   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+
+   // ---- Extract a poster frame from a video file ----
+   const extractVideoPoster = (file: File): Promise<string | null> => {
+      return new Promise((resolve) => {
+         try {
+            const video = document.createElement("video");
+            video.preload = "metadata";
+            video.muted = true;
+            video.playsInline = true;
+            const url = URL.createObjectURL(file);
+            video.src = url;
+
+            const cleanup = () => URL.revokeObjectURL(url);
+
+            video.onloadedmetadata = () => {
+               // Seek to 1 second (or 10% of duration if shorter)
+               video.currentTime = Math.min(1, video.duration * 0.1 || 0.5);
+            };
+
+            video.onseeked = () => {
+               try {
+                  const canvas = document.createElement("canvas");
+                  canvas.width = video.videoWidth;
+                  canvas.height = video.videoHeight;
+                  const ctx = canvas.getContext("2d");
+                  if (!ctx) {
+                     cleanup();
+                     resolve(null);
+                     return;
+                  }
+                  ctx.drawImage(video, 0, 0);
+                  canvas.toBlob(
+                     (blob) => {
+                        if (!blob) {
+                           cleanup();
+                           resolve(null);
+                           return;
+                        }
+                        // Upload the poster as a file
+                        const posterFile = new File(
+                           [blob],
+                           `poster-${Date.now()}.jpg`,
+                           { type: "image/jpeg" },
+                        );
+                        uploadSingle(posterFile)
+                           .then((res) => {
+                              cleanup();
+                              resolve(res?.url ?? null);
+                           })
+                           .catch(() => {
+                              cleanup();
+                              resolve(null);
+                           });
+                     },
+                     "image/jpeg",
+                     0.85,
+                  );
+               } catch {
+                  cleanup();
+                  resolve(null);
+               }
+            };
+
+            video.onerror = () => {
+               cleanup();
+               resolve(null);
+            };
+         } catch {
+            resolve(null);
+         }
+      });
+   };
+
+   const uploadSingle = async (
+      file: File,
+   ): Promise<{ url: string; type: "image" | "video" } | null> => {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", {
+         method: "POST",
+         body: fd,
+         credentials: "include",
+      });
+      if (!res.ok) return null;
+      return res.json();
+   };
 
    const handleFiles = async (files: FileList) => {
       setUploadError(null);
@@ -1392,6 +1556,7 @@ function StepThree({
       try {
          const uploaded: MediaAsset[] = [];
          for (const file of Array.from(files)) {
+            // 1. Upload the media
             const fd = new FormData();
             fd.append("file", file);
             const res = await fetch("/api/upload", {
@@ -1404,11 +1569,20 @@ function StepThree({
                setUploadError(data?.error ?? "Upload failed");
                continue;
             }
+
+            // 2. For videos, extract a poster and upload it too
+            let thumbnail = "";
+            if (file.type.startsWith("video/")) {
+               const poster = await extractVideoPoster(file);
+               if (poster) thumbnail = poster;
+            }
+
             uploaded.push({
                url: data.url,
                type: data.type,
                name: data.name,
                size: data.size,
+               thumbnail,
             });
          }
          set("mediaAssets", [...form.mediaAssets, ...uploaded]);
@@ -1426,6 +1600,46 @@ function StepThree({
       );
    };
 
+   // ---- Drag & drop reorder ----
+   const onDragStart = (i: number) => {
+      dragIndex.current = i;
+   };
+
+   const onDragOver = (e: React.DragEvent, i: number) => {
+      e.preventDefault();
+      setDragOverIndex(i);
+   };
+
+   const onDragLeave = () => {
+      setDragOverIndex(null);
+   };
+
+   const onDrop = (e: React.DragEvent, i: number) => {
+      e.preventDefault();
+      const from = dragIndex.current;
+      dragIndex.current = null;
+      setDragOverIndex(null);
+      if (from === null || from === i) return;
+
+      const next = [...form.mediaAssets];
+      const [moved] = next.splice(from, 1);
+      next.splice(i, 0, moved);
+      set("mediaAssets", next);
+   };
+
+   const onDragEnd = () => {
+      dragIndex.current = null;
+      setDragOverIndex(null);
+   };
+
+   const makeCover = (i: number) => {
+      if (i === 0) return;
+      const next = [...form.mediaAssets];
+      const [moved] = next.splice(i, 1);
+      next.unshift(moved);
+      set("mediaAssets", next);
+   };
+
    return (
       <div className={styles.formColumn}>
          <h2 className={styles.h2}>Ad creative</h2>
@@ -1434,7 +1648,6 @@ function StepThree({
             your brief.
          </p>
 
-         {/* Headline */}
          <section className={styles.section}>
             <label className={styles.field}>
                <span className={styles.sectionTitle}>
@@ -1450,7 +1663,6 @@ function StepThree({
             </label>
          </section>
 
-         {/* Primary text */}
          <section className={styles.section}>
             <label className={styles.field}>
                <span className={styles.sectionTitle}>Primary text</span>
@@ -1459,7 +1671,7 @@ function StepThree({
                   rows={4}
                   value={form.primaryText}
                   onChange={(e) => set("primaryText", e.target.value)}
-                  placeholder="Body copy that appears above the media. Keep it under 125 characters for best reach."
+                  placeholder="Body copy that appears above the media."
                   maxLength={500}
                />
                <span className={styles.charCount}>
@@ -1468,7 +1680,6 @@ function StepThree({
             </label>
          </section>
 
-         {/* CTA */}
          <section className={styles.section}>
             <div className={styles.twoCol}>
                <label className={styles.field}>
@@ -1501,32 +1712,74 @@ function StepThree({
             </div>
          </section>
 
-         {/* Assets */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Media assets</div>
             <p className={styles.hint}>
-               Upload images or short videos. The first image becomes the
-               campaign cover.
+               Drag to reorder. The first image becomes the campaign cover.
             </p>
 
             <div className={styles.assetGrid}>
-               {form.mediaAssets.map((a) => (
-                  <div key={a.url} className={styles.assetCard}>
-                     {a.type === "image" ? (
-                        <img src={a.url} alt="" />
-                     ) : (
-                        <video src={a.url} muted />
-                     )}
-                     <button
-                        type="button"
-                        className={styles.assetRemove}
-                        onClick={() => removeAsset(a.url)}
+               {form.mediaAssets.map((a, i) => {
+                  const isCover = i === 0;
+                  const isDraggingOver = dragOverIndex === i;
+                  return (
+                     <div
+                        key={a.url}
+                        className={`${styles.assetCard} ${
+                           isDraggingOver ? styles.assetCardHover : ""
+                        }`}
+                        draggable
+                        onDragStart={() => onDragStart(i)}
+                        onDragOver={(e) => onDragOver(e, i)}
+                        onDragLeave={onDragLeave}
+                        onDrop={(e) => onDrop(e, i)}
+                        onDragEnd={onDragEnd}
                      >
-                        <Trash2 size={12} />
-                     </button>
-                     <div className={styles.assetBadge}>{a.type}</div>
-                  </div>
-               ))}
+                        {a.type === "image" ? (
+                           <img src={a.url} alt="" />
+                        ) : a.thumbnail ? (
+                           <img src={a.thumbnail} alt="" />
+                        ) : (
+                           <video src={a.url} muted />
+                        )}
+
+                        {/* Drag handle */}
+                        <div className={styles.assetHandle}>
+                           <GripVertical size={12} />
+                        </div>
+
+                        {/* Cover badge */}
+                        {isCover && (
+                           <div className={styles.coverBadge}>
+                              <Star size={10} /> Cover
+                           </div>
+                        )}
+
+                        {/* Set cover button (only if not first) */}
+                        {!isCover && (
+                           <button
+                              type="button"
+                              className={styles.setCoverBtn}
+                              onClick={() => makeCover(i)}
+                              title="Set as cover"
+                           >
+                              <Star size={12} />
+                           </button>
+                        )}
+
+                        {/* Remove */}
+                        <button
+                           type="button"
+                           className={styles.assetRemove}
+                           onClick={() => removeAsset(a.url)}
+                        >
+                           <Trash2 size={12} />
+                        </button>
+
+                        <div className={styles.assetBadge}>{a.type}</div>
+                     </div>
+                  );
+               })}
 
                <label
                   className={`${styles.assetUpload} ${
@@ -1562,7 +1815,6 @@ function StepThree({
             )}
          </section>
 
-         {/* Preview */}
          {form.headline && (
             <section className={styles.section}>
                <div className={styles.sectionTitle}>Preview</div>
@@ -1610,7 +1862,7 @@ function StepThree({
 }
 
 // =========================================
-// STEP 4 — Creator brief (was StepThree)
+// STEP 4 — Creator brief
 // =========================================
 function StepFour({
    form,
