@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
    Check,
    ChevronLeft,
+   ChevronRight,
    Image as ImageIcon,
    Layout,
    Play,
@@ -19,6 +20,10 @@ import {
    Info,
    Plus,
    X,
+   Ban,
+   Landmark,
+   Briefcase,
+   Home as HomeIcon,
 } from "lucide-react";
 import styles from "@/styles/pages/campaign-new.module.css";
 
@@ -31,18 +36,19 @@ type AdFormat =
    | "search-display"
    | "text-feed"
    | "community";
-type Objective =
-   | "views"
-   | "comments"
-   | "shares"
-   | "subscribes"
-   | "follows"
-   | "engagement"
-   | "sales"
-   | "leads"
-   | "traffic"
-   | "awareness";
-type Platform = "youtube" | "tiktok" | "instagram" | "x" | "facebook";
+type Objective = "sales" | "leads" | "engagement" | "traffic" | "awareness";
+type BudgetControl = "campaign" | "adgroup";
+type BidStrategy = "highest-volume" | "cost-cap" | "bid-cap";
+type SpecialAdCategory =
+   | "none"
+   | "financial-products"
+   | "employment"
+   | "housing";
+type ConversionLocation = "website" | "messages";
+type PerformanceGoal =
+   | "maximize-conversions"
+   | "maximize-conversations"
+   | "maximize-clicks";
 
 interface FormState {
    // Step 1
@@ -53,21 +59,33 @@ interface FormState {
    category: string;
    budget: number;
    budgetType: "daily" | "lifetime";
-   bidStrategy: "highest-volume" | "cost-cap" | "manual";
+   budgetControl: BudgetControl;
+   bidStrategy: BidStrategy;
    cpm: number;
+   specialAdCategory: SpecialAdCategory;
 
    // Step 2
-   socials: Platform[];
-   platform: Platform | "multi";
+   conversionLocation: ConversionLocation;
+   conversionEvent: string;
+   performanceGoal: PerformanceGoal;
+   messageDestinations: string[];
+   pageId: string;
+   socialProfileId: string;
    globalReach: boolean;
    targetCountries: string[];
    targetLanguages: string[];
+   excludedCountries: string[];
    minAge: number;
    maxAge: number;
+   autoAudience: boolean;
+   autoPlacements: boolean;
    startDate: string;
    endDate: string;
+   minDailySpend: number;
+   deliveryHours: string[];
 
    // Step 3
+   socials: string[];
    coverImage: string;
    summary: string;
    deliverable: string;
@@ -78,6 +96,9 @@ interface FormState {
    requirements: string[];
 }
 
+// =========================================
+// CONSTANTS
+// =========================================
 const AD_FORMATS: {
    key: AdFormat;
    label: string;
@@ -124,78 +145,127 @@ const OBJECTIVES: {
    color: string;
 }[] = [
    {
-      key: "views",
-      label: "Views",
-      desc: "Maximize impressions on creator content",
-      icon: <TrendingUp size={18} />,
+      key: "sales",
+      label: "Sales",
+      desc: "Find people likely to purchase your product or service",
+      icon: <DollarSign size={18} />,
       color: "#10b981",
+   },
+   {
+      key: "leads",
+      label: "Leads",
+      desc: "Collect leads for your business or brand",
+      icon: <Plus size={18} />,
+      color: "#06b6d4",
    },
    {
       key: "engagement",
       label: "Engagement",
-      desc: "Likes, saves, comments, shares",
-      icon: <Sparkles size={18} />,
+      desc: "Get more messages, purchases through messaging, video views",
+      icon: <Users size={18} />,
       color: "#8b5cf6",
-   },
-   {
-      key: "subscribes",
-      label: "Subscribes",
-      desc: "Grow your channel subscribers",
-      icon: <Users size={18} />,
-      color: "#3b82f6",
-   },
-   {
-      key: "follows",
-      label: "Follows",
-      desc: "Grow your social following",
-      icon: <Users size={18} />,
-      color: "#06b6d4",
    },
    {
       key: "traffic",
       label: "Traffic",
-      desc: "Send people to a destination",
+      desc: "Send people to a destination, such as your website, app or profile",
       icon: <Globe size={18} />,
-      color: "#f59e0b",
+      color: "#3b82f6",
    },
    {
       key: "awareness",
       label: "Awareness",
-      desc: "Reach people most likely to remember you",
-      icon: <Target size={18} />,
-      color: "#ef4444",
+      desc: "Show your ads to people who are most likely to remember them",
+      icon: <Sparkles size={18} />,
+      color: "#f59e0b",
    },
 ];
 
-const PLATFORMS: { key: Platform; label: string; color: string }[] = [
-   { key: "youtube", label: "YouTube", color: "#ff0000" },
-   { key: "tiktok", label: "TikTok", color: "#ffffff" },
-   { key: "instagram", label: "Instagram", color: "#E1306C" },
-   { key: "x", label: "X", color: "#ffffff" },
-   { key: "facebook", label: "Facebook", color: "#1877F2" },
+const CONVERSION_EVENTS = [
+   "Add payment info",
+   "Add to cart",
+   "Complete registration",
+   "Initiate checkout",
+   "Purchase",
+   "Start trial",
+   "Subscribe",
+   "View content",
 ];
 
+const CONTINENTS: { name: string; countries: string[] }[] = [
+   {
+      name: "Africa",
+      countries: ["Egypt", "Nigeria", "South Africa", "Kenya", "Morocco"],
+   },
+   {
+      name: "Asia",
+      countries: ["China", "India", "Japan", "South Korea", "Thailand"],
+   },
+   {
+      name: "Eastern Europe",
+      countries: ["Poland", "Romania", "Ukraine", "Czech Republic"],
+   },
+   {
+      name: "Latin America and the Caribbean",
+      countries: ["Brazil", "Mexico", "Argentina", "Chile", "Colombia"],
+   },
+   {
+      name: "North America",
+      countries: ["United States", "Canada", "Mexico"],
+   },
+   {
+      name: "Oceania (AU, NZ, Pacific Islands)",
+      countries: ["Australia", "New Zealand", "Fiji"],
+   },
+   {
+      name: "Western Europe",
+      countries: [
+         "United Kingdom",
+         "Germany",
+         "France",
+         "Spain",
+         "Italy",
+         "Netherlands",
+      ],
+   },
+];
+
+// =========================================
+// INITIAL STATE
+// =========================================
 const emptyForm: FormState = {
    adFormat: "feed",
-   objective: "views",
+   objective: "sales",
    title: "",
    subtitle: "",
    category: "Entertainment",
    budget: 200,
    budgetType: "daily",
+   budgetControl: "campaign",
    bidStrategy: "highest-volume",
    cpm: 1,
+   specialAdCategory: "none",
 
-   socials: ["youtube", "tiktok"],
-   platform: "multi",
+   conversionLocation: "website",
+   conversionEvent: "",
+   performanceGoal: "maximize-conversions",
+   messageDestinations: [],
+   pageId: "",
+   socialProfileId: "",
    globalReach: true,
-   targetCountries: ["United States"],
-   targetLanguages: ["English"],
+   targetCountries: [],
+   targetLanguages: [],
+   excludedCountries: [],
    minAge: 18,
    maxAge: 65,
+   autoAudience: true,
+   autoPlacements: true,
    startDate: new Date().toISOString().slice(0, 10),
    endDate: "",
+   minDailySpend: 0,
+   deliveryHours: [],
 
+   socials: ["youtube", "tiktok"],
    coverImage: "",
    summary: "",
    deliverable: "1 short-form video, 30–60 seconds",
@@ -215,23 +285,13 @@ export default function NewCampaignPage() {
    const [form, setForm] = useState<FormState>(emptyForm);
    const [submitting, setSubmitting] = useState(false);
    const [error, setError] = useState<string | null>(null);
+   const [showCountryPicker, setShowCountryPicker] = useState(false);
+   const [countryMode, setCountryMode] = useState<"target" | "exclude">(
+      "target",
+   );
 
    const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
       setForm((f) => ({ ...f, [key]: value }));
-
-   const toggleSocial = (p: Platform) => {
-      setForm((f) => {
-         const has = f.socials.includes(p);
-         const socials = has
-            ? f.socials.filter((s) => s !== p)
-            : [...f.socials, p];
-         return {
-            ...f,
-            socials,
-            platform: socials.length === 1 ? socials[0] : "multi",
-         };
-      });
-   };
 
    const next = () => {
       if (step === 1) {
@@ -245,8 +305,8 @@ export default function NewCampaignPage() {
          }
       }
       if (step === 2) {
-         if (form.socials.length === 0) {
-            setError("Select at least one platform");
+         if (form.conversionLocation === "website" && !form.conversionEvent) {
+            setError("Please choose a conversion event");
             return;
          }
       }
@@ -282,9 +342,28 @@ export default function NewCampaignPage() {
       }
    };
 
+   const toggleCountry = (country: string) => {
+      const key =
+         countryMode === "target" ? "targetCountries" : "excludedCountries";
+      const list = form[key];
+      set(
+         key,
+         list.includes(country)
+            ? list.filter((c) => c !== country)
+            : [...list, country],
+      );
+   };
+
+   const addAllInContinent = (countries: string[]) => {
+      const key =
+         countryMode === "target" ? "targetCountries" : "excludedCountries";
+      const merged = Array.from(new Set([...form[key], ...countries]));
+      set(key, merged);
+   };
+
    return (
       <div className={styles.page}>
-         {/* Header / breadcrumb */}
+         {/* Breadcrumb */}
          <div className={styles.topBar}>
             <button
                className={styles.backBtn}
@@ -299,7 +378,7 @@ export default function NewCampaignPage() {
             </div>
          </div>
 
-         {/* Step indicators */}
+         {/* Steps */}
          <div className={styles.steps}>
             {[1, 2, 3].map((n) => (
                <div
@@ -319,7 +398,7 @@ export default function NewCampaignPage() {
                   Audience
                </span>
                <span className={step >= 3 ? styles.labelActive : ""}>
-                  Creative brief
+                  Creative
                </span>
             </div>
          </div>
@@ -327,7 +406,16 @@ export default function NewCampaignPage() {
          <div className={styles.body}>
             {step === 1 && <StepOne form={form} set={set} />}
             {step === 2 && (
-               <StepTwo form={form} set={set} toggleSocial={toggleSocial} />
+               <StepTwo
+                  form={form}
+                  set={set}
+                  showCountryPicker={showCountryPicker}
+                  setShowCountryPicker={setShowCountryPicker}
+                  countryMode={countryMode}
+                  setCountryMode={setCountryMode}
+                  toggleCountry={toggleCountry}
+                  addAllInContinent={addAllInContinent}
+               />
             )}
             {step === 3 && <StepThree form={form} set={set} />}
          </div>
@@ -360,7 +448,7 @@ export default function NewCampaignPage() {
 }
 
 // =========================================
-// STEP 1 — Ad format, objective, title, budget
+// STEP 1 — Ad setup
 // =========================================
 function StepOne({
    form,
@@ -371,8 +459,6 @@ function StepOne({
 }) {
    return (
       <div className={styles.formColumn}>
-         <h2 className={styles.h2}>Ad setup</h2>
-
          {/* Ad format */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>
@@ -405,7 +491,7 @@ function StepOne({
                Campaign objective <span className={styles.req}>*</span>
             </div>
             <p className={styles.hint}>
-               What do you want creators to help you achieve?
+               What do you want people to do after seeing your ad?
             </p>
             <div className={styles.objectiveGrid}>
                {OBJECTIVES.map((o) => (
@@ -432,7 +518,7 @@ function StepOne({
             </div>
          </section>
 
-         {/* Title + subtitle */}
+         {/* Title */}
          <section className={styles.section}>
             <label className={styles.field}>
                <span className={styles.sectionTitle}>
@@ -442,27 +528,8 @@ function StepOne({
                   className={styles.input}
                   value={form.title}
                   onChange={(e) => set("title", e.target.value)}
-                  placeholder="e.g. Review our new headphones"
+                  placeholder="Enter campaign title"
                   maxLength={120}
-               />
-            </label>
-            <label className={styles.field}>
-               <span className={styles.label}>Subtitle</span>
-               <input
-                  className={styles.input}
-                  value={form.subtitle}
-                  onChange={(e) => set("subtitle", e.target.value)}
-                  placeholder="Short one-liner for the card"
-                  maxLength={140}
-               />
-            </label>
-            <label className={styles.field}>
-               <span className={styles.label}>Category</span>
-               <input
-                  className={styles.input}
-                  value={form.category}
-                  onChange={(e) => set("category", e.target.value)}
-                  placeholder="Tech, Fitness, Beauty, Gaming…"
                />
             </label>
          </section>
@@ -512,7 +579,6 @@ function StepOne({
                   </button>
                ))}
             </div>
-
             <div className={styles.field}>
                <span className={styles.label}>Reward rate (per 1k)</span>
                <div className={styles.amountWrap}>
@@ -532,7 +598,7 @@ function StepOne({
             </div>
          </section>
 
-         {/* Advanced */}
+         {/* Advanced options */}
          <details className={styles.advanced}>
             <summary className={styles.advancedSummary}>
                Advanced options
@@ -543,12 +609,18 @@ function StepOne({
                      <div className={styles.advancedTitle}>Budget control</div>
                      <div className={styles.advancedHint}>
                         Split one campaign budget automatically, or set one per
-                        ad group.
+                        ad group
                      </div>
                   </div>
-                  <select className={styles.select}>
-                     <option>Campaign budget</option>
-                     <option>Ad group budget</option>
+                  <select
+                     className={styles.select}
+                     value={form.budgetControl}
+                     onChange={(e) =>
+                        set("budgetControl", e.target.value as BudgetControl)
+                     }
+                  >
+                     <option value="campaign">Campaign budget</option>
+                     <option value="adgroup">Ad group budgets</option>
                   </select>
                </div>
                <div className={styles.advancedRow}>
@@ -562,18 +634,39 @@ function StepOne({
                      className={styles.select}
                      value={form.bidStrategy}
                      onChange={(e) =>
-                        set(
-                           "bidStrategy",
-                           e.target.value as
-                              | "highest-volume"
-                              | "cost-cap"
-                              | "manual",
-                        )
+                        set("bidStrategy", e.target.value as BidStrategy)
                      }
                   >
                      <option value="highest-volume">Highest volume</option>
-                     <option value="cost-cap">Cost per result cap</option>
-                     <option value="manual">Manual</option>
+                     <option value="cost-cap">Cost cap</option>
+                     <option value="bid-cap">Bid cap</option>
+                  </select>
+               </div>
+               <div className={styles.advancedRow}>
+                  <div>
+                     <div className={styles.advancedTitle}>
+                        Special ad category
+                     </div>
+                     <div className={styles.advancedHint}>
+                        Required for credit, employment, or housing ads
+                     </div>
+                  </div>
+                  <select
+                     className={styles.select}
+                     value={form.specialAdCategory}
+                     onChange={(e) =>
+                        set(
+                           "specialAdCategory",
+                           e.target.value as SpecialAdCategory,
+                        )
+                     }
+                  >
+                     <option value="none">None</option>
+                     <option value="financial-products">
+                        Financial products and services
+                     </option>
+                     <option value="employment">Employment</option>
+                     <option value="housing">Housing</option>
                   </select>
                </div>
             </div>
@@ -583,51 +676,139 @@ function StepOne({
 }
 
 // =========================================
-// STEP 2 — Platforms, audience, schedule
+// STEP 2 — Default settings
 // =========================================
 function StepTwo({
    form,
    set,
-   toggleSocial,
+   showCountryPicker,
+   setShowCountryPicker,
+   countryMode,
+   setCountryMode,
+   toggleCountry,
+   addAllInContinent,
 }: {
    form: FormState;
    set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
-   toggleSocial: (p: Platform) => void;
+   showCountryPicker: boolean;
+   setShowCountryPicker: (v: boolean) => void;
+   countryMode: "target" | "exclude";
+   setCountryMode: (v: "target" | "exclude") => void;
+   toggleCountry: (c: string) => void;
+   addAllInContinent: (countries: string[]) => void;
 }) {
    return (
       <div className={styles.formColumn}>
-         <h2 className={styles.h2}>Audience & platforms</h2>
+         <h2 className={styles.h2}>Default settings</h2>
+         <p className={styles.hint}>These can be changed at any time.</p>
 
-         {/* Platforms */}
+         {/* Conversion location */}
          <section className={styles.section}>
-            <div className={styles.sectionTitle}>
-               Platforms <span className={styles.req}>*</span>
-            </div>
+            <div className={styles.sectionTitle}>Conversion location</div>
             <p className={styles.hint}>
-               Where should creators post their content?
+               Choose where you want to drive results.
             </p>
-            <div className={styles.platformRow}>
-               {PLATFORMS.map((p) => {
-                  const active = form.socials.includes(p.key);
-                  return (
-                     <button
-                        key={p.key}
-                        type="button"
-                        className={`${styles.platformChip} ${
-                           active ? styles.platformActive : ""
-                        }`}
-                        onClick={() => toggleSocial(p.key)}
-                     >
-                        <span
-                           className={styles.platformDot}
-                           style={{ background: p.color }}
-                        />
-                        {p.label}
-                     </button>
-                  );
-               })}
+            <div className={styles.locRow}>
+               <button
+                  type="button"
+                  className={`${styles.locCard} ${
+                     form.conversionLocation === "website"
+                        ? styles.cardActive
+                        : ""
+                  }`}
+                  onClick={() => set("conversionLocation", "website")}
+               >
+                  <Globe size={16} />
+                  <span>Website</span>
+               </button>
+               <button
+                  type="button"
+                  className={`${styles.locCard} ${
+                     form.conversionLocation === "messages"
+                        ? styles.cardActive
+                        : ""
+                  }`}
+                  onClick={() => set("conversionLocation", "messages")}
+               >
+                  <MessageSquare size={16} />
+                  <span>Message destinations</span>
+               </button>
             </div>
          </section>
+
+         {form.conversionLocation === "website" && (
+            <section className={styles.section}>
+               <div className={styles.sectionTitle}>
+                  Conversion event <span className={styles.req}>*</span>
+               </div>
+               <p className={styles.hint}>
+                  The action you want people to take when they see your ads.
+               </p>
+               <select
+                  className={styles.select}
+                  value={form.conversionEvent}
+                  onChange={(e) => set("conversionEvent", e.target.value)}
+               >
+                  <option value="">Select a conversion event</option>
+                  {CONVERSION_EVENTS.map((ev) => (
+                     <option key={ev} value={ev}>
+                        {ev}
+                     </option>
+                  ))}
+               </select>
+            </section>
+         )}
+
+         {form.conversionLocation === "messages" && (
+            <section className={styles.section}>
+               <div className={styles.sectionTitle}>Performance goal</div>
+               <select
+                  className={styles.select}
+                  value={form.performanceGoal}
+                  onChange={(e) =>
+                     set("performanceGoal", e.target.value as PerformanceGoal)
+                  }
+               >
+                  <option value="maximize-conversions">
+                     Maximize number of conversions
+                  </option>
+                  <option value="maximize-conversations">
+                     Maximize number of conversations
+                  </option>
+               </select>
+
+               <div className={styles.sectionTitle}>
+                  Message destinations <span className={styles.req}>*</span>
+               </div>
+               <div className={styles.checkList}>
+                  {[
+                     { key: "page_messages", label: "Page messages" },
+                     { key: "profile_messages", label: "Profile messages" },
+                  ].map((d) => {
+                     const checked = form.messageDestinations.includes(d.key);
+                     return (
+                        <label key={d.key} className={styles.checkRow}>
+                           <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                 set(
+                                    "messageDestinations",
+                                    checked
+                                       ? form.messageDestinations.filter(
+                                            (x) => x !== d.key,
+                                         )
+                                       : [...form.messageDestinations, d.key],
+                                 )
+                              }
+                           />
+                           <span>{d.label}</span>
+                        </label>
+                     );
+                  })}
+               </div>
+            </section>
+         )}
 
          {/* Targeting */}
          <section className={styles.section}>
@@ -652,105 +833,295 @@ function StepTwo({
             </div>
 
             {!form.globalReach && (
-               <div className={styles.chipInput}>
-                  <span className={styles.chipLabel}>Countries</span>
-                  <div className={styles.chipList}>
-                     {form.targetCountries.map((c) => (
-                        <span key={c} className={styles.chip}>
-                           {c}
-                           <button
-                              type="button"
-                              onClick={() =>
-                                 set(
-                                    "targetCountries",
-                                    form.targetCountries.filter((x) => x !== c),
-                                 )
-                              }
-                           >
-                              <X size={10} />
-                           </button>
-                        </span>
-                     ))}
+               <div className={styles.countryBlock}>
+                  <div className={styles.countryTabs}>
+                     <button
+                        type="button"
+                        className={`${styles.countryTab} ${
+                           countryMode === "target"
+                              ? styles.countryTabActive
+                              : ""
+                        }`}
+                        onClick={() => setCountryMode("target")}
+                     >
+                        Target
+                     </button>
+                     <button
+                        type="button"
+                        className={`${styles.countryTab} ${
+                           countryMode === "exclude"
+                              ? styles.countryTabActive
+                              : ""
+                        }`}
+                        onClick={() => setCountryMode("exclude")}
+                     >
+                        Exclude
+                     </button>
+                  </div>
+
+                  <div className={styles.searchBlock}>
+                     <Search size={14} />
                      <input
-                        className={styles.chipAdd}
-                        placeholder="Add country + Enter"
-                        onKeyDown={(e) => {
-                           if (e.key === "Enter") {
-                              const v = (
-                                 e.currentTarget as HTMLInputElement
-                              ).value.trim();
-                              if (v && !form.targetCountries.includes(v)) {
-                                 set("targetCountries", [
-                                    ...form.targetCountries,
-                                    v,
-                                 ]);
-                                 (e.currentTarget as HTMLInputElement).value =
-                                    "";
-                              }
-                           }
-                        }}
+                        className={styles.searchInput}
+                        placeholder="Search countries, regions, cities, or ZIP codes"
+                        onFocus={() => setShowCountryPicker(true)}
                      />
                   </div>
+
+                  {showCountryPicker && (
+                     <div className={styles.countryDropdown}>
+                        <div className={styles.countryHeader}>Continents</div>
+                        {CONTINENTS.map((c) => (
+                           <div key={c.name} className={styles.continentRow}>
+                              <div className={styles.continentLeft}>
+                                 <Globe size={14} />
+                                 <span>{c.name}</span>
+                              </div>
+                              <button
+                                 type="button"
+                                 className={styles.addAllBtn}
+                                 onClick={() => addAllInContinent(c.countries)}
+                              >
+                                 Add all
+                              </button>
+                           </div>
+                        ))}
+                        <div className={styles.countryHeader}>Countries</div>
+                        <div className={styles.countryGrid}>
+                           {CONTINENTS.flatMap((c) => c.countries).map(
+                              (country) => {
+                                 const list =
+                                    countryMode === "target"
+                                       ? form.targetCountries
+                                       : form.excludedCountries;
+                                 const active = list.includes(country);
+                                 return (
+                                    <button
+                                       key={country}
+                                       type="button"
+                                       className={`${styles.countryItem} ${
+                                          active ? styles.countryItemActive : ""
+                                       }`}
+                                       onClick={() => toggleCountry(country)}
+                                    >
+                                       {active && <Check size={12} />}
+                                       {country}
+                                    </button>
+                                 );
+                              },
+                           )}
+                        </div>
+                     </div>
+                  )}
+
+                  {form[
+                     countryMode === "target"
+                        ? "targetCountries"
+                        : "excludedCountries"
+                  ].length > 0 && (
+                     <div className={styles.chipList}>
+                        {form[
+                           countryMode === "target"
+                              ? "targetCountries"
+                              : "excludedCountries"
+                        ].map((c) => (
+                           <span key={c} className={styles.chip}>
+                              {c}
+                              <button
+                                 type="button"
+                                 onClick={() => toggleCountry(c)}
+                              >
+                                 <X size={10} />
+                              </button>
+                           </span>
+                        ))}
+                     </div>
+                  )}
                </div>
             )}
 
-            <div className={styles.ageRow}>
-               <span className={styles.label}>Age range</span>
-               <div className={styles.ageInputs}>
-                  <input
-                     className={styles.ageInput}
-                     type="number"
-                     min={13}
-                     value={form.minAge}
-                     onChange={(e) =>
-                        set("minAge", Number(e.target.value) || 13)
-                     }
-                  />
-                  <span>–</span>
-                  <input
-                     className={styles.ageInput}
-                     type="number"
-                     min={13}
-                     max={99}
-                     value={form.maxAge}
-                     onChange={(e) =>
-                        set("maxAge", Number(e.target.value) || 99)
-                     }
-                  />
+            <div className={styles.autoRow}>
+               <div>
+                  <div className={styles.autoTitle}>
+                     Automatic audience{" "}
+                     <span className={styles.recPill}>Recommended</span>
+                  </div>
+                  <div className={styles.advancedHint}>
+                     Let Space-Ex find the best audience for your ads.
+                  </div>
+               </div>
+               <div className={styles.autoRight}>
+                  <label className={styles.minAgeLabel}>
+                     Minimum age
+                     <select
+                        className={styles.ageSelect}
+                        value={form.minAge}
+                        onChange={(e) =>
+                           set("minAge", Number(e.target.value) || 18)
+                        }
+                     >
+                        {[13, 16, 18, 21, 25].map((a) => (
+                           <option key={a} value={a}>
+                              {a}+
+                           </option>
+                        ))}
+                     </select>
+                  </label>
+                  <button
+                     type="button"
+                     className={`${styles.switch} ${
+                        form.autoAudience ? styles.switchOn : ""
+                     }`}
+                     onClick={() => set("autoAudience", !form.autoAudience)}
+                  >
+                     <span className={styles.switchKnob} />
+                  </button>
                </div>
             </div>
          </section>
 
-         {/* Schedule */}
+         {/* Placements */}
          <section className={styles.section}>
-            <div className={styles.sectionTitle}>Schedule</div>
-            <div className={styles.scheduleRow}>
-               <label className={styles.field}>
-                  <span className={styles.label}>Start date</span>
-                  <input
-                     className={styles.input}
-                     type="date"
-                     value={form.startDate}
-                     onChange={(e) => set("startDate", e.target.value)}
-                  />
-               </label>
-               <label className={styles.field}>
-                  <span className={styles.label}>End date (optional)</span>
-                  <input
-                     className={styles.input}
-                     type="date"
-                     value={form.endDate}
-                     onChange={(e) => set("endDate", e.target.value)}
-                  />
-               </label>
+            <div className={styles.sectionTitle}>Placements</div>
+            <div className={styles.autoRow}>
+               <div>
+                  <div className={styles.autoTitle}>
+                     Automatic placements{" "}
+                     <span className={styles.recPill}>Recommended</span>
+                  </div>
+                  <div className={styles.advancedHint}>
+                     Space-Ex will automatically show your ads across the
+                     placements most likely to drive the best results.
+                  </div>
+               </div>
+               <button
+                  type="button"
+                  className={`${styles.switch} ${
+                     form.autoPlacements ? styles.switchOn : ""
+                  }`}
+                  onClick={() => set("autoPlacements", !form.autoPlacements)}
+               >
+                  <span className={styles.switchKnob} />
+               </button>
             </div>
          </section>
+
+         {/* Advanced options */}
+         <details className={styles.advanced}>
+            <summary className={styles.advancedSummary}>
+               Advanced options
+            </summary>
+            <div className={styles.advancedBody}>
+               <div className={styles.advancedTitle}>Schedule</div>
+               <div className={styles.scheduleRow}>
+                  <label className={styles.field}>
+                     <span className={styles.label}>Start</span>
+                     <input
+                        className={styles.input}
+                        type="date"
+                        value={form.startDate}
+                        onChange={(e) => set("startDate", e.target.value)}
+                     />
+                  </label>
+                  <label className={styles.field}>
+                     <span className={styles.label}>
+                        <input
+                           type="checkbox"
+                           checked={!!form.endDate}
+                           onChange={(e) =>
+                              set(
+                                 "endDate",
+                                 e.target.checked ? form.startDate : "",
+                              )
+                           }
+                        />{" "}
+                        Set an end date
+                     </span>
+                     <input
+                        className={styles.input}
+                        type="date"
+                        value={form.endDate}
+                        disabled={!form.endDate}
+                        onChange={(e) => set("endDate", e.target.value)}
+                     />
+                  </label>
+               </div>
+
+               <div className={styles.advancedRow}>
+                  <div>
+                     <div className={styles.advancedTitle}>
+                        Minimum daily spend
+                     </div>
+                     <div className={styles.advancedHint}>
+                        Optional spend target for this ad group, not a
+                        guarantee.
+                     </div>
+                  </div>
+                  <div className={styles.amountWrap}>
+                     <DollarSign size={14} />
+                     <input
+                        className={styles.amountInput}
+                        type="number"
+                        min={0}
+                        value={form.minDailySpend}
+                        onChange={(e) =>
+                           set("minDailySpend", Number(e.target.value) || 0)
+                        }
+                     />
+                     <span className={styles.amountSuffix}>/day</span>
+                  </div>
+               </div>
+
+               <div className={styles.advancedRow}>
+                  <div>
+                     <div className={styles.advancedTitle}>Audiences</div>
+                     <div className={styles.advancedHint}>
+                        Target or exclude your audiences.
+                     </div>
+                  </div>
+                  <button
+                     type="button"
+                     className={styles.btnPrimary}
+                     style={{ padding: "6px 12px", fontSize: 12 }}
+                  >
+                     Create audience
+                  </button>
+               </div>
+
+               <div className={styles.advancedRow}>
+                  <div>
+                     <div className={styles.advancedTitle}>Languages</div>
+                     <div className={styles.advancedHint}>
+                        Leave empty to target all languages
+                     </div>
+                  </div>
+                  <input
+                     className={styles.input}
+                     placeholder="e.g. English, Spanish"
+                     onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                           const v = (
+                              e.target as HTMLInputElement
+                           ).value.trim();
+                           if (v && !form.targetLanguages.includes(v)) {
+                              set("targetLanguages", [
+                                 ...form.targetLanguages,
+                                 v,
+                              ]);
+                              (e.target as HTMLInputElement).value = "";
+                           }
+                        }
+                     }}
+                  />
+               </div>
+            </div>
+         </details>
       </div>
    );
 }
 
 // =========================================
-// STEP 3 — Creative brief for creators
+// STEP 3 — Creative
 // =========================================
 function StepThree({
    form,
@@ -759,33 +1130,13 @@ function StepThree({
    form: FormState;
    set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
 }) {
-   const addRequirement = () => {
-      const el = document.getElementById(
-         "creatorReq",
-      ) as HTMLInputElement | null;
+   const addChip = (
+      key: "creatorRequirements" | "instructions" | "requirements",
+      inputId: string,
+   ) => {
+      const el = document.getElementById(inputId) as HTMLInputElement | null;
       if (el && el.value.trim()) {
-         set("creatorRequirements", [
-            ...form.creatorRequirements,
-            el.value.trim(),
-         ]);
-         el.value = "";
-      }
-   };
-   const addInstruction = () => {
-      const el = document.getElementById(
-         "creatorIns",
-      ) as HTMLInputElement | null;
-      if (el && el.value.trim()) {
-         set("instructions", [...form.instructions, el.value.trim()]);
-         el.value = "";
-      }
-   };
-   const addDeliverableReq = () => {
-      const el = document.getElementById(
-         "deliverableReq",
-      ) as HTMLInputElement | null;
-      if (el && el.value.trim()) {
-         set("requirements", [...form.requirements, el.value.trim()]);
+         set(key, [...form[key], el.value.trim()]);
          el.value = "";
       }
    };
@@ -797,7 +1148,7 @@ function StepThree({
             Tell creators exactly what you want them to produce.
          </p>
 
-         {/* Cover image */}
+         {/* Cover */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Cover image</div>
             <div className={styles.coverRow}>
@@ -830,7 +1181,7 @@ function StepThree({
                   rows={3}
                   value={form.summary}
                   onChange={(e) => set("summary", e.target.value)}
-                  placeholder="Explain the campaign in 2–3 sentences. What's the product? What's the vibe you want creators to capture?"
+                  placeholder="Explain the campaign in 2–3 sentences."
                />
             </label>
          </section>
@@ -838,9 +1189,7 @@ function StepThree({
          {/* Deliverable */}
          <section className={styles.section}>
             <label className={styles.field}>
-               <span className={styles.sectionTitle}>
-                  Deliverable <span className={styles.req}>*</span>
-               </span>
+               <span className={styles.sectionTitle}>Deliverable</span>
                <input
                   className={styles.input}
                   value={form.deliverable}
@@ -853,9 +1202,6 @@ function StepThree({
          {/* Creator requirements */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Creator requirements</div>
-            <p className={styles.hint}>
-               Minimum thresholds a creator must meet before joining.
-            </p>
             <div className={styles.minRow}>
                <label className={styles.field}>
                   <span className={styles.label}>Min followers</span>
@@ -883,9 +1229,7 @@ function StepThree({
                   />
                </label>
             </div>
-
             <div className={styles.chipInput}>
-               <span className={styles.chipLabel}>Additional requirements</span>
                <div className={styles.chipList}>
                   {form.creatorRequirements.map((r, i) => (
                      <span key={i} className={styles.chip}>
@@ -912,14 +1256,16 @@ function StepThree({
                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                            e.preventDefault();
-                           addRequirement();
+                           addChip("creatorRequirements", "creatorReq");
                         }
                      }}
                   />
                   <button
                      type="button"
                      className={styles.addBtn}
-                     onClick={addRequirement}
+                     onClick={() =>
+                        addChip("creatorRequirements", "creatorReq")
+                     }
                   >
                      <Plus size={12} /> Add
                   </button>
@@ -930,9 +1276,6 @@ function StepThree({
          {/* Instructions */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Instructions</div>
-            <p className={styles.hint}>
-               Step-by-step for how the creator should approach the content.
-            </p>
             <div className={styles.chipInput}>
                <div className={styles.chipList}>
                   {form.instructions.map((r, i) => (
@@ -960,14 +1303,14 @@ function StepThree({
                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                            e.preventDefault();
-                           addInstruction();
+                           addChip("instructions", "creatorIns");
                         }
                      }}
                   />
                   <button
                      type="button"
                      className={styles.addBtn}
-                     onClick={addInstruction}
+                     onClick={() => addChip("instructions", "creatorIns")}
                   >
                      <Plus size={12} /> Add
                   </button>
@@ -975,7 +1318,7 @@ function StepThree({
             </div>
          </section>
 
-         {/* Content requirements (also shown to creators) */}
+         {/* Content requirements */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Content requirements</div>
             <div className={styles.chipInput}>
@@ -1005,14 +1348,14 @@ function StepThree({
                      onKeyDown={(e) => {
                         if (e.key === "Enter") {
                            e.preventDefault();
-                           addDeliverableReq();
+                           addChip("requirements", "deliverableReq");
                         }
                      }}
                   />
                   <button
                      type="button"
                      className={styles.addBtn}
-                     onClick={addDeliverableReq}
+                     onClick={() => addChip("requirements", "deliverableReq")}
                   >
                      <Plus size={12} /> Add
                   </button>
@@ -1020,12 +1363,11 @@ function StepThree({
             </div>
          </section>
 
-         {/* Review box */}
          <div className={styles.reviewBox}>
             <Info size={14} />
             <div>
                <strong>Review before launch:</strong> Once created, the campaign
-               will go live on the Discover page immediately.
+               goes live on the Discover page immediately.
             </div>
          </div>
       </div>

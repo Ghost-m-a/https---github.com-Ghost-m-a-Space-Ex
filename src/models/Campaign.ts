@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
 // =========================================
-// SHARED TYPES
+// TYPES
 // =========================================
 export type AdFormat =
    | "feed"
@@ -11,16 +11,16 @@ export type AdFormat =
    | "community";
 
 export type Objective =
+   | "sales"
+   | "leads"
+   | "engagement"
+   | "traffic"
+   | "awareness"
    | "views"
    | "comments"
    | "shares"
    | "subscribes"
-   | "follows"
-   | "engagement"
-   | "sales"
-   | "leads"
-   | "traffic"
-   | "awareness";
+   | "follows";
 
 export type CampaignPlatform =
    | "youtube"
@@ -28,6 +28,19 @@ export type CampaignPlatform =
    | "instagram"
    | "x"
    | "facebook";
+
+export type BudgetControl = "campaign" | "adgroup";
+export type BidStrategy = "highest-volume" | "cost-cap" | "bid-cap";
+export type SpecialAdCategory =
+   | "none"
+   | "financial-products"
+   | "employment"
+   | "housing";
+export type ConversionLocation = "website" | "messages";
+export type PerformanceGoal =
+   | "maximize-conversions"
+   | "maximize-conversations"
+   | "maximize-clicks";
 
 export interface IPlatformRate {
    platform: CampaignPlatform | string;
@@ -45,73 +58,78 @@ export interface ICampaignAsset {
 }
 
 export interface ICampaign extends Document {
-   // Ownership
    businessId: Types.ObjectId;
    createdBy: Types.ObjectId;
 
-   // Identity
    slug: string;
    title: string;
    subtitle: string;
    category: string;
    summary: string;
 
-   // Brand display
    brandName: string;
    brandAvatar: string;
    brandVerified: boolean;
 
-   // Visuals
    coverImage: string;
    previewImage: string;
 
-   // Format & platform
+   // ---- Step 1: Build ----
    adFormat: AdFormat;
+   objective: Objective;
    platform: CampaignPlatform | "multi";
    socials: CampaignPlatform[];
 
-   // Objective (what the advertiser wants to grow)
-   objective: Objective;
-   conversionEvent: string;
-
-   // Budget & bid
    budget: number;
    budgetSpent: number;
    budgetType: "daily" | "lifetime";
-   bidStrategy: "highest-volume" | "cost-cap" | "manual";
+   budgetControl: BudgetControl;
+   bidStrategy: BidStrategy;
    cpm: number;
 
-   // Audience targeting
+   specialAdCategory: SpecialAdCategory;
+
+   // ---- Step 2: Default settings ----
+   conversionLocation: ConversionLocation;
+   conversionEvent: string;
+   performanceGoal: PerformanceGoal;
+
+   messageDestinations: string[]; // ["page_messages", "profile_messages"]
+   pageId: string;
+   socialProfileId: string;
+
+   globalReach: boolean;
    targetCountries: string[];
    targetLanguages: string[];
+   excludedCountries: string[];
    minAge: number;
    maxAge: number;
-   globalReach: boolean;
+   autoAudience: boolean;
+   audiences: string[];
 
-   // Creator requirements
+   autoPlacements: boolean;
+
+   startDate: Date;
+   endDate: Date | null;
+   minDailySpend: number;
+   deliveryHours: string[];
+
+   // ---- Creator requirements ----
    minFollowers: number;
    minEngagement: number;
    creatorRequirements: string[];
 
-   // Deliverable & brief
+   // ---- Brief ----
    deliverable: string;
    instructions: string[];
    requirements: string[];
-
-   // Legacy / compatibility
    duration: string;
    platformRates: IPlatformRate[];
    assets: ICampaignAsset[];
 
-   // Schedule
-   startDate: Date;
-   endDate: Date | null;
-
-   // Stats
    joinedUsers: number;
    totalViews: number;
 
-   // Status — includes legacy "ended"
    status: "draft" | "active" | "paused" | "completed" | "archived" | "ended";
    featured: boolean;
 
@@ -120,7 +138,7 @@ export interface ICampaign extends Document {
 }
 
 // =========================================
-// SCHEMA
+// SCHEMAS
 // =========================================
 const PlatformRateSchema = new Schema<IPlatformRate>(
    {
@@ -155,6 +173,7 @@ const CampaignSchema = new Schema<ICampaign>(
       coverImage: { type: String, default: "" },
       previewImage: { type: String, default: "" },
 
+      // Step 1
       adFormat: {
          type: String,
          enum: [
@@ -164,7 +183,23 @@ const CampaignSchema = new Schema<ICampaign>(
             "text-feed",
             "community",
          ],
-         default: "short-video",
+         default: "feed",
+      },
+      objective: {
+         type: String,
+         enum: [
+            "sales",
+            "leads",
+            "engagement",
+            "traffic",
+            "awareness",
+            "views",
+            "comments",
+            "shares",
+            "subscribes",
+            "follows",
+         ],
+         default: "sales",
       },
       platform: {
          type: String,
@@ -177,58 +212,80 @@ const CampaignSchema = new Schema<ICampaign>(
          default: [],
       },
 
-      objective: {
-         type: String,
-         enum: [
-            "views",
-            "comments",
-            "shares",
-            "subscribes",
-            "follows",
-            "engagement",
-            "sales",
-            "leads",
-            "traffic",
-            "awareness",
-         ],
-         default: "views",
-      },
-      conversionEvent: { type: String, default: "" },
-
       budget: { type: Number, required: true, min: 1 },
       budgetSpent: { type: Number, default: 0 },
       budgetType: {
          type: String,
          enum: ["daily", "lifetime"],
-         default: "lifetime",
+         default: "daily",
+      },
+      budgetControl: {
+         type: String,
+         enum: ["campaign", "adgroup"],
+         default: "campaign",
       },
       bidStrategy: {
          type: String,
-         enum: ["highest-volume", "cost-cap", "manual"],
+         enum: ["highest-volume", "cost-cap", "bid-cap"],
          default: "highest-volume",
       },
-      cpm: { type: Number, required: true, min: 0.01 },
+      cpm: { type: Number, required: true, min: 0.01, default: 1 },
 
+      specialAdCategory: {
+         type: String,
+         enum: ["none", "financial-products", "employment", "housing"],
+         default: "none",
+      },
+
+      // Step 2
+      conversionLocation: {
+         type: String,
+         enum: ["website", "messages"],
+         default: "website",
+      },
+      conversionEvent: { type: String, default: "" },
+      performanceGoal: {
+         type: String,
+         enum: [
+            "maximize-conversions",
+            "maximize-conversations",
+            "maximize-clicks",
+         ],
+         default: "maximize-conversions",
+      },
+
+      messageDestinations: { type: [String], default: [] },
+      pageId: { type: String, default: "" },
+      socialProfileId: { type: String, default: "" },
+
+      globalReach: { type: Boolean, default: true },
       targetCountries: { type: [String], default: [] },
       targetLanguages: { type: [String], default: [] },
+      excludedCountries: { type: [String], default: [] },
       minAge: { type: Number, default: 18 },
       maxAge: { type: Number, default: 65 },
-      globalReach: { type: Boolean, default: true },
+      autoAudience: { type: Boolean, default: true },
+      audiences: { type: [String], default: [] },
 
+      autoPlacements: { type: Boolean, default: true },
+
+      startDate: { type: Date, default: Date.now },
+      endDate: { type: Date, default: null },
+      minDailySpend: { type: Number, default: 0 },
+      deliveryHours: { type: [String], default: [] },
+
+      // Creator requirements
       minFollowers: { type: Number, default: 0 },
       minEngagement: { type: Number, default: 0 },
       creatorRequirements: { type: [String], default: [] },
 
+      // Brief
       deliverable: { type: String, default: "" },
       instructions: { type: [String], default: [] },
       requirements: { type: [String], default: [] },
-
-      // ---------- Legacy fields kept for backward compatibility ----------
       duration: { type: String, default: "" },
       platformRates: { type: [PlatformRateSchema], default: [] },
       assets: { type: Schema.Types.Mixed, default: [] },
-      startDate: { type: Date, default: Date.now },
-      endDate: { type: Date, default: null },
 
       joinedUsers: { type: Number, default: 0 },
       totalViews: { type: Number, default: 0 },

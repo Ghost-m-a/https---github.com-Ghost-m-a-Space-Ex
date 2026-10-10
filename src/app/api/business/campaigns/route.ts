@@ -7,7 +7,7 @@ import { getCurrentUserId } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 // --------------------------------------------------
-// GET — list campaigns owned by current user's business
+// GET — list campaigns for current business
 // --------------------------------------------------
 export async function GET() {
    try {
@@ -36,7 +36,7 @@ export async function GET() {
 }
 
 // --------------------------------------------------
-// POST — create a new campaign
+// POST — create a campaign (with all the new fields)
 // --------------------------------------------------
 export async function POST(req: Request) {
    try {
@@ -49,6 +49,7 @@ export async function POST(req: Request) {
 
       const body = await req.json();
 
+      // ---- Destructure everything ----
       const {
          title,
          subtitle,
@@ -56,30 +57,47 @@ export async function POST(req: Request) {
          summary,
          coverImage,
          adFormat,
+         objective,
          platform,
          socials,
-         objective,
-         conversionEvent,
          budget,
          budgetType,
+         budgetControl,
          bidStrategy,
          cpm,
+         specialAdCategory,
+
+         conversionLocation,
+         conversionEvent,
+         performanceGoal,
+         messageDestinations,
+         pageId,
+         socialProfileId,
+
+         globalReach,
          targetCountries,
          targetLanguages,
+         excludedCountries,
          minAge,
          maxAge,
-         globalReach,
+         autoAudience,
+         audiences,
+         autoPlacements,
+
+         startDate,
+         endDate,
+         minDailySpend,
+         deliveryHours,
+
          minFollowers,
          minEngagement,
          creatorRequirements,
          deliverable,
          instructions,
          requirements,
-         startDate,
-         endDate,
       } = body ?? {};
 
-      // ---- Validation ----
+      // ---- Validate ----
       if (!title || typeof title !== "string" || !title.trim()) {
          return NextResponse.json(
             { error: "Campaign title is required" },
@@ -98,12 +116,6 @@ export async function POST(req: Request) {
             { status: 400 },
          );
       }
-      if (!Array.isArray(socials) || socials.length === 0) {
-         return NextResponse.json(
-            { error: "Select at least one platform" },
-            { status: 400 },
-         );
-      }
 
       // ---- Business ----
       const business = await Business.findOne({ userId }).lean<any>();
@@ -114,14 +126,13 @@ export async function POST(req: Request) {
          );
       }
 
-      // ---- Unique slug ----
+      // ---- Slug ----
       const baseSlug = title
          .toLowerCase()
          .replace(/[^\w\s-]/g, "")
          .replace(/\s+/g, "-")
          .slice(0, 50);
-      const suffix = Math.random().toString(36).slice(2, 8);
-      const slug = `${baseSlug}-${suffix}`;
+      const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 8)}`;
 
       // ---- Create ----
       const campaign = await Campaign.create({
@@ -140,35 +151,47 @@ export async function POST(req: Request) {
             business.initial ?? (business.name?.charAt(0) ?? "?").toUpperCase(),
          brandVerified: business.verification?.business === "verified",
 
-         adFormat: adFormat ?? "short-video",
+         adFormat: adFormat ?? "feed",
+         objective: objective ?? "sales",
          platform: platform ?? "multi",
-         socials,
-
-         objective: objective ?? "views",
-         conversionEvent: conversionEvent ?? "",
+         socials: socials ?? [],
 
          budget,
          budgetSpent: 0,
-         budgetType: budgetType ?? "lifetime",
+         budgetType: budgetType ?? "daily",
+         budgetControl: budgetControl ?? "campaign",
          bidStrategy: bidStrategy ?? "highest-volume",
          cpm,
+         specialAdCategory: specialAdCategory ?? "none",
 
+         conversionLocation: conversionLocation ?? "website",
+         conversionEvent: conversionEvent ?? "",
+         performanceGoal: performanceGoal ?? "maximize-conversions",
+         messageDestinations: messageDestinations ?? [],
+         pageId: pageId ?? "",
+         socialProfileId: socialProfileId ?? "",
+
+         globalReach: globalReach !== false,
          targetCountries: targetCountries ?? [],
          targetLanguages: targetLanguages ?? [],
+         excludedCountries: excludedCountries ?? [],
          minAge: minAge ?? 18,
          maxAge: maxAge ?? 65,
-         globalReach: globalReach !== false,
+         autoAudience: autoAudience !== false,
+         audiences: audiences ?? [],
+         autoPlacements: autoPlacements !== false,
+
+         startDate: startDate ? new Date(startDate) : new Date(),
+         endDate: endDate ? new Date(endDate) : null,
+         minDailySpend: minDailySpend ?? 0,
+         deliveryHours: deliveryHours ?? [],
 
          minFollowers: minFollowers ?? 0,
          minEngagement: minEngagement ?? 0,
          creatorRequirements: creatorRequirements ?? [],
-
          deliverable: deliverable ?? "",
          instructions: instructions ?? [],
          requirements: requirements ?? [],
-
-         startDate: startDate ? new Date(startDate) : new Date(),
-         endDate: endDate ? new Date(endDate) : null,
 
          joinedUsers: 0,
          totalViews: 0,
