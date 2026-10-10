@@ -20,6 +20,7 @@ export async function GET(req: Request) {
       const filter: Record<string, unknown> = {
          status: { $in: ["active", "published", "live"] },
       };
+
       if (q) {
          filter.$or = [
             { title: { $regex: q, $options: "i" } },
@@ -40,6 +41,7 @@ export async function GET(req: Request) {
          .limit(60)
          .lean<any[]>();
 
+      // ---- Which of these campaigns has the current user joined? ----
       let joinedIds = new Set<string>();
       const userId = await getCurrentUserId();
       if (userId && docs.length > 0) {
@@ -52,9 +54,11 @@ export async function GET(req: Request) {
          joinedIds = new Set(signups.map((s) => String(s.campaignId)));
       }
 
+      // ---- Shape the response ----
       const campaigns = docs.map((c) => {
          const budget = c.budget ?? 0;
          const budgetSpent = c.budgetSpent ?? c.spent ?? 0;
+
          return {
             id: String(c._id),
             slug: c.slug ?? String(c._id),
@@ -71,10 +75,12 @@ export async function GET(req: Request) {
             budgetSpent,
             budgetRemaining: Math.max(0, budget - budgetSpent),
             cpm: c.cpm ?? 0,
-            joinedUsers: c.joinedUsers ?? 0,
+            joinedUsers: c.joinedUsers ?? c.participants?.length ?? 0,
             totalViews: c.totalViews ?? 0,
             duration: c.duration ?? "",
             featured: Boolean(c.featured),
+            objective: c.objective ?? "views",
+            adFormat: c.adFormat ?? "short-video",
             joined: joinedIds.has(String(c._id)),
          };
       });

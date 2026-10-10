@@ -2,13 +2,12 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
 import Business from "@/models/Business";
-import User from "@/models/User";
 import { getCurrentUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
 // --------------------------------------------------
-// GET — list campaigns owned by the current user's business
+// GET — list campaigns owned by current user's business
 // --------------------------------------------------
 export async function GET() {
    try {
@@ -19,10 +18,8 @@ export async function GET() {
          return NextResponse.json({ campaigns: [] }, { status: 401 });
       }
 
-      const business = await Business.findOne({ userId }).lean();
-      if (!business) {
-         return NextResponse.json({ campaigns: [] });
-      }
+      const business = await Business.findOne({ userId }).lean<any>();
+      if (!business) return NextResponse.json({ campaigns: [] });
 
       const campaigns = await Campaign.find({ businessId: business._id })
          .sort({ createdAt: -1 })
@@ -39,7 +36,7 @@ export async function GET() {
 }
 
 // --------------------------------------------------
-// POST — create a new campaign (real, from the UI form)
+// POST — create a new campaign
 // --------------------------------------------------
 export async function POST(req: Request) {
    try {
@@ -56,20 +53,36 @@ export async function POST(req: Request) {
          title,
          subtitle,
          category,
-         coverImage,
-         socials,
-         budget,
-         cpm,
-         duration,
-         requirements,
-         instructions,
          summary,
+         coverImage,
+         adFormat,
+         platform,
+         socials,
+         objective,
+         conversionEvent,
+         budget,
+         budgetType,
+         bidStrategy,
+         cpm,
+         targetCountries,
+         targetLanguages,
+         minAge,
+         maxAge,
+         globalReach,
+         minFollowers,
+         minEngagement,
+         creatorRequirements,
+         deliverable,
+         instructions,
+         requirements,
+         startDate,
+         endDate,
       } = body ?? {};
 
-      // -------- validation --------
+      // ---- Validation ----
       if (!title || typeof title !== "string" || !title.trim()) {
          return NextResponse.json(
-            { error: "Title is required" },
+            { error: "Campaign title is required" },
             { status: 400 },
          );
       }
@@ -81,7 +94,7 @@ export async function POST(req: Request) {
       }
       if (typeof cpm !== "number" || cpm <= 0) {
          return NextResponse.json(
-            { error: "CPM must be a positive number" },
+            { error: "Reward rate (CPM) must be positive" },
             { status: 400 },
          );
       }
@@ -92,7 +105,7 @@ export async function POST(req: Request) {
          );
       }
 
-      // -------- resolve business --------
+      // ---- Business ----
       const business = await Business.findOne({ userId }).lean<any>();
       if (!business) {
          return NextResponse.json(
@@ -101,7 +114,7 @@ export async function POST(req: Request) {
          );
       }
 
-      // -------- unique slug --------
+      // ---- Unique slug ----
       const baseSlug = title
          .toLowerCase()
          .replace(/[^\w\s-]/g, "")
@@ -110,7 +123,7 @@ export async function POST(req: Request) {
       const suffix = Math.random().toString(36).slice(2, 8);
       const slug = `${baseSlug}-${suffix}`;
 
-      // -------- create --------
+      // ---- Create ----
       const campaign = await Campaign.create({
          businessId: business._id,
          createdBy: userId,
@@ -118,33 +131,49 @@ export async function POST(req: Request) {
          title: title.trim(),
          subtitle: subtitle ?? "",
          category: category ?? "General",
+         summary: summary ?? "",
          coverImage: coverImage ?? "",
          previewImage: coverImage ?? "",
+
          brandName: business.name ?? "Unknown",
          brandAvatar:
             business.initial ?? (business.name?.charAt(0) ?? "?").toUpperCase(),
          brandVerified: business.verification?.business === "verified",
+
+         adFormat: adFormat ?? "short-video",
+         platform: platform ?? "multi",
          socials,
-         platformRates: socials.map((s: string) => ({
-            platform: s,
-            minViews: 1000,
-            maxViews: 1_000_000,
-            cpm,
-         })),
+
+         objective: objective ?? "views",
+         conversionEvent: conversionEvent ?? "",
+
          budget,
          budgetSpent: 0,
+         budgetType: budgetType ?? "lifetime",
+         bidStrategy: bidStrategy ?? "highest-volume",
          cpm,
-         duration: duration ?? "1mo",
-         requirements: requirements ?? [],
+
+         targetCountries: targetCountries ?? [],
+         targetLanguages: targetLanguages ?? [],
+         minAge: minAge ?? 18,
+         maxAge: maxAge ?? 65,
+         globalReach: globalReach !== false,
+
+         minFollowers: minFollowers ?? 0,
+         minEngagement: minEngagement ?? 0,
+         creatorRequirements: creatorRequirements ?? [],
+
+         deliverable: deliverable ?? "",
          instructions: instructions ?? [],
-         summary:
-            summary ??
-            `Create short-form content for ${title.trim()} and get paid per view.`,
+         requirements: requirements ?? [],
+
+         startDate: startDate ? new Date(startDate) : new Date(),
+         endDate: endDate ? new Date(endDate) : null,
+
          joinedUsers: 0,
          totalViews: 0,
          status: "active",
          featured: false,
-         startDate: new Date(),
       });
 
       return NextResponse.json({ campaign }, { status: 201 });

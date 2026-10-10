@@ -6,13 +6,9 @@ import {
    Search,
    ChevronDown,
    ChevronLeft,
-   ChevronRight,
-   X,
    Check,
    Eraser,
    Users,
-   TrendingUp,
-   Wallet,
 } from "lucide-react";
 import styles from "@/styles/pages/discover.module.css";
 
@@ -39,6 +35,8 @@ interface Campaign {
    duration: string;
    featured: boolean;
    joined: boolean;
+   objective?: string;
+   adFormat?: string;
 }
 
 const SOCIALS: Record<SocialPlatform, { label: string; color: string }> = {
@@ -71,7 +69,9 @@ export default function DiscoverPage() {
          if (search) p.set("q", search);
          if (social) p.set("social", social);
          if (sort) p.set("sort", sort);
-         const res = await fetch(`/api/discover/campaigns?${p}`);
+         const res = await fetch(`/api/discover/campaigns?${p}`, {
+            credentials: "include",
+         });
          const d = await res.json();
          setCampaigns(d.campaigns || []);
       } finally {
@@ -81,6 +81,20 @@ export default function DiscoverPage() {
 
    useEffect(() => {
       load();
+   }, [load]);
+
+   // Refetch when the tab regains focus or the page is restored from bfcache
+   useEffect(() => {
+      const onFocus = () => load();
+      const onPageShow = (e: PageTransitionEvent) => {
+         if (e.persisted) load();
+      };
+      window.addEventListener("focus", onFocus);
+      window.addEventListener("pageshow", onPageShow);
+      return () => {
+         window.removeEventListener("focus", onFocus);
+         window.removeEventListener("pageshow", onPageShow);
+      };
    }, [load]);
 
    useEffect(() => {
@@ -138,7 +152,9 @@ export default function DiscoverPage() {
                   return (
                      <button
                         key={s}
-                        className={`${styles.socialBtn} ${active ? styles.socialBtnActive : ""}`}
+                        className={`${styles.socialBtn} ${
+                           active ? styles.socialBtnActive : ""
+                        }`}
                         onClick={() => setSocial(active ? "" : s)}
                         style={
                            active
@@ -255,6 +271,11 @@ function CampaignCard({
                   <span>{c.brandName}</span>
                </div>
             )}
+            {c.joined && (
+               <div className={styles.joinedPill}>
+                  <Check size={12} /> Joined
+               </div>
+            )}
          </div>
 
          {/* Info */}
@@ -281,6 +302,20 @@ function CampaignCard({
             {/* Title */}
             <div className={styles.cardTitle}>{c.title}</div>
 
+            {/* Objective + format pills */}
+            {(c.objective || c.adFormat) && (
+               <div className={styles.tagRow}>
+                  {c.objective && (
+                     <span className={styles.objectivePill}>{c.objective}</span>
+                  )}
+                  {c.adFormat && (
+                     <span className={styles.formatPill}>
+                        {c.adFormat.replace("-", " ")}
+                     </span>
+                  )}
+               </div>
+            )}
+
             {/* Stats */}
             <div className={styles.statsRow}>
                <div className={styles.statLeft}>
@@ -305,13 +340,6 @@ function CampaignCard({
                   style={{ width: `${pct}%` }}
                />
             </div>
-
-            {/* Joined pill */}
-            {c.joined && (
-               <div className={styles.joinedPill}>
-                  <Check size={12} /> Joined
-               </div>
-            )}
          </div>
       </Link>
    );

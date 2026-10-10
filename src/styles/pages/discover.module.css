@@ -93,6 +93,7 @@
    background: var(--bg-hover);
    color: var(--text-primary);
 }
+
 .socialBtnActive {
    border-color: transparent;
 }
@@ -277,13 +278,16 @@
 .duration {
    color: var(--text-muted);
 }
+
 .dot {
    color: var(--text-muted);
 }
+
 .brandName {
    color: var(--accent-blue);
    font-weight: 500;
 }
+
 .brandVerifiedIcon {
    color: #10b981;
    font-size: 10px;
@@ -342,9 +346,11 @@
 .raised {
    color: var(--text-primary);
 }
+
 .separator {
    color: var(--text-muted);
 }
+
 .budget {
    color: var(--text-secondary);
 }
@@ -364,10 +370,11 @@
    transition: width 0.3s;
 }
 
+/* Joined pill now overlays the cover (top-left) */
 .joinedPill {
    position: absolute;
-   top: -46px;
-   left: 14px;
+   top: 8px;
+   left: 8px;
    display: inline-flex;
    align-items: center;
    gap: 4px;
@@ -377,6 +384,7 @@
    border-radius: 999px;
    font-size: 11px;
    font-weight: 600;
+   z-index: 2;
 }
 
 .loading {
@@ -398,14 +406,45 @@
    font-size: 60px;
    opacity: 0.4;
 }
+
 .emptyTitle {
    font-size: 16px;
    font-weight: 600;
    color: var(--text-primary);
 }
+
 .emptySub {
    font-size: 13px;
    color: var(--text-secondary);
+}
+
+/* Objective + format tag row */
+.tagRow {
+   display: flex;
+   gap: 6px;
+   flex-wrap: wrap;
+}
+
+.objectivePill {
+   padding: 3px 8px;
+   background: rgba(139, 92, 246, 0.15);
+   color: #a78bfa;
+   border-radius: 6px;
+   font-weight: 700;
+   font-size: 10.5px;
+   text-transform: capitalize;
+   letter-spacing: 0.2px;
+}
+
+.formatPill {
+   padding: 3px 8px;
+   background: rgba(59, 130, 246, 0.15);
+   color: #93c5fd;
+   border-radius: 6px;
+   font-weight: 700;
+   font-size: 10.5px;
+   text-transform: capitalize;
+   letter-spacing: 0.2px;
 }
 
 @media (max-width: 1400px) {
@@ -413,11 +452,13 @@
       grid-template-columns: repeat(3, 1fr);
    }
 }
+
 @media (max-width: 1000px) {
    .grid {
       grid-template-columns: repeat(2, 1fr);
    }
 }
+
 @media (max-width: 700px) {
    .grid {
       grid-template-columns: 1fr;
