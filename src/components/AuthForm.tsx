@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Rocket, Eye, EyeOff, Loader2 } from "lucide-react";
 import styles from "./AuthForm.module.css";
 
 type Mode = "login" | "signup";
@@ -11,6 +12,7 @@ export default function AuthForm() {
    const [mode, setMode] = useState<Mode>("login");
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState<string | null>(null);
+   const [showPassword, setShowPassword] = useState(false);
 
    const [name, setName] = useState("");
    const [email, setEmail] = useState("");
@@ -42,15 +44,16 @@ export default function AuthForm() {
 
          if (!res.ok) {
             setError(data?.error ?? "Something went wrong");
+            setLoading(false);
             return;
          }
 
-         // Session cookie is now set — re-run the server component on /
-         router.refresh();
-         router.push("/");
+         // Cookie is now set. Force a full reload so:
+         //   - layout.tsx re-runs and mounts the AppShell
+         //   - UserDropdown re-fetches /api/auth/me
+         window.location.href = "/";
       } catch {
          setError("Network error. Please try again.");
-      } finally {
          setLoading(false);
       }
    };
@@ -58,8 +61,10 @@ export default function AuthForm() {
    return (
       <div className={styles.wrap}>
          <div className={styles.card}>
-            <div className={styles.brand}>
-               <span className={styles.brandDot} />
+            <div className={styles.brandRow}>
+               <div className={styles.brandIcon}>
+                  <Rocket size={20} />
+               </div>
                <span className={styles.brandName}>Space-Ex</span>
             </div>
 
@@ -72,11 +77,12 @@ export default function AuthForm() {
                   : "Start building with Space-Ex in seconds."}
             </p>
 
-            {/* Tabs */}
             <div className={styles.tabs}>
                <button
                   type="button"
-                  className={`${styles.tab} ${mode === "login" ? styles.tabActive : ""}`}
+                  className={`${styles.tab} ${
+                     mode === "login" ? styles.tabActive : ""
+                  }`}
                   onClick={() => {
                      setMode("login");
                      setError(null);
@@ -86,7 +92,9 @@ export default function AuthForm() {
                </button>
                <button
                   type="button"
-                  className={`${styles.tab} ${mode === "signup" ? styles.tabActive : ""}`}
+                  className={`${styles.tab} ${
+                     mode === "signup" ? styles.tabActive : ""
+                  }`}
                   onClick={() => {
                      setMode("signup");
                      setError(null);
@@ -127,18 +135,34 @@ export default function AuthForm() {
 
                <label className={styles.field}>
                   <span className={styles.label}>Password</span>
-                  <input
-                     className={styles.input}
-                     type="password"
-                     value={password}
-                     onChange={(e) => setPassword(e.target.value)}
-                     placeholder="••••••••"
-                     required
-                     minLength={6}
-                     autoComplete={
-                        mode === "login" ? "current-password" : "new-password"
-                     }
-                  />
+                  <div className={styles.passwordWrap}>
+                     <input
+                        className={styles.input}
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        minLength={6}
+                        autoComplete={
+                           mode === "login"
+                              ? "current-password"
+                              : "new-password"
+                        }
+                     />
+                     <button
+                        type="button"
+                        className={styles.eyeBtn}
+                        onClick={() => setShowPassword((s) => !s)}
+                        tabIndex={-1}
+                     >
+                        {showPassword ? (
+                           <EyeOff size={16} />
+                        ) : (
+                           <Eye size={16} />
+                        )}
+                     </button>
+                  </div>
                </label>
 
                <label className={styles.checkboxRow}>
@@ -157,13 +181,50 @@ export default function AuthForm() {
                   className={styles.submit}
                   disabled={loading}
                >
-                  {loading
-                     ? "Please wait…"
-                     : mode === "login"
-                       ? "Log in"
-                       : "Create account"}
+                  {loading ? (
+                     <>
+                        <Loader2 size={16} className={styles.spinner} />
+                        Please wait…
+                     </>
+                  ) : mode === "login" ? (
+                     "Log in"
+                  ) : (
+                     "Create account"
+                  )}
                </button>
             </form>
+
+            <p className={styles.footer}>
+               {mode === "login" ? (
+                  <>
+                     Don&apos;t have an account?{" "}
+                     <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => {
+                           setMode("signup");
+                           setError(null);
+                        }}
+                     >
+                        Sign up
+                     </button>
+                  </>
+               ) : (
+                  <>
+                     Already have an account?{" "}
+                     <button
+                        type="button"
+                        className={styles.linkBtn}
+                        onClick={() => {
+                           setMode("login");
+                           setError(null);
+                        }}
+                     >
+                        Log in
+                     </button>
+                  </>
+               )}
+            </p>
          </div>
       </div>
    );

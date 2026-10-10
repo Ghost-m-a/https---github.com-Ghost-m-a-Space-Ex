@@ -4,7 +4,6 @@ import { verifySessionToken, SESSION_COOKIE_NAME } from "./auth-edge";
 
 // =========================================
 // RE-EXPORT EDGE-SAFE HELPERS
-// (so existing imports from "./auth" still work)
 // =========================================
 export {
    createSessionToken,
@@ -18,7 +17,7 @@ export {
 export type { SessionPayload } from "./auth-edge";
 
 // =========================================
-// PASSWORD HASHING (Node.js runtime only)
+// PASSWORD HASHING (Node runtime only)
 // =========================================
 export function hashPassword(password: string): string {
    const salt = crypto.randomBytes(16).toString("hex");
@@ -42,7 +41,6 @@ export function verifyPassword(password: string, stored: string): boolean {
 
 // =========================================
 // CURRENT USER (Node runtime only)
-// Reads the session cookie and returns the userId, or null.
 // =========================================
 export async function getCurrentUserId(): Promise<string | null> {
    const store = await cookies();

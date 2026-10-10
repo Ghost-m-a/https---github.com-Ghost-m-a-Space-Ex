@@ -3,44 +3,34 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import AppShell from "@/components/appshell";
 import { WorkspaceProvider } from "@/context/workspace-context";
+import { getCurrentUserId } from "@/lib/auth";
 
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-   title: "Space/Ex",
-   description: "Modern workspace dashboard",
+   title: "Space-Ex",
+   description: "Build and scale your business on Space-Ex.",
 };
 
-export default function RootLayout({
+export const dynamic = "force-dynamic";
+
+export default async function RootLayout({
    children,
-}: Readonly<{ children: React.ReactNode }>) {
+}: {
+   children: React.ReactNode;
+}) {
+   const userId = await getCurrentUserId();
+
    return (
-      <html lang="en" suppressHydrationWarning>
-         <head>
-            <script
-               dangerouslySetInnerHTML={{
-                  __html: `
-              (function() {
-                try {
-                  var theme = localStorage.getItem('theme') || 'dark';
-                  var resolvedTheme = theme;
-                  if (theme === 'system') {
-                    resolvedTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-                  }
-                  document.documentElement.setAttribute('data-theme', resolvedTheme);
-                  document.documentElement.style.colorScheme = resolvedTheme;
-                } catch (e) {
-                  document.documentElement.setAttribute('data-theme', 'dark');
-                }
-              })();
-            `,
-               }}
-            />
-         </head>
+      <html lang="en" data-theme="dark">
          <body className={inter.className}>
-            <WorkspaceProvider>
-               <AppShell>{children}</AppShell>
-            </WorkspaceProvider>
+            {userId ? (
+               <WorkspaceProvider>
+                  <AppShell>{children}</AppShell>
+               </WorkspaceProvider>
+            ) : (
+               children
+            )}
          </body>
       </html>
    );

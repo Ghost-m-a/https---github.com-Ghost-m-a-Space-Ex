@@ -3,6 +3,8 @@ import mongoose, { Schema, Document, Model, Types } from "mongoose";
 export interface IAffiliateSignup extends Document {
    businessId: Types.ObjectId;
    affiliateId: Types.ObjectId;
+   campaignId: Types.ObjectId;
+   userId: Types.ObjectId;
    name: string;
    email: string;
    username: string;
@@ -29,6 +31,18 @@ const AffiliateSignupSchema = new Schema<IAffiliateSignup>(
          required: true,
          index: true,
       },
+      campaignId: {
+         type: Schema.Types.ObjectId,
+         ref: "Campaign",
+         required: true,
+         index: true,
+      },
+      userId: {
+         type: Schema.Types.ObjectId,
+         ref: "User",
+         required: true,
+         index: true,
+      },
       name: { type: String, required: true },
       email: { type: String, required: true, lowercase: true },
       username: { type: String, default: "" },
@@ -37,7 +51,7 @@ const AffiliateSignupSchema = new Schema<IAffiliateSignup>(
       status: {
          type: String,
          enum: ["signed_up", "active", "inactive"],
-         default: "signed_up",
+         default: "active",
          index: true,
       },
       referrals: { type: Number, default: 0 },
@@ -46,6 +60,12 @@ const AffiliateSignupSchema = new Schema<IAffiliateSignup>(
    },
    { timestamps: true },
 );
+
+AffiliateSignupSchema.index(
+   { affiliateId: 1, campaignId: 1 },
+   { unique: true },
+);
+AffiliateSignupSchema.index({ userId: 1, campaignId: 1 });
 
 const AffiliateSignup: Model<IAffiliateSignup> =
    mongoose.models.AffiliateSignup ||

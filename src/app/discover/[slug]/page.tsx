@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronLeft, Users, Check } from "lucide-react";
+import { ChevronLeft, Users, Check, Loader2 } from "lucide-react";
 import styles from "@/styles/pages/campaign.module.css";
 
 interface Campaign {
@@ -27,6 +27,7 @@ interface Campaign {
    joinedUsers: number;
    totalViews: number;
    duration: string;
+   joined: boolean;
 }
 
 export default function CampaignDetailPage() {
@@ -35,14 +36,15 @@ export default function CampaignDetailPage() {
    const [campaign, setCampaign] = useState<Campaign | null>(null);
    const [loading, setLoading] = useState(true);
    const [joining, setJoining] = useState(false);
-   const [joined, setJoined] = useState(false);
    const [error, setError] = useState<string | null>(null);
 
    useEffect(() => {
       if (!params?.slug) return;
       (async () => {
          try {
-            const res = await fetch(`/api/discover/campaigns/${params.slug}`);
+            const res = await fetch(`/api/discover/campaigns/${params.slug}`, {
+               credentials: "include",
+            });
             if (!res.ok) throw new Error("Campaign not found");
             const data = await res.json();
             setCampaign(data.campaign);
@@ -55,31 +57,47 @@ export default function CampaignDetailPage() {
    }, [params?.slug]);
 
    const handleJoin = async () => {
-      if (!campaign) return;
+      if (!campaign || campaign.joined) return;
       setJoining(true);
+      setError(null);
       try {
          const res = await fetch(
             `/api/discover/campaigns/${campaign.id}/join`,
-            { method: "POST" },
+            { method: "POST", credentials: "include" },
          );
+
          if (res.status === 401) {
             router.push(
-               "/login?next=" +
+               "/login?from=" +
                   encodeURIComponent(`/discover/${campaign.slug}`),
             );
             return;
          }
-         if (!res.ok) throw new Error("Failed to join");
-         setJoined(true);
-         setCampaign((c) => (c ? { ...c, joinedUsers: c.joinedUsers + 1 } : c));
+
+         const data = await res.json().catch(() => ({}));
+
+         if (!res.ok) {
+            // Show the real reason from the server
+            setError(
+               data?.error
+                  ? `${data.error}${data.step ? ` (at: ${data.step})` : ""}`
+                  : `Failed to join (${res.status})`,
+            );
+            return;
+         }
+
+         setCampaign((c) =>
+            c ? { ...c, joined: true, joinedUsers: c.joinedUsers + 1 } : c,
+         );
+         router.refresh();
       } catch {
-         setError("Could not join campaign");
+         setError("Network error");
       } finally {
          setJoining(false);
       }
    };
 
-   if (loading) return <div className={styles.loading}>Loading…</div>;
+   if (loading) return <div className={styles.loading}>Loading campaign…</div>;
    if (error || !campaign)
       return <div className={styles.loading}>{error ?? "Not found"}</div>;
 
@@ -176,16 +194,20 @@ export default function CampaignDetailPage() {
          )}
 
          <button
-            className={`${styles.joinBtn} ${joined ? styles.joined : ""}`}
+            className={`${styles.joinBtn} ${
+               campaign.joined ? styles.joined : ""
+            }`}
             onClick={handleJoin}
-            disabled={joining || joined}
+            disabled={joining || campaign.joined}
          >
-            {joined ? (
+            {campaign.joined ? (
                <>
                   <Check size={16} /> Joined
                </>
             ) : joining ? (
-               "Joining…"
+               <>
+                  <Loader2 size={16} className={styles.spin} /> Joining…
+               </>
             ) : (
                "Join campaign"
             )}

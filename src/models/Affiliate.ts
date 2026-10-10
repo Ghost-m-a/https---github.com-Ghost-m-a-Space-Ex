@@ -31,7 +31,12 @@ const AffiliateSchema = new Schema<IAffiliate>(
       email: { type: String, required: true, lowercase: true },
       username: { type: String, default: "" },
       avatar: { type: String, default: "" },
-      referralCode: { type: String, required: true, unique: true, index: true },
+      referralCode: {
+         type: String,
+         required: true,
+         unique: true,
+         index: true,
+      },
       commissionRate: { type: Number, default: 30, min: 0, max: 100 },
       status: {
          type: String,

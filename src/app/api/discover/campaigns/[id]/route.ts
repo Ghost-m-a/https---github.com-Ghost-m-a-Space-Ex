@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
+import AffiliateSignup from "@/models/AffiliateSignup";
+import { getCurrentUserId } from "@/lib/auth";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -24,6 +26,16 @@ export async function GET(
             { error: "Campaign not found" },
             { status: 404 },
          );
+      }
+
+      let joined = false;
+      const userId = await getCurrentUserId();
+      if (userId) {
+         const s = await AffiliateSignup.exists({
+            userId,
+            campaignId: campaign._id,
+         });
+         joined = Boolean(s);
       }
 
       const budget = campaign.budget ?? 0;
@@ -55,6 +67,7 @@ export async function GET(
             duration: campaign.duration ?? "",
             featured: Boolean(campaign.featured),
             startDate: campaign.startDate ?? null,
+            joined,
          },
       });
    } catch (err) {

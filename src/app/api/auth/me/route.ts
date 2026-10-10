@@ -1,25 +1,40 @@
-import { NextResponse, NextRequest } from "next/server";
-import { verifySessionToken, SESSION_COOKIE_NAME } from "@/lib/auth";
+import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User";
+import { getCurrentUserId } from "@/lib/auth";
 
-export async function GET(req: NextRequest) {
+export const dynamic = "force-dynamic";
+
+export async function GET() {
    try {
-      const token = req.cookies.get(SESSION_COOKIE_NAME)?.value;
-      if (!token) return NextResponse.json({ user: null });
-
-      const session = await verifySessionToken(token);
-      if (!session) return NextResponse.json({ user: null });
+      const userId = await getCurrentUserId();
+      if (!userId) {
+         return NextResponse.json({ user: null });
+      }
 
       await connectDB();
-      const user = await User.findById(session.userId).select("name email");
-      if (!user) return NextResponse.json({ user: null });
+
+      const user = await User.findById(userId)
+         .select("name email username avatar avatarColor bio")
+         .lean<any>();
+
+      if (!user) {
+         return NextResponse.json({ user: null });
+      }
 
       return NextResponse.json({
-         user: { id: user._id.toString(), name: user.name, email: user.email },
+         user: {
+            id: String(user._id),
+            name: user.name ?? "",
+            email: user.email ?? "",
+            username: user.username ?? "",
+            avatar: user.avatar ?? "",
+            avatarColor: user.avatarColor ?? "#3b82f6",
+            bio: user.bio ?? "",
+         },
       });
-   } catch (err: unknown) {
-      console.error("[Me API Error]", err);
-      return NextResponse.json({ user: null }, { status: 200 });
+   } catch (err) {
+      console.error("[GET /api/auth/me]", err);
+      return NextResponse.json({ user: null }, { status: 500 });
    }
 }

@@ -2,16 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import {
-   Wallet,
-   Eye,
-   Trophy,
-   TrendingUp,
-   ArrowUpRight,
-   ChevronRight,
-   Users,
-   DollarSign,
-} from "lucide-react";
+import { Eye, Trophy, ChevronRight, Users, DollarSign } from "lucide-react";
 import styles from "@/styles/pages/home.module.css";
 
 interface JoinedCampaign {
@@ -58,7 +49,7 @@ export default function PersonalHomePage() {
    const [loading, setLoading] = useState(true);
 
    useEffect(() => {
-      fetch("/api/user/campaigns")
+      fetch("/api/user/campaigns", { credentials: "include" })
          .then((r) => r.json())
          .then((d) => {
             setJoined(d.joined || []);
@@ -184,7 +175,9 @@ export default function PersonalHomePage() {
                                  <div className={styles.coverFallback}>🎬</div>
                               )}
                               <span
-                                 className={`${styles.statusPill} ${styles[item.campaign.status]}`}
+                                 className={`${styles.statusPill} ${
+                                    styles[item.campaign.status] || ""
+                                 }`}
                               >
                                  {item.campaign.status}
                               </span>

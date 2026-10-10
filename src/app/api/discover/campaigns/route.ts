@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongodb";
 import Campaign from "@/models/Campaign";
-import Business from "@/models/Business";
-import User from "@/models/User";
+import AffiliateSignup from "@/models/AffiliateSignup";
 import { getCurrentUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
@@ -21,7 +20,6 @@ export async function GET(req: Request) {
       const filter: Record<string, unknown> = {
          status: { $in: ["active", "published", "live"] },
       };
-
       if (q) {
          filter.$or = [
             { title: { $regex: q, $options: "i" } },
@@ -42,29 +40,21 @@ export async function GET(req: Request) {
          .limit(60)
          .lean<any[]>();
 
-      // ---- Per-user "joined" state ----
       let joinedIds = new Set<string>();
       const userId = await getCurrentUserId();
-
       if (userId && docs.length > 0) {
-         const AffiliateSignup = (
-            await import("@/models/AffiliateSignup")
-         ).default;
          const signups = await AffiliateSignup.find({
             userId,
             campaignId: { $in: docs.map((d) => d._id) },
          })
             .select("campaignId")
             .lean<any[]>();
-
          joinedIds = new Set(signups.map((s) => String(s.campaignId)));
       }
 
-      // ---- Shape for the Discover UI ----
       const campaigns = docs.map((c) => {
          const budget = c.budget ?? 0;
          const budgetSpent = c.budgetSpent ?? c.spent ?? 0;
-
          return {
             id: String(c._id),
             slug: c.slug ?? String(c._id),
@@ -81,7 +71,7 @@ export async function GET(req: Request) {
             budgetSpent,
             budgetRemaining: Math.max(0, budget - budgetSpent),
             cpm: c.cpm ?? 0,
-            joinedUsers: c.joinedUsers ?? c.participants?.length ?? 0,
+            joinedUsers: c.joinedUsers ?? 0,
             totalViews: c.totalViews ?? 0,
             duration: c.duration ?? "",
             featured: Boolean(c.featured),
@@ -91,7 +81,7 @@ export async function GET(req: Request) {
 
       return NextResponse.json({ campaigns });
    } catch (err) {
-      console.error("[api/discover/campaigns]", err);
+      console.error("[GET /api/discover/campaigns]", err);
       return NextResponse.json(
          { campaigns: [], error: "Failed to load campaigns" },
          { status: 500 },
