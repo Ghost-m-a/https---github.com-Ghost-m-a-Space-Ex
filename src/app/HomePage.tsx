@@ -12,6 +12,7 @@ import {
    DollarSign,
    Eye,
 } from "lucide-react";
+import SubmitContentModal from "@/components/SubmitContentModal";
 import styles from "@/styles/pages/home.module.css";
 
 // =========================================
@@ -84,6 +85,7 @@ export default function PersonalHomePage() {
    const [loadingCampaigns, setLoadingCampaigns] = useState(true);
    const [economicIntelligence, setEconomicIntelligence] = useState(false);
    const [busyId, setBusyId] = useState<string | null>(null);
+   const [submitFor, setSubmitFor] = useState<JoinedCampaign | null>(null);
 
    const loadCampaigns = () => {
       setLoadingCampaigns(true);
@@ -118,16 +120,6 @@ export default function PersonalHomePage() {
          minimumFractionDigits: 2,
          maximumFractionDigits: 2,
       })}`;
-
-   const formatTime = (t: string) => {
-      const diff = Date.now() - new Date(t).getTime();
-      const min = Math.floor(diff / 60000);
-      if (min < 1) return "just now";
-      if (min < 60) return `${min}m ago`;
-      const hr = Math.floor(min / 60);
-      if (hr < 24) return `${hr}h ago`;
-      return `${Math.floor(hr / 24)}d ago`;
-   };
 
    const leave = async (item: JoinedCampaign) => {
       const wasApproved = item.status === "approved";
@@ -207,7 +199,6 @@ export default function PersonalHomePage() {
                      </Link>
                   </div>
 
-                  {/* Quick stats when the user has campaigns */}
                   {stats && joined.length > 0 && (
                      <div className={styles.miniStatsRow}>
                         <div className={styles.miniStat}>
@@ -278,6 +269,7 @@ export default function PersonalHomePage() {
                               item={item}
                               busyId={busyId}
                               onLeave={() => leave(item)}
+                              onOpenSubmit={() => setSubmitFor(item)}
                               fmtMoney={fmtMoney}
                            />
                         ))}
@@ -288,7 +280,6 @@ export default function PersonalHomePage() {
 
             {/* ================= RIGHT SIDEBAR ================= */}
             <aside className={styles.side}>
-               {/* Balances */}
                <div className={styles.card}>
                   <div className={styles.cardHeader}>Balances</div>
                   <div className={styles.balanceList}>
@@ -318,7 +309,6 @@ export default function PersonalHomePage() {
                   </div>
                </div>
 
-               {/* Pulse */}
                <div className={styles.card}>
                   <div className={styles.cardHeader}>
                      <span>Pulse</span>
@@ -375,6 +365,20 @@ export default function PersonalHomePage() {
                </div>
             </aside>
          </div>
+
+         {/* Submit content modal */}
+         {submitFor && (
+            <SubmitContentModal
+               isOpen={true}
+               onClose={() => setSubmitFor(null)}
+               campaignId={submitFor.campaign.id}
+               campaignTitle={submitFor.campaign.title}
+               onSubmitted={() => {
+                  loadCampaigns();
+                  setSubmitFor(null);
+               }}
+            />
+         )}
       </div>
    );
 }
@@ -386,11 +390,13 @@ function CampaignControlCard({
    item,
    busyId,
    onLeave,
+   onOpenSubmit,
    fmtMoney,
 }: {
    item: JoinedCampaign;
    busyId: string | null;
    onLeave: () => void;
+   onOpenSubmit: () => void;
    fmtMoney: (n: number) => string;
 }) {
    const pct =
@@ -503,13 +509,18 @@ function CampaignControlCard({
                </button>
             )}
             {isApproved && (
-               <button
-                  className={styles.withdrawBtn}
-                  onClick={onLeave}
-                  disabled={busy}
-               >
-                  {busy ? "Leaving…" : "Leave"}
-               </button>
+               <>
+                  <button className={styles.submitBtn} onClick={onOpenSubmit}>
+                     Submit content
+                  </button>
+                  <button
+                     className={styles.withdrawBtn}
+                     onClick={onLeave}
+                     disabled={busy}
+                  >
+                     {busy ? "Leaving…" : "Leave"}
+                  </button>
+               </>
             )}
             {isRejected && (
                <Link

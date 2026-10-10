@@ -486,7 +486,8 @@
 }
 
 .withdrawBtn,
-.retryBtn {
+.retryBtn,
+.submitBtn {
    flex: 1;
    display: inline-flex;
    align-items: center;
@@ -500,6 +501,7 @@
    text-decoration: none;
    border: 1px solid transparent;
    transition: all 0.15s;
+   white-space: nowrap;
 }
 
 .withdrawBtn {
@@ -523,6 +525,19 @@
 }
 .retryBtn:hover {
    background: #2563eb;
+}
+
+/* ---- Submit content button (primary blue) ---- */
+.submitBtn {
+   background: #3b82f6;
+   color: #fff;
+}
+.submitBtn:hover:not(:disabled) {
+   background: #2563eb;
+}
+.submitBtn:disabled {
+   opacity: 0.6;
+   cursor: default;
 }
 
 /* =========================================
