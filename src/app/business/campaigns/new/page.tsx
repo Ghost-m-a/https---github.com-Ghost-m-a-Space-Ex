@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
    Check,
    ChevronLeft,
-   ChevronRight,
    Image as ImageIcon,
    Layout,
    Play,
@@ -14,16 +13,15 @@ import {
    Users,
    Globe,
    DollarSign,
-   Target,
-   TrendingUp,
    Sparkles,
    Info,
    Plus,
    X,
-   Ban,
-   Landmark,
-   Briefcase,
-   Home as HomeIcon,
+   Upload,
+   Trash2,
+   Loader2,
+   Link as LinkIcon,
+   Loader,
 } from "lucide-react";
 import styles from "@/styles/pages/campaign-new.module.css";
 
@@ -49,6 +47,41 @@ type PerformanceGoal =
    | "maximize-conversions"
    | "maximize-conversations"
    | "maximize-clicks";
+type CTAType =
+   | "learn-more"
+   | "shop-now"
+   | "sign-up"
+   | "subscribe"
+   | "download"
+   | "contact-us"
+   | "get-offer"
+   | "book-now"
+   | "watch-more";
+
+interface MediaAsset {
+   url: string;
+   type: "image" | "video";
+   name?: string;
+   size?: number;
+}
+
+interface SocialPage {
+   _id: string;
+   platform: string;
+   name: string;
+   username: string;
+   avatar: string;
+   verified: boolean;
+}
+
+interface SavedAudience {
+   _id: string;
+   name: string;
+   countries: string[];
+   languages: string[];
+   minAge: number;
+   maxAge: number;
+}
 
 interface FormState {
    // Step 1
@@ -79,12 +112,20 @@ interface FormState {
    maxAge: number;
    autoAudience: boolean;
    autoPlacements: boolean;
+   audienceId: string;
    startDate: string;
    endDate: string;
    minDailySpend: number;
    deliveryHours: string[];
 
    // Step 3
+   headline: string;
+   primaryText: string;
+   ctaType: CTAType;
+   ctaUrl: string;
+   mediaAssets: MediaAsset[];
+
+   // Step 4
    socials: string[];
    coverImage: string;
    summary: string;
@@ -96,86 +137,72 @@ interface FormState {
    requirements: string[];
 }
 
-// =========================================
-// CONSTANTS
-// =========================================
-const AD_FORMATS: {
-   key: AdFormat;
-   label: string;
-   desc: string;
-   icon: React.ReactNode;
-}[] = [
+const AD_FORMATS = [
    {
-      key: "feed",
+      key: "feed" as AdFormat,
       label: "Feed ads",
       desc: "Images and videos in feeds, stories and short clips",
       icon: <Layout size={18} />,
    },
    {
-      key: "short-video",
+      key: "short-video" as AdFormat,
       label: "Short video ads",
       desc: "Full-screen videos and swipeable images",
       icon: <Play size={18} />,
    },
    {
-      key: "search-display",
+      key: "search-display" as AdFormat,
       label: "Search & display ads",
       desc: "Search results, discovery feeds and video placements",
       icon: <Search size={18} />,
    },
    {
-      key: "text-feed",
+      key: "text-feed" as AdFormat,
       label: "Text feed ads",
       desc: "Posts in conversation feeds",
       icon: <MessageSquare size={18} />,
    },
    {
-      key: "community",
+      key: "community" as AdFormat,
       label: "Community ads",
       desc: "Posts in community feeds",
       icon: <Users size={18} />,
    },
 ];
 
-const OBJECTIVES: {
-   key: Objective;
-   label: string;
-   desc: string;
-   icon: React.ReactNode;
-   color: string;
-}[] = [
+const OBJECTIVES = [
    {
-      key: "sales",
+      key: "sales" as Objective,
       label: "Sales",
       desc: "Find people likely to purchase your product or service",
       icon: <DollarSign size={18} />,
       color: "#10b981",
    },
    {
-      key: "leads",
+      key: "leads" as Objective,
       label: "Leads",
       desc: "Collect leads for your business or brand",
       icon: <Plus size={18} />,
       color: "#06b6d4",
    },
    {
-      key: "engagement",
+      key: "engagement" as Objective,
       label: "Engagement",
       desc: "Get more messages, purchases through messaging, video views",
       icon: <Users size={18} />,
       color: "#8b5cf6",
    },
    {
-      key: "traffic",
+      key: "traffic" as Objective,
       label: "Traffic",
-      desc: "Send people to a destination, such as your website, app or profile",
+      desc: "Send people to a destination like your website or profile",
       icon: <Globe size={18} />,
       color: "#3b82f6",
    },
    {
-      key: "awareness",
+      key: "awareness" as Objective,
       label: "Awareness",
-      desc: "Show your ads to people who are most likely to remember them",
+      desc: "Show your ads to people most likely to remember them",
       icon: <Sparkles size={18} />,
       color: "#f59e0b",
    },
@@ -190,6 +217,18 @@ const CONVERSION_EVENTS = [
    "Start trial",
    "Subscribe",
    "View content",
+];
+
+const CTA_OPTIONS: { key: CTAType; label: string }[] = [
+   { key: "learn-more", label: "Learn more" },
+   { key: "shop-now", label: "Shop now" },
+   { key: "sign-up", label: "Sign up" },
+   { key: "subscribe", label: "Subscribe" },
+   { key: "download", label: "Download" },
+   { key: "contact-us", label: "Contact us" },
+   { key: "get-offer", label: "Get offer" },
+   { key: "book-now", label: "Book now" },
+   { key: "watch-more", label: "Watch more" },
 ];
 
 const CONTINENTS: { name: string; countries: string[] }[] = [
@@ -230,9 +269,8 @@ const CONTINENTS: { name: string; countries: string[] }[] = [
    },
 ];
 
-// =========================================
-// INITIAL STATE
-// =========================================
+const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
 const emptyForm: FormState = {
    adFormat: "feed",
    objective: "sales",
@@ -260,10 +298,17 @@ const emptyForm: FormState = {
    maxAge: 65,
    autoAudience: true,
    autoPlacements: true,
+   audienceId: "",
    startDate: new Date().toISOString().slice(0, 10),
    endDate: "",
    minDailySpend: 0,
    deliveryHours: [],
+
+   headline: "",
+   primaryText: "",
+   ctaType: "learn-more",
+   ctaUrl: "",
+   mediaAssets: [],
 
    socials: ["youtube", "tiktok"],
    coverImage: "",
@@ -285,13 +330,26 @@ export default function NewCampaignPage() {
    const [form, setForm] = useState<FormState>(emptyForm);
    const [submitting, setSubmitting] = useState(false);
    const [error, setError] = useState<string | null>(null);
-   const [showCountryPicker, setShowCountryPicker] = useState(false);
-   const [countryMode, setCountryMode] = useState<"target" | "exclude">(
-      "target",
-   );
+
+   const [socialPages, setSocialPages] = useState<SocialPage[]>([]);
+   const [audiences, setAudiences] = useState<SavedAudience[]>([]);
+   const [newAudienceModal, setNewAudienceModal] = useState(false);
 
    const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
       setForm((f) => ({ ...f, [key]: value }));
+
+   // Load pages + audiences on mount
+   useEffect(() => {
+      fetch("/api/social/pages", { credentials: "include" })
+         .then((r) => r.json())
+         .then((d) => setSocialPages(d.pages ?? []))
+         .catch(() => {});
+
+      fetch("/api/business/audiences", { credentials: "include" })
+         .then((r) => r.json())
+         .then((d) => setAudiences(d.audiences ?? []))
+         .catch(() => {});
+   }, []);
 
    const next = () => {
       if (step === 1) {
@@ -310,8 +368,14 @@ export default function NewCampaignPage() {
             return;
          }
       }
+      if (step === 3) {
+         if (!form.headline.trim()) {
+            setError("Ad headline is required");
+            return;
+         }
+      }
       setError(null);
-      setStep((s) => Math.min(3, s + 1));
+      setStep((s) => Math.min(4, s + 1));
    };
 
    const back = () => {
@@ -323,11 +387,15 @@ export default function NewCampaignPage() {
       setSubmitting(true);
       setError(null);
       try {
+         const payload = {
+            ...form,
+            coverImage: form.mediaAssets[0]?.url ?? form.coverImage,
+         };
          const res = await fetch("/api/business/campaigns", {
             method: "POST",
             credentials: "include",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(form),
+            body: JSON.stringify(payload),
          });
          const data = await res.json().catch(() => ({}));
          if (!res.ok) {
@@ -342,28 +410,8 @@ export default function NewCampaignPage() {
       }
    };
 
-   const toggleCountry = (country: string) => {
-      const key =
-         countryMode === "target" ? "targetCountries" : "excludedCountries";
-      const list = form[key];
-      set(
-         key,
-         list.includes(country)
-            ? list.filter((c) => c !== country)
-            : [...list, country],
-      );
-   };
-
-   const addAllInContinent = (countries: string[]) => {
-      const key =
-         countryMode === "target" ? "targetCountries" : "excludedCountries";
-      const merged = Array.from(new Set([...form[key], ...countries]));
-      set(key, merged);
-   };
-
    return (
       <div className={styles.page}>
-         {/* Breadcrumb */}
          <div className={styles.topBar}>
             <button
                className={styles.backBtn}
@@ -378,9 +426,8 @@ export default function NewCampaignPage() {
             </div>
          </div>
 
-         {/* Steps */}
          <div className={styles.steps}>
-            {[1, 2, 3].map((n) => (
+            {[1, 2, 3, 4].map((n) => (
                <div
                   key={n}
                   className={`${styles.stepDot} ${
@@ -400,6 +447,9 @@ export default function NewCampaignPage() {
                <span className={step >= 3 ? styles.labelActive : ""}>
                   Creative
                </span>
+               <span className={step >= 4 ? styles.labelActive : ""}>
+                  Brief
+               </span>
             </div>
          </div>
 
@@ -409,15 +459,13 @@ export default function NewCampaignPage() {
                <StepTwo
                   form={form}
                   set={set}
-                  showCountryPicker={showCountryPicker}
-                  setShowCountryPicker={setShowCountryPicker}
-                  countryMode={countryMode}
-                  setCountryMode={setCountryMode}
-                  toggleCountry={toggleCountry}
-                  addAllInContinent={addAllInContinent}
+                  socialPages={socialPages}
+                  audiences={audiences}
+                  onCreateAudience={() => setNewAudienceModal(true)}
                />
             )}
             {step === 3 && <StepThree form={form} set={set} />}
+            {step === 4 && <StepFour form={form} set={set} />}
          </div>
 
          {error && <div className={styles.errorBox}>{error}</div>}
@@ -429,7 +477,7 @@ export default function NewCampaignPage() {
                </button>
             )}
             <div className={styles.footerSpacer} />
-            {step < 3 ? (
+            {step < 4 ? (
                <button className={styles.btnPrimary} onClick={next}>
                   Next
                </button>
@@ -443,12 +491,23 @@ export default function NewCampaignPage() {
                </button>
             )}
          </div>
+
+         {newAudienceModal && (
+            <NewAudienceModal
+               onClose={() => setNewAudienceModal(false)}
+               onCreated={(a) => {
+                  setAudiences((prev) => [a, ...prev]);
+                  set("audienceId", a._id);
+                  setNewAudienceModal(false);
+               }}
+            />
+         )}
       </div>
    );
 }
 
 // =========================================
-// STEP 1 — Ad setup
+// STEP 1 — unchanged from before
 // =========================================
 function StepOne({
    form,
@@ -459,7 +518,6 @@ function StepOne({
 }) {
    return (
       <div className={styles.formColumn}>
-         {/* Ad format */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>
                Ad format <span className={styles.req}>*</span>
@@ -485,7 +543,6 @@ function StepOne({
             </div>
          </section>
 
-         {/* Objective */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>
                Campaign objective <span className={styles.req}>*</span>
@@ -518,7 +575,6 @@ function StepOne({
             </div>
          </section>
 
-         {/* Title */}
          <section className={styles.section}>
             <label className={styles.field}>
                <span className={styles.sectionTitle}>
@@ -532,9 +588,18 @@ function StepOne({
                   maxLength={120}
                />
             </label>
+            <label className={styles.field}>
+               <span className={styles.label}>Subtitle</span>
+               <input
+                  className={styles.input}
+                  value={form.subtitle}
+                  onChange={(e) => set("subtitle", e.target.value)}
+                  placeholder="Short one-liner for the card"
+                  maxLength={140}
+               />
+            </label>
          </section>
 
-         {/* Budget */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>
                Budget <span className={styles.req}>*</span>
@@ -598,7 +663,6 @@ function StepOne({
             </div>
          </section>
 
-         {/* Advanced options */}
          <details className={styles.advanced}>
             <summary className={styles.advancedSummary}>
                Advanced options
@@ -676,33 +740,82 @@ function StepOne({
 }
 
 // =========================================
-// STEP 2 — Default settings
+// STEP 2 — with Page picker, SavedAudience picker, Delivery hours
 // =========================================
 function StepTwo({
    form,
    set,
-   showCountryPicker,
-   setShowCountryPicker,
-   countryMode,
-   setCountryMode,
-   toggleCountry,
-   addAllInContinent,
+   socialPages,
+   audiences,
+   onCreateAudience,
 }: {
    form: FormState;
    set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
-   showCountryPicker: boolean;
-   setShowCountryPicker: (v: boolean) => void;
-   countryMode: "target" | "exclude";
-   setCountryMode: (v: "target" | "exclude") => void;
-   toggleCountry: (c: string) => void;
-   addAllInContinent: (countries: string[]) => void;
+   socialPages: SocialPage[];
+   audiences: SavedAudience[];
+   onCreateAudience: () => void;
 }) {
+   const [showCountryPicker, setShowCountryPicker] = useState(false);
+   const [countryMode, setCountryMode] = useState<"target" | "exclude">(
+      "target",
+   );
+
+   const toggleCountry = (country: string) => {
+      const key =
+         countryMode === "target" ? "targetCountries" : "excludedCountries";
+      const list = form[key];
+      set(
+         key,
+         list.includes(country)
+            ? list.filter((c) => c !== country)
+            : [...list, country],
+      );
+   };
+
+   const addAllInContinent = (countries: string[]) => {
+      const key =
+         countryMode === "target" ? "targetCountries" : "excludedCountries";
+      set(key, Array.from(new Set([...form[key], ...countries])));
+   };
+
+   const toggleHour = (dayIdx: number, hour: number) => {
+      const key = `${DAYS[dayIdx].toLowerCase()}-${hour
+         .toString()
+         .padStart(2, "0")}`;
+      const has = form.deliveryHours.includes(key);
+      set(
+         "deliveryHours",
+         has
+            ? form.deliveryHours.filter((h) => h !== key)
+            : [...form.deliveryHours, key],
+      );
+   };
+
+   const toggleRow = (dayIdx: number) => {
+      const day = DAYS[dayIdx].toLowerCase();
+      const all = Array.from(
+         { length: 24 },
+         (_, h) => `${day}-${h.toString().padStart(2, "0")}`,
+      );
+      const allSelected = all.every((h) => form.deliveryHours.includes(h));
+      set(
+         "deliveryHours",
+         allSelected
+            ? form.deliveryHours.filter((h) => !h.startsWith(`${day}-`))
+            : Array.from(new Set([...form.deliveryHours, ...all])),
+      );
+   };
+
+   const filteredPages = socialPages.filter((p) =>
+      form.socials.length === 0 ? true : form.socials.includes(p.platform),
+   );
+
    return (
       <div className={styles.formColumn}>
          <h2 className={styles.h2}>Default settings</h2>
          <p className={styles.hint}>These can be changed at any time.</p>
 
-         {/* Conversion location */}
+         {/* ---- Conversion location ---- */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Conversion location</div>
             <p className={styles.hint}>
@@ -741,9 +854,6 @@ function StepTwo({
                <div className={styles.sectionTitle}>
                   Conversion event <span className={styles.req}>*</span>
                </div>
-               <p className={styles.hint}>
-                  The action you want people to take when they see your ads.
-               </p>
                <select
                   className={styles.select}
                   value={form.conversionEvent}
@@ -769,11 +879,11 @@ function StepTwo({
                      set("performanceGoal", e.target.value as PerformanceGoal)
                   }
                >
-                  <option value="maximize-conversions">
-                     Maximize number of conversions
-                  </option>
                   <option value="maximize-conversations">
                      Maximize number of conversations
+                  </option>
+                  <option value="maximize-conversions">
+                     Maximize number of conversions
                   </option>
                </select>
 
@@ -810,7 +920,57 @@ function StepTwo({
             </section>
          )}
 
-         {/* Targeting */}
+         {/* ---- Page / Social profile pickers ---- */}
+         <section className={styles.section}>
+            <div className={styles.twoCol}>
+               <label className={styles.field}>
+                  <span className={styles.sectionTitle}>
+                     Page <span className={styles.req}>*</span>
+                  </span>
+                  <select
+                     className={styles.select}
+                     value={form.pageId}
+                     onChange={(e) => set("pageId", e.target.value)}
+                  >
+                     <option value="">Select a page…</option>
+                     {filteredPages.map((p) => (
+                        <option key={p._id} value={p._id}>
+                           {p.name}
+                           {p.verified ? " ✓" : ""} · {p.platform}
+                        </option>
+                     ))}
+                  </select>
+               </label>
+               <label className={styles.field}>
+                  <span className={styles.sectionTitle}>
+                     Social profile{" "}
+                     <span className={styles.optTag}>optional</span>
+                  </span>
+                  <select
+                     className={styles.select}
+                     value={form.socialProfileId}
+                     onChange={(e) => set("socialProfileId", e.target.value)}
+                  >
+                     <option value="">No connected social profile</option>
+                     {filteredPages.map((p) => (
+                        <option key={p._id} value={p._id}>
+                           @{p.username || p.name} · {p.platform}
+                        </option>
+                     ))}
+                  </select>
+               </label>
+            </div>
+            {filteredPages.length === 0 && (
+               <div className={styles.emptyRow}>
+                  No pages connected yet.{" "}
+                  <a href="/business/settings">
+                     Connect your pages and profiles →
+                  </a>
+               </div>
+            )}
+         </section>
+
+         {/* ---- Targeting ---- */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>
                Targeting <span className={styles.req}>*</span>
@@ -980,7 +1140,7 @@ function StepTwo({
             </div>
          </section>
 
-         {/* Placements */}
+         {/* ---- Placements ---- */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Placements</div>
             <div className={styles.autoRow}>
@@ -990,8 +1150,8 @@ function StepTwo({
                      <span className={styles.recPill}>Recommended</span>
                   </div>
                   <div className={styles.advancedHint}>
-                     Space-Ex will automatically show your ads across the
-                     placements most likely to drive the best results.
+                     Space-Ex will show your ads across the placements most
+                     likely to drive the best results.
                   </div>
                </div>
                <button
@@ -1006,12 +1166,13 @@ function StepTwo({
             </div>
          </section>
 
-         {/* Advanced options */}
+         {/* ---- Advanced ---- */}
          <details className={styles.advanced}>
             <summary className={styles.advancedSummary}>
                Advanced options
             </summary>
             <div className={styles.advancedBody}>
+               {/* Schedule */}
                <div className={styles.advancedTitle}>Schedule</div>
                <div className={styles.scheduleRow}>
                   <label className={styles.field}>
@@ -1047,14 +1208,100 @@ function StepTwo({
                   </label>
                </div>
 
+               {/* Delivery hours grid */}
+               <div className={styles.advancedTitle}>Delivery hours</div>
+               <p className={styles.advancedHint}>
+                  Click any cell to toggle. Drag column header to select a whole
+                  day. Leave empty for 24/7.
+               </p>
+               <div className={styles.gridWrap}>
+                  <div className={styles.gridHeader}>
+                     <div />
+                     {Array.from({ length: 24 }, (_, h) => (
+                        <div key={h} className={styles.gridHour}>
+                           {h.toString().padStart(2, "0")}
+                        </div>
+                     ))}
+                  </div>
+                  {DAYS.map((day, di) => (
+                     <div key={day} className={styles.gridRow}>
+                        <button
+                           type="button"
+                           className={styles.gridDayBtn}
+                           onClick={() => toggleRow(di)}
+                        >
+                           {day}
+                        </button>
+                        {Array.from({ length: 24 }, (_, h) => {
+                           const key = `${day.toLowerCase()}-${h
+                              .toString()
+                              .padStart(2, "0")}`;
+                           const on = form.deliveryHours.includes(key);
+                           return (
+                              <button
+                                 key={h}
+                                 type="button"
+                                 className={`${styles.gridCell} ${
+                                    on ? styles.gridCellOn : ""
+                                 }`}
+                                 onClick={() => toggleHour(di, h)}
+                                 title={`${day} ${h}:00`}
+                              />
+                           );
+                        })}
+                     </div>
+                  ))}
+                  {form.deliveryHours.length > 0 && (
+                     <button
+                        type="button"
+                        className={styles.clearGrid}
+                        onClick={() => set("deliveryHours", [])}
+                     >
+                        Clear selection
+                     </button>
+                  )}
+               </div>
+
+               {/* Saved audiences */}
+               <div className={styles.advancedRow}>
+                  <div>
+                     <div className={styles.advancedTitle}>Audiences</div>
+                     <div className={styles.advancedHint}>
+                        Pick a saved audience or create a new one.
+                     </div>
+                  </div>
+                  <div className={styles.audienceControls}>
+                     <select
+                        className={styles.select}
+                        value={form.audienceId}
+                        onChange={(e) => set("audienceId", e.target.value)}
+                     >
+                        <option value="">None</option>
+                        {audiences.map((a) => (
+                           <option key={a._id} value={a._id}>
+                              {a.name}
+                           </option>
+                        ))}
+                     </select>
+                     <button
+                        type="button"
+                        className={styles.btnPrimary}
+                        style={{ padding: "8px 12px", fontSize: 12 }}
+                        onClick={onCreateAudience}
+                     >
+                        Create audience
+                     </button>
+                  </div>
+               </div>
+
+               {/* Minimum daily spend */}
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>
                         Minimum daily spend
                      </div>
                      <div className={styles.advancedHint}>
-                        Optional spend target for this ad group, not a
-                        guarantee.
+                        Optional spend target, not a guarantee.
                      </div>
                   </div>
                   <div className={styles.amountWrap}>
@@ -1072,22 +1319,7 @@ function StepTwo({
                   </div>
                </div>
 
-               <div className={styles.advancedRow}>
-                  <div>
-                     <div className={styles.advancedTitle}>Audiences</div>
-                     <div className={styles.advancedHint}>
-                        Target or exclude your audiences.
-                     </div>
-                  </div>
-                  <button
-                     type="button"
-                     className={styles.btnPrimary}
-                     style={{ padding: "6px 12px", fontSize: 12 }}
-                  >
-                     Create audience
-                  </button>
-               </div>
-
+               {/* Languages */}
                <div className={styles.advancedRow}>
                   <div>
                      <div className={styles.advancedTitle}>Languages</div>
@@ -1114,6 +1346,27 @@ function StepTwo({
                      }}
                   />
                </div>
+
+               {form.targetLanguages.length > 0 && (
+                  <div className={styles.chipList}>
+                     {form.targetLanguages.map((l) => (
+                        <span key={l} className={styles.chip}>
+                           {l}
+                           <button
+                              type="button"
+                              onClick={() =>
+                                 set(
+                                    "targetLanguages",
+                                    form.targetLanguages.filter((x) => x !== l),
+                                 )
+                              }
+                           >
+                              <X size={10} />
+                           </button>
+                        </span>
+                     ))}
+                  </div>
+               )}
             </div>
          </details>
       </div>
@@ -1121,9 +1374,245 @@ function StepTwo({
 }
 
 // =========================================
-// STEP 3 — Creative
+// STEP 3 — Ad creative (copy + assets)
 // =========================================
 function StepThree({
+   form,
+   set,
+}: {
+   form: FormState;
+   set: <K extends keyof FormState>(k: K, v: FormState[K]) => void;
+}) {
+   const [uploading, setUploading] = useState(false);
+   const [uploadError, setUploadError] = useState<string | null>(null);
+
+   const handleFiles = async (files: FileList) => {
+      setUploadError(null);
+      setUploading(true);
+      try {
+         const uploaded: MediaAsset[] = [];
+         for (const file of Array.from(files)) {
+            const fd = new FormData();
+            fd.append("file", file);
+            const res = await fetch("/api/upload", {
+               method: "POST",
+               body: fd,
+               credentials: "include",
+            });
+            const data = await res.json();
+            if (!res.ok) {
+               setUploadError(data?.error ?? "Upload failed");
+               continue;
+            }
+            uploaded.push({
+               url: data.url,
+               type: data.type,
+               name: data.name,
+               size: data.size,
+            });
+         }
+         set("mediaAssets", [...form.mediaAssets, ...uploaded]);
+      } catch {
+         setUploadError("Upload failed");
+      } finally {
+         setUploading(false);
+      }
+   };
+
+   const removeAsset = (url: string) => {
+      set(
+         "mediaAssets",
+         form.mediaAssets.filter((a) => a.url !== url),
+      );
+   };
+
+   return (
+      <div className={styles.formColumn}>
+         <h2 className={styles.h2}>Ad creative</h2>
+         <p className={styles.hint}>
+            This is what people see in the feed. Be specific — creators follow
+            your brief.
+         </p>
+
+         {/* Headline */}
+         <section className={styles.section}>
+            <label className={styles.field}>
+               <span className={styles.sectionTitle}>
+                  Headline <span className={styles.req}>*</span>
+               </span>
+               <input
+                  className={styles.input}
+                  value={form.headline}
+                  onChange={(e) => set("headline", e.target.value)}
+                  placeholder="Short, punchy hook (max 40 chars)"
+                  maxLength={40}
+               />
+            </label>
+         </section>
+
+         {/* Primary text */}
+         <section className={styles.section}>
+            <label className={styles.field}>
+               <span className={styles.sectionTitle}>Primary text</span>
+               <textarea
+                  className={styles.textarea}
+                  rows={4}
+                  value={form.primaryText}
+                  onChange={(e) => set("primaryText", e.target.value)}
+                  placeholder="Body copy that appears above the media. Keep it under 125 characters for best reach."
+                  maxLength={500}
+               />
+               <span className={styles.charCount}>
+                  {form.primaryText.length} / 500
+               </span>
+            </label>
+         </section>
+
+         {/* CTA */}
+         <section className={styles.section}>
+            <div className={styles.twoCol}>
+               <label className={styles.field}>
+                  <span className={styles.sectionTitle}>Call to action</span>
+                  <select
+                     className={styles.select}
+                     value={form.ctaType}
+                     onChange={(e) => set("ctaType", e.target.value as CTAType)}
+                  >
+                     {CTA_OPTIONS.map((c) => (
+                        <option key={c.key} value={c.key}>
+                           {c.label}
+                        </option>
+                     ))}
+                  </select>
+               </label>
+               <label className={styles.field}>
+                  <span className={styles.sectionTitle}>Destination URL</span>
+                  <div className={styles.urlWrap}>
+                     <LinkIcon size={14} />
+                     <input
+                        className={styles.urlInput}
+                        value={form.ctaUrl}
+                        onChange={(e) => set("ctaUrl", e.target.value)}
+                        placeholder="https://example.com/landing"
+                        type="url"
+                     />
+                  </div>
+               </label>
+            </div>
+         </section>
+
+         {/* Assets */}
+         <section className={styles.section}>
+            <div className={styles.sectionTitle}>Media assets</div>
+            <p className={styles.hint}>
+               Upload images or short videos. The first image becomes the
+               campaign cover.
+            </p>
+
+            <div className={styles.assetGrid}>
+               {form.mediaAssets.map((a) => (
+                  <div key={a.url} className={styles.assetCard}>
+                     {a.type === "image" ? (
+                        <img src={a.url} alt="" />
+                     ) : (
+                        <video src={a.url} muted />
+                     )}
+                     <button
+                        type="button"
+                        className={styles.assetRemove}
+                        onClick={() => removeAsset(a.url)}
+                     >
+                        <Trash2 size={12} />
+                     </button>
+                     <div className={styles.assetBadge}>{a.type}</div>
+                  </div>
+               ))}
+
+               <label
+                  className={`${styles.assetUpload} ${
+                     uploading ? styles.assetUploading : ""
+                  }`}
+               >
+                  {uploading ? (
+                     <Loader2 size={20} className={styles.spin} />
+                  ) : (
+                     <>
+                        <Upload size={20} />
+                        <span>Upload</span>
+                     </>
+                  )}
+                  <input
+                     type="file"
+                     multiple
+                     accept="image/*,video/mp4,video/webm"
+                     hidden
+                     disabled={uploading}
+                     onChange={(e) => {
+                        if (e.target.files?.length) {
+                           handleFiles(e.target.files);
+                           e.target.value = "";
+                        }
+                     }}
+                  />
+               </label>
+            </div>
+
+            {uploadError && (
+               <div className={styles.errorInline}>{uploadError}</div>
+            )}
+         </section>
+
+         {/* Preview */}
+         {form.headline && (
+            <section className={styles.section}>
+               <div className={styles.sectionTitle}>Preview</div>
+               <div className={styles.previewCard}>
+                  {form.mediaAssets[0] && (
+                     <div className={styles.previewMedia}>
+                        {form.mediaAssets[0].type === "image" ? (
+                           <img src={form.mediaAssets[0].url} alt="" />
+                        ) : (
+                           <video
+                              src={form.mediaAssets[0].url}
+                              muted
+                              autoPlay
+                              loop
+                           />
+                        )}
+                     </div>
+                  )}
+                  <div className={styles.previewBody}>
+                     <div className={styles.previewHeadline}>
+                        {form.headline}
+                     </div>
+                     {form.primaryText && (
+                        <div className={styles.previewText}>
+                           {form.primaryText}
+                        </div>
+                     )}
+                     {form.ctaUrl && (
+                        <a
+                           href={form.ctaUrl}
+                           className={styles.previewCta}
+                           target="_blank"
+                           rel="noopener noreferrer"
+                        >
+                           {CTA_OPTIONS.find((c) => c.key === form.ctaType)
+                              ?.label ?? "Learn more"}
+                        </a>
+                     )}
+                  </div>
+               </div>
+            </section>
+         )}
+      </div>
+   );
+}
+
+// =========================================
+// STEP 4 — Creator brief (was StepThree)
+// =========================================
+function StepFour({
    form,
    set,
 }: {
@@ -1143,36 +1632,11 @@ function StepThree({
 
    return (
       <div className={styles.formColumn}>
-         <h2 className={styles.h2}>Creative brief</h2>
+         <h2 className={styles.h2}>Creator brief</h2>
          <p className={styles.hint}>
             Tell creators exactly what you want them to produce.
          </p>
 
-         {/* Cover */}
-         <section className={styles.section}>
-            <div className={styles.sectionTitle}>Cover image</div>
-            <div className={styles.coverRow}>
-               {form.coverImage ? (
-                  <img
-                     src={form.coverImage}
-                     alt="cover"
-                     className={styles.coverPreview}
-                  />
-               ) : (
-                  <div className={styles.coverPlaceholder}>
-                     <ImageIcon size={24} />
-                  </div>
-               )}
-               <input
-                  className={styles.input}
-                  placeholder="https://… paste image URL"
-                  value={form.coverImage}
-                  onChange={(e) => set("coverImage", e.target.value)}
-               />
-            </div>
-         </section>
-
-         {/* Summary */}
          <section className={styles.section}>
             <label className={styles.field}>
                <span className={styles.sectionTitle}>Summary</span>
@@ -1186,7 +1650,6 @@ function StepThree({
             </label>
          </section>
 
-         {/* Deliverable */}
          <section className={styles.section}>
             <label className={styles.field}>
                <span className={styles.sectionTitle}>Deliverable</span>
@@ -1199,7 +1662,6 @@ function StepThree({
             </label>
          </section>
 
-         {/* Creator requirements */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Creator requirements</div>
             <div className={styles.minRow}>
@@ -1273,7 +1735,6 @@ function StepThree({
             </div>
          </section>
 
-         {/* Instructions */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Instructions</div>
             <div className={styles.chipInput}>
@@ -1318,7 +1779,6 @@ function StepThree({
             </div>
          </section>
 
-         {/* Content requirements */}
          <section className={styles.section}>
             <div className={styles.sectionTitle}>Content requirements</div>
             <div className={styles.chipInput}>
@@ -1367,7 +1827,82 @@ function StepThree({
             <Info size={14} />
             <div>
                <strong>Review before launch:</strong> Once created, the campaign
-               goes live on the Discover page immediately.
+               goes live on Discover immediately.
+            </div>
+         </div>
+      </div>
+   );
+}
+
+// =========================================
+// NEW AUDIENCE MODAL
+// =========================================
+function NewAudienceModal({
+   onClose,
+   onCreated,
+}: {
+   onClose: () => void;
+   onCreated: (a: SavedAudience) => void;
+}) {
+   const [name, setName] = useState("");
+   const [desc, setDesc] = useState("");
+   const [saving, setSaving] = useState(false);
+
+   const save = async () => {
+      if (!name.trim()) return;
+      setSaving(true);
+      try {
+         const res = await fetch("/api/business/audiences", {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name, description: desc }),
+         });
+         const data = await res.json();
+         if (res.ok && data.audience) onCreated(data.audience);
+      } finally {
+         setSaving(false);
+      }
+   };
+
+   return (
+      <div className={styles.modalOverlay} onClick={onClose}>
+         <div className={styles.modalCard} onClick={(e) => e.stopPropagation()}>
+            <div className={styles.modalHeader}>
+               <span>New audience</span>
+               <button onClick={onClose}>
+                  <X size={16} />
+               </button>
+            </div>
+            <label className={styles.field}>
+               <span className={styles.label}>Name</span>
+               <input
+                  className={styles.input}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="e.g. US Gamers 18-24"
+               />
+            </label>
+            <label className={styles.field}>
+               <span className={styles.label}>Description</span>
+               <textarea
+                  className={styles.textarea}
+                  rows={2}
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
+               />
+            </label>
+            <div className={styles.modalFooter}>
+               <button className={styles.btnGhost} onClick={onClose}>
+                  Cancel
+               </button>
+               <button
+                  className={styles.btnPrimary}
+                  onClick={save}
+                  disabled={saving || !name.trim()}
+               >
+                  {saving ? "Saving…" : "Create"}
+               </button>
             </div>
          </div>
       </div>

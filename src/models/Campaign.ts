@@ -42,11 +42,32 @@ export type PerformanceGoal =
    | "maximize-conversations"
    | "maximize-clicks";
 
+export type CTAType =
+   | "learn-more"
+   | "shop-now"
+   | "sign-up"
+   | "subscribe"
+   | "download"
+   | "contact-us"
+   | "get-offer"
+   | "book-now"
+   | "watch-more";
+
 export interface IPlatformRate {
    platform: CampaignPlatform | string;
    minViews: number;
    maxViews: number;
    cpm: number;
+}
+
+export interface IMediaAsset {
+   url: string;
+   type: "image" | "video";
+   name?: string;
+   size?: number;
+   width?: number;
+   height?: number;
+   thumbnail?: string;
 }
 
 export interface ICampaignAsset {
@@ -74,7 +95,7 @@ export interface ICampaign extends Document {
    coverImage: string;
    previewImage: string;
 
-   // ---- Step 1: Build ----
+   // Step 1
    adFormat: AdFormat;
    objective: Objective;
    platform: CampaignPlatform | "multi";
@@ -86,15 +107,14 @@ export interface ICampaign extends Document {
    budgetControl: BudgetControl;
    bidStrategy: BidStrategy;
    cpm: number;
-
    specialAdCategory: SpecialAdCategory;
 
-   // ---- Step 2: Default settings ----
+   // Step 2
    conversionLocation: ConversionLocation;
    conversionEvent: string;
    performanceGoal: PerformanceGoal;
 
-   messageDestinations: string[]; // ["page_messages", "profile_messages"]
+   messageDestinations: string[];
    pageId: string;
    socialProfileId: string;
 
@@ -106,6 +126,7 @@ export interface ICampaign extends Document {
    maxAge: number;
    autoAudience: boolean;
    audiences: string[];
+   audienceId: string; // ← SavedAudience reference
 
    autoPlacements: boolean;
 
@@ -114,12 +135,17 @@ export interface ICampaign extends Document {
    minDailySpend: number;
    deliveryHours: string[];
 
-   // ---- Creator requirements ----
+   // Step 3 — Ad creative
+   headline: string;
+   primaryText: string;
+   ctaType: CTAType;
+   ctaUrl: string;
+   mediaAssets: IMediaAsset[];
+
+   // Step 4 — Creator brief
    minFollowers: number;
    minEngagement: number;
    creatorRequirements: string[];
-
-   // ---- Brief ----
    deliverable: string;
    instructions: string[];
    requirements: string[];
@@ -150,6 +176,19 @@ const PlatformRateSchema = new Schema<IPlatformRate>(
    { _id: false },
 );
 
+const MediaAssetSchema = new Schema<IMediaAsset>(
+   {
+      url: { type: String, required: true },
+      type: { type: String, enum: ["image", "video"], required: true },
+      name: { type: String, default: "" },
+      size: { type: Number, default: 0 },
+      width: { type: Number, default: 0 },
+      height: { type: Number, default: 0 },
+      thumbnail: { type: String, default: "" },
+   },
+   { _id: false },
+);
+
 const CampaignSchema = new Schema<ICampaign>(
    {
       businessId: {
@@ -173,7 +212,6 @@ const CampaignSchema = new Schema<ICampaign>(
       coverImage: { type: String, default: "" },
       previewImage: { type: String, default: "" },
 
-      // Step 1
       adFormat: {
          type: String,
          enum: [
@@ -230,14 +268,12 @@ const CampaignSchema = new Schema<ICampaign>(
          default: "highest-volume",
       },
       cpm: { type: Number, required: true, min: 0.01, default: 1 },
-
       specialAdCategory: {
          type: String,
          enum: ["none", "financial-products", "employment", "housing"],
          default: "none",
       },
 
-      // Step 2
       conversionLocation: {
          type: String,
          enum: ["website", "messages"],
@@ -266,6 +302,7 @@ const CampaignSchema = new Schema<ICampaign>(
       maxAge: { type: Number, default: 65 },
       autoAudience: { type: Boolean, default: true },
       audiences: { type: [String], default: [] },
+      audienceId: { type: String, default: "" },
 
       autoPlacements: { type: Boolean, default: true },
 
@@ -274,12 +311,31 @@ const CampaignSchema = new Schema<ICampaign>(
       minDailySpend: { type: Number, default: 0 },
       deliveryHours: { type: [String], default: [] },
 
-      // Creator requirements
+      // Step 3
+      headline: { type: String, default: "" },
+      primaryText: { type: String, default: "" },
+      ctaType: {
+         type: String,
+         enum: [
+            "learn-more",
+            "shop-now",
+            "sign-up",
+            "subscribe",
+            "download",
+            "contact-us",
+            "get-offer",
+            "book-now",
+            "watch-more",
+         ],
+         default: "learn-more",
+      },
+      ctaUrl: { type: String, default: "" },
+      mediaAssets: { type: [MediaAssetSchema], default: [] },
+
+      // Step 4
       minFollowers: { type: Number, default: 0 },
       minEngagement: { type: Number, default: 0 },
       creatorRequirements: { type: [String], default: [] },
-
-      // Brief
       deliverable: { type: String, default: "" },
       instructions: { type: [String], default: [] },
       requirements: { type: [String], default: [] },

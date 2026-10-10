@@ -6,17 +6,11 @@ import { getCurrentUserId } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-// --------------------------------------------------
-// GET — list campaigns for current business
-// --------------------------------------------------
 export async function GET() {
    try {
       await connectDB();
-
       const userId = await getCurrentUserId();
-      if (!userId) {
-         return NextResponse.json({ campaigns: [] }, { status: 401 });
-      }
+      if (!userId) return NextResponse.json({ campaigns: [] }, { status: 401 });
 
       const business = await Business.findOne({ userId }).lean<any>();
       if (!business) return NextResponse.json({ campaigns: [] });
@@ -29,27 +23,20 @@ export async function GET() {
    } catch (err) {
       console.error("[GET /api/business/campaigns]", err);
       return NextResponse.json(
-         { campaigns: [], error: "Failed to load campaigns" },
+         { campaigns: [], error: "Failed" },
          { status: 500 },
       );
    }
 }
 
-// --------------------------------------------------
-// POST — create a campaign (with all the new fields)
-// --------------------------------------------------
 export async function POST(req: Request) {
    try {
       await connectDB();
-
       const userId = await getCurrentUserId();
-      if (!userId) {
+      if (!userId)
          return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-      }
 
       const body = await req.json();
-
-      // ---- Destructure everything ----
       const {
          title,
          subtitle,
@@ -66,14 +53,12 @@ export async function POST(req: Request) {
          bidStrategy,
          cpm,
          specialAdCategory,
-
          conversionLocation,
          conversionEvent,
          performanceGoal,
          messageDestinations,
          pageId,
          socialProfileId,
-
          globalReach,
          targetCountries,
          targetLanguages,
@@ -82,13 +67,17 @@ export async function POST(req: Request) {
          maxAge,
          autoAudience,
          audiences,
+         audienceId,
          autoPlacements,
-
          startDate,
          endDate,
          minDailySpend,
          deliveryHours,
-
+         headline,
+         primaryText,
+         ctaType,
+         ctaUrl,
+         mediaAssets,
          minFollowers,
          minEngagement,
          creatorRequirements,
@@ -97,8 +86,7 @@ export async function POST(req: Request) {
          requirements,
       } = body ?? {};
 
-      // ---- Validate ----
-      if (!title || typeof title !== "string" || !title.trim()) {
+      if (!title?.trim()) {
          return NextResponse.json(
             { error: "Campaign title is required" },
             { status: 400 },
@@ -106,27 +94,25 @@ export async function POST(req: Request) {
       }
       if (typeof budget !== "number" || budget <= 0) {
          return NextResponse.json(
-            { error: "Budget must be a positive number" },
+            { error: "Budget must be positive" },
             { status: 400 },
          );
       }
       if (typeof cpm !== "number" || cpm <= 0) {
          return NextResponse.json(
-            { error: "Reward rate (CPM) must be positive" },
+            { error: "Reward rate must be positive" },
             { status: 400 },
          );
       }
 
-      // ---- Business ----
       const business = await Business.findOne({ userId }).lean<any>();
       if (!business) {
          return NextResponse.json(
-            { error: "Create a business before creating campaigns." },
+            { error: "Create a business first" },
             { status: 400 },
          );
       }
 
-      // ---- Slug ----
       const baseSlug = title
          .toLowerCase()
          .replace(/[^\w\s-]/g, "")
@@ -134,7 +120,6 @@ export async function POST(req: Request) {
          .slice(0, 50);
       const slug = `${baseSlug}-${Math.random().toString(36).slice(2, 8)}`;
 
-      // ---- Create ----
       const campaign = await Campaign.create({
          businessId: business._id,
          createdBy: userId,
@@ -143,8 +128,8 @@ export async function POST(req: Request) {
          subtitle: subtitle ?? "",
          category: category ?? "General",
          summary: summary ?? "",
-         coverImage: coverImage ?? "",
-         previewImage: coverImage ?? "",
+         coverImage: coverImage || (mediaAssets?.[0]?.url ?? ""),
+         previewImage: coverImage || (mediaAssets?.[0]?.url ?? ""),
 
          brandName: business.name ?? "Unknown",
          brandAvatar:
@@ -179,12 +164,19 @@ export async function POST(req: Request) {
          maxAge: maxAge ?? 65,
          autoAudience: autoAudience !== false,
          audiences: audiences ?? [],
+         audienceId: audienceId ?? "",
          autoPlacements: autoPlacements !== false,
 
          startDate: startDate ? new Date(startDate) : new Date(),
          endDate: endDate ? new Date(endDate) : null,
          minDailySpend: minDailySpend ?? 0,
          deliveryHours: deliveryHours ?? [],
+
+         headline: headline ?? "",
+         primaryText: primaryText ?? "",
+         ctaType: ctaType ?? "learn-more",
+         ctaUrl: ctaUrl ?? "",
+         mediaAssets: mediaAssets ?? [],
 
          minFollowers: minFollowers ?? 0,
          minEngagement: minEngagement ?? 0,
