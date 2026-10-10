@@ -9,6 +9,9 @@ import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
 
+// =========================================
+// GET — load a conversation's thread + mark as read
+// =========================================
 export async function GET(
    _req: NextRequest,
    { params }: { params: Promise<{ id: string }> },
@@ -28,6 +31,7 @@ export async function GET(
          );
       }
 
+      // .lean() → unreadCounts comes back as a plain object
       const convo = await Conversation.findById(id).lean<any>();
       if (!convo) {
          return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -40,9 +44,12 @@ export async function GET(
          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
-      // Mark as read
-      const unreadCounts = { ...(convo.unreadCounts ?? {}) };
-      if (unreadCounts[String(userId)]) {
+      // Mark as read for the current user
+      const unreadCounts: Record<string, number> = {
+         ...(convo.unreadCounts ?? {}),
+      };
+      const currentCount = unreadCounts[String(userId)] ?? 0;
+      if (currentCount > 0) {
          unreadCounts[String(userId)] = 0;
          await Conversation.findByIdAndUpdate(id, { unreadCounts });
       }
@@ -86,6 +93,9 @@ export async function GET(
    }
 }
 
+// =========================================
+// POST — send a message
+// =========================================
 export async function POST(
    req: NextRequest,
    { params }: { params: Promise<{ id: string }> },
@@ -114,6 +124,7 @@ export async function POST(
          );
       }
 
+      // Document (NOT .lean()) so we can use .save()
       const convo = await Conversation.findById(id);
       if (!convo) {
          return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -132,18 +143,26 @@ export async function POST(
          text,
       });
 
+      // ---- Update conversation ----
       convo.lastMessage = text;
       convo.lastMessageAt = new Date();
 
-      // Increment unread for every other participant
-      const unreadCounts = { ...(convo.unreadCounts ?? {}) };
+      // unreadCounts is a Map on the document — use Map methods.
+      // Normalize to Map in case the schema ever returns a plain object.
+      const raw = (convo as any).unreadCounts;
+      const unreadCounts: Map<string, number> =
+         raw instanceof Map
+            ? raw
+            : new Map<string, number>(Object.entries(raw ?? {}));
+
       for (const p of convo.participants ?? []) {
          const pid = String(p);
          if (pid !== String(userId)) {
-            unreadCounts[pid] = (unreadCounts[pid] ?? 0) + 1;
+            unreadCounts.set(pid, (unreadCounts.get(pid) ?? 0) + 1);
          }
       }
-      convo.unreadCounts = unreadCounts;
+
+      (convo as any).unreadCounts = unreadCounts;
       await convo.save();
 
       return NextResponse.json(
